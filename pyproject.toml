@@ -1,0 +1,39 @@
+[build-system]
+requires = [
+  "setuptools >= 45.0.0",
+  "setuptools_scm[toml] >= 7.0.5",
+  "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aiogossip"
+dynamic = ["version"]
+description = "AsyncIO implementation of Gossip protocol"
+authors = [{ "name" = "Andrey Gubarev", "email" = "andrey@andreygubarev.com" }]
+
+readme = "README.md"
+license = { text = "MIT" }
+
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/andreygubarev/python-aiogossip/"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests"]
+
+[tool.setuptools_scm]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "--cov --cov-report term-missing"
+
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.isort]
+profile = "black"
+src_paths = ["src", "test"]
+honor_noqa = true

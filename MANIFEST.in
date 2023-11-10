@@ -1,0 +1,8 @@
+exclude .git/**/* .github/**/* .gitignore
+
+exclude .envrc
+exclude Makefile
+
+exclude tests/**/*
+exclude .flake8 .pre-commit-config.yaml
+exclude Pipfile Pipfile.lock MANIFEST.in
