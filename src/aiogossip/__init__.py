@@ -9,7 +9,9 @@ import uuid
 class Node:
     GOSSIP_INTERVAL = 5
 
-    def __init__(self, seeds, port=50000):
+    def __init__(self, seeds, port=50000, loop=None):
+        self.loop = loop or asyncio.get_running_loop()
+
         self.id = uuid.uuid4()
         self.address = ("0.0.0.0", port)
         self.seeds = seeds
@@ -22,9 +24,8 @@ class Node:
         self.sock.setblocking(False)
 
     async def listen(self):
-        loop = asyncio.get_running_loop()
         while True:
-            data, addr = await loop.sock_recvfrom(self.sock, 1024)
+            data, addr = await self.loop.sock_recvfrom(self.sock, 1024)
             message = json.loads(data.decode())
             await self.handle(addr, message)
 
@@ -50,8 +51,7 @@ class Node:
                 await self.send(message, peer)
 
     async def send(self, message, peer):
-        loop = asyncio.get_running_loop()
-        await loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
+        await self.loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
 
     async def handle(self, addr, message):
         self.peers[message["node"]] = addr
