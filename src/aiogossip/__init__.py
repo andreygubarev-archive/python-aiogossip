@@ -8,7 +8,7 @@ import uuid
 
 class Node:
     GOSSIP_INTERVAL = 5
-    GOSSIP_MESSAGE_SIZE = 1024
+    GOSSIP_MESSAGE_SIZE = 4096
 
     def __init__(self, host="0.0.0.0", port=49152, loop=None):
         self.loop = loop or asyncio.get_running_loop()
@@ -38,7 +38,7 @@ class Node:
     async def send(self, message, peer):
         await self.loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
 
-    async def gossip(self):
+    async def broadcast(self):
         while True:
             await asyncio.sleep(self.GOSSIP_INTERVAL)
             message = {
@@ -67,7 +67,7 @@ async def main():
 
     node = Node(port=port)
     recv_task = asyncio.create_task(node.recv())
-    gossip_task = asyncio.create_task(node.gossip())
+    broadcast_task = asyncio.create_task(node.broadcast())
 
     seed = os.getenv("SEED")
     if seed is not None:
@@ -75,7 +75,7 @@ async def main():
         seeds = [(seed[0], int(seed[1]))]
         await node.connect(seeds[0])
 
-    await asyncio.gather(recv_task, gossip_task)
+    await asyncio.gather(recv_task, broadcast_task)
 
 
 if __name__ == "__main__":
