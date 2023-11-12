@@ -3,19 +3,18 @@ import json
 import os
 import random
 import socket
-import time
 import uuid
 
 
-class ServerNode:
+class Node:
+    GOSSIP_INTERVAL = 5
+
     def __init__(self, seeds, port=50000):
-        self.node = uuid.uuid4()
+        self.id = uuid.uuid4()
         self.address = ("0.0.0.0", port)
         self.seeds = seeds
 
         self.peers = {}
-        self.configuration = {"timestamp": time.time(), "data": {}}
-        self.gossip_interval = 5  # seconds
 
         # Shared socket for sending and receiving
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -27,22 +26,18 @@ class ServerNode:
         while True:
             data, addr = await loop.sock_recvfrom(self.sock, 1024)
             message = json.loads(data.decode())
-            print(f"Received message from {addr}: {message}")
-            await self.handle_incoming_message(addr, message)
+            await self.handle(addr, message)
 
     async def gossip(self):
         while True:
-            await asyncio.sleep(self.gossip_interval)
+            await asyncio.sleep(self.GOSSIP_INTERVAL)
             message = {
-                "node": str(self.node),
-                "type": "gossip",
-                "timestamp": self.configuration["timestamp"],
-                "data": self.configuration["data"],
+                "id": str(self.id),
                 "peers": self.peers,
             }
 
             if self.peers:
-                selected_peers = set(self.peers) - {self.node}
+                selected_peers = set(self.peers) - {self.id}
                 selected_peers = random.sample(
                     sorted(selected_peers), k=len(selected_peers)
                 )
@@ -52,19 +47,16 @@ class ServerNode:
                 selected_peers = self.seeds
 
             for peer in selected_peers:
-                await self.send_message(message, peer)
+                await self.send(message, peer)
 
-    async def send_message(self, message, peer):
+    async def send(self, message, peer):
         loop = asyncio.get_running_loop()
         await loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
 
-    async def handle_incoming_message(self, addr, message):
+    async def handle(self, addr, message):
         self.peers[message["node"]] = addr
         for peer in message["peers"]:
             self.peers[peer] = tuple(message["peers"][peer])
-
-        if message["timestamp"] > self.configuration["timestamp"]:
-            self.configuration.update(message)
 
 
 async def main():
@@ -79,7 +71,7 @@ async def main():
         seed = seed.split(":")
         seeds = [(seed[0], int(seed[1]))]
 
-    node = ServerNode(seeds, port=port)
+    node = Node(seeds, port=port)
     listen_task = asyncio.create_task(node.listen())
     gossip_task = asyncio.create_task(node.gossip())
 
