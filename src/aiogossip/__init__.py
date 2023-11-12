@@ -1,9 +1,34 @@
 import asyncio
+import collections
 import json
 import os
 import random
 import socket
 import uuid
+
+
+class Channel:
+    TIMEOUT = 10
+
+    def __init__(self):
+        self._channel = collections.defaultdict(asyncio.Queue)
+
+    async def send(self, key, value):
+        chan = self._channel[key]
+        await chan.put(value)
+
+    async def recv(self, key, timeout=TIMEOUT):
+        chan = self._channel[key]
+        async with asyncio.timeout(timeout):
+            r = await chan.get()
+            chan.task_done()
+            return r
+
+    async def close(self, key):
+        chan = self._channel[key]
+        async with asyncio.timeout(self.TIMEOUT):
+            await chan.join()
+        self._channel.pop(key, None)
 
 
 class Node:
@@ -12,6 +37,7 @@ class Node:
 
     def __init__(self, host="0.0.0.0", port=49152, loop=None):
         self.loop = loop or asyncio.get_running_loop()
+        self.channel = Channel()
 
         self.node_id = uuid.uuid4()
         self.node_peers = {}
@@ -41,10 +67,6 @@ class Node:
     async def broadcast(self):
         while True:
             await asyncio.sleep(self.GOSSIP_INTERVAL)
-            message = {
-                "id": str(self.node_id),
-                "peers": self.node_peers,
-            }
 
             peers = set(self.node_peers) - {self.node_id}
             peers = random.sample(sorted(peers), k=len(peers))
@@ -52,12 +74,49 @@ class Node:
             print(f"Selected peers: {peers}")
 
             for peer in peers:
-                await self.send(message, peer)
+                await self.ping(peer)
 
     async def handle(self, addr, message):
-        self.node_peers[message["id"]] = addr
-        for p in message["peers"]:
-            self.node_peers[p] = tuple(message["peers"][p])
+        print(f"Received message: {message}")
+
+        if "id" in message:
+            self.node_peers[message["id"]] = addr
+
+        if "peers" in message:
+            for p in message["peers"]:
+                self.node_peers[p] = tuple(message["peers"][p])
+
+        if "kind" not in message:
+            return
+
+        if message["kind"] == "ping":
+            self.loop.create_task(self.ack(message["metadata"]["message_id"], addr))
+
+        if message["kind"] == "ack":
+            await self.channel.send(message["metadata"]["message_id"], message)
+
+    async def ping(self, peer):
+        message_id = str(uuid.uuid4())
+        message = {
+            "kind": "ping",
+            "metadata": {
+                "message_id": message_id,
+                "node_id": str(self.node_id),
+            },
+        }
+        await self.send(message, peer)
+        ack = await self.channel.recv(message_id)
+        print(f"Received ack: {ack}")
+
+    async def ack(self, message_id, peer):
+        message = {
+            "kind": "ack",
+            "metadata": {
+                "message_id": message_id,
+                "node_id": str(self.node_id),
+            },
+        }
+        await self.send(message, peer)
 
 
 async def main():
