@@ -12,12 +12,11 @@ class Node:
     def __init__(self, port=50000, loop=None):
         self.loop = loop or asyncio.get_running_loop()
 
-        self.id = uuid.uuid4()
+        self.node_id = uuid.uuid4()
         self.address = ("0.0.0.0", port)
 
         self.peers = {}
 
-        # Shared socket for sending and receiving
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(self.address)
         self.sock.setblocking(False)
@@ -30,7 +29,7 @@ class Node:
 
     async def connect(self, seed):
         message = {
-            "id": str(self.id),
+            "id": str(self.node_id),
             "peers": self.peers,
         }
         await self.send(message, seed)
@@ -39,11 +38,11 @@ class Node:
         while True:
             await asyncio.sleep(self.GOSSIP_INTERVAL)
             message = {
-                "id": str(self.id),
+                "id": str(self.node_id),
                 "peers": self.peers,
             }
 
-            peers = set(self.peers) - {self.id}
+            peers = set(self.peers) - {self.node_id}
             peers = random.sample(sorted(peers), k=len(peers))
             peers = [self.peers[p] for p in peers]
             print(f"Selected peers: {peers}")
