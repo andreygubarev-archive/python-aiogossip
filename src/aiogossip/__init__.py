@@ -55,9 +55,14 @@ async def main():
     address = (address[0], int(address[1]))
     print(f"Starting node at {address}")
 
-    peers = [("127.0.0.1", 40000)]
-    node = ServerNode(address, peers)
+    peer = os.getenv("PEER")
+    if peer is None:
+        peers = []
+    else:
+        peer = peer.split(":")
+        peers = [(peer[0], int(peer[1]))]
 
+    node = ServerNode(address, peers)
     listen_task = asyncio.create_task(node.listen())
     gossip_task = asyncio.create_task(node.gossip())
 
