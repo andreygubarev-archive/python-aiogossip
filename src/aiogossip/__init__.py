@@ -1,6 +1,5 @@
 import asyncio
 import json
-import os
 import random
 import socket
 import time
@@ -42,7 +41,6 @@ class ServerNode:
 
     async def send_message(self, message, peer):
         loop = asyncio.get_running_loop()
-        print(f"Sending message to {peer}: {message}")
         await loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
 
     async def handle_incoming_message(self, message):
@@ -52,19 +50,8 @@ class ServerNode:
 
 
 async def main():
-    address = os.getenv("ADDRESS")
-    address = address.split(":")
-    address = (address[0], int(address[1]))
-
-    # peers = [('127.0.0.1', 8000), ('127.0.0.1', 8002)]
-    peer = os.getenv("PEER")
-    if peer is None:
-        peers = []
-    else:
-        peer = peer.split(":")
-        peer = (peer[0], int(peer[1]))
-        peers = [peer]
-
+    address = ("127.0.0.1", 8000)
+    peers = [("127.0.0.1", 8001), ("127.0.0.1", 8002)]
     node = ServerNode(address, peers)
 
     listen_task = asyncio.create_task(node.listen())
