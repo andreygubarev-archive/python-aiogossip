@@ -52,6 +52,11 @@ class ServerNode:
         if addr not in self.peers:
             self.peers.append(addr)
 
+        for peer in message["peers"]:
+            peer = tuple(peer)
+            if peer not in self.peers:
+                self.peers.append(peer)
+
         if message["timestamp"] > self.configuration["timestamp"]:
             self.configuration.update(message)
 
