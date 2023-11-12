@@ -4,10 +4,12 @@ import os
 import random
 import socket
 import time
+import uuid
 
 
 class ServerNode:
     def __init__(self, peers, port=50000):
+        self.node = uuid.uuid4()
         self.address = ("0.0.0.0", port)
         self.peers = peers
         self.configuration = {"timestamp": time.time(), "data": {}}
@@ -30,9 +32,11 @@ class ServerNode:
         while True:
             await asyncio.sleep(self.gossip_interval)
             message = {
+                "node": str(self.node),
                 "type": "gossip",
                 "timestamp": self.configuration["timestamp"],
                 "data": self.configuration["data"],
+                "peers": self.peers,
             }
             selected_peers = random.sample(self.peers, k=len(self.peers))
             for peer in selected_peers:
@@ -43,6 +47,8 @@ class ServerNode:
         await loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
 
     async def handle_incoming_message(self, addr, message):
+        print(f"Received message from {addr}: {message}")
+
         if addr not in self.peers:
             self.peers.append(addr)
 
