@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import random
 import socket
 import time
@@ -33,9 +34,7 @@ class ServerNode:
                 "timestamp": self.configuration["timestamp"],
                 "data": self.configuration["data"],
             }
-            selected_peers = random.sample(
-                self.peers, k=len(self.peers) // 2
-            )  # Gossip to half of the peers
+            selected_peers = random.sample(self.peers, k=len(self.peers))
             for peer in selected_peers:
                 await self.send_message(message, peer)
 
@@ -50,8 +49,13 @@ class ServerNode:
 
 
 async def main():
-    address = ("127.0.0.1", 8000)
-    peers = [("127.0.0.1", 8001), ("127.0.0.1", 8002)]
+    address = os.getenv("ADDRESS")
+    assert address is not None, "ADDRESS environment variable must be set"
+    address = address.split(":")
+    address = (address[0], int(address[1]))
+    print(f"Starting node at {address}")
+
+    peers = [("127.0.0.1", 40000)]
     node = ServerNode(address, peers)
 
     listen_task = asyncio.create_task(node.listen())
