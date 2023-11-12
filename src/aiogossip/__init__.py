@@ -8,10 +8,12 @@ import uuid
 
 
 class ServerNode:
-    def __init__(self, peers, port=50000):
+    def __init__(self, seeds, port=50000):
         self.node = uuid.uuid4()
         self.address = ("0.0.0.0", port)
-        self.peers = peers
+        self.seeds = seeds
+
+        self.peers = {}
         self.configuration = {"timestamp": time.time(), "data": {}}
         self.gossip_interval = 5  # seconds
 
@@ -38,7 +40,17 @@ class ServerNode:
                 "data": self.configuration["data"],
                 "peers": self.peers,
             }
-            selected_peers = random.sample(self.peers, k=len(self.peers))
+
+            if self.peers:
+                selected_peers = set(self.peers) - {self.node}
+                selected_peers = random.sample(
+                    sorted(selected_peers), k=len(selected_peers)
+                )
+                selected_peers = [self.peers[peer] for peer in selected_peers]
+                print(f"Selected peers: {selected_peers}")
+            else:
+                selected_peers = self.seeds
+
             for peer in selected_peers:
                 await self.send_message(message, peer)
 
@@ -47,15 +59,9 @@ class ServerNode:
         await loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
 
     async def handle_incoming_message(self, addr, message):
-        print(f"Received message from {addr}: {message}")
-
-        if addr not in self.peers:
-            self.peers.append(addr)
-
+        self.peers[message["node"]] = addr
         for peer in message["peers"]:
-            peer = tuple(peer)
-            if peer not in self.peers:
-                self.peers.append(peer)
+            self.peers[peer] = tuple(message["peers"][peer])
 
         if message["timestamp"] > self.configuration["timestamp"]:
             self.configuration.update(message)
@@ -66,14 +72,14 @@ async def main():
     assert port is not None, "PORT environment variable must be set"
     port = int(port)
 
-    peer = os.getenv("PEER")
-    if peer is None:
-        peers = []
+    seed = os.getenv("SEED")
+    if seed is None:
+        seeds = []
     else:
-        peer = peer.split(":")
-        peers = [(peer[0], int(peer[1]))]
+        seed = seed.split(":")
+        seeds = [(seed[0], int(seed[1]))]
 
-    node = ServerNode(peers, port=port)
+    node = ServerNode(seeds, port=port)
     listen_task = asyncio.create_task(node.listen())
     gossip_task = asyncio.create_task(node.gossip())
 
