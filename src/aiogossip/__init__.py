@@ -9,12 +9,11 @@ import uuid
 class Node:
     GOSSIP_INTERVAL = 5
 
-    def __init__(self, seeds, port=50000, loop=None):
+    def __init__(self, port=50000, loop=None):
         self.loop = loop or asyncio.get_running_loop()
 
         self.id = uuid.uuid4()
         self.address = ("0.0.0.0", port)
-        self.seeds = seeds
 
         self.peers = {}
 
@@ -29,6 +28,13 @@ class Node:
             message = json.loads(data.decode())
             await self.handle(addr, message)
 
+    async def connect(self, seed):
+        message = {
+            "id": str(self.id),
+            "peers": self.peers,
+        }
+        await self.send(message, seed)
+
     async def gossip(self):
         while True:
             await asyncio.sleep(self.GOSSIP_INTERVAL)
@@ -37,26 +43,21 @@ class Node:
                 "peers": self.peers,
             }
 
-            if self.peers:
-                selected_peers = set(self.peers) - {self.id}
-                selected_peers = random.sample(
-                    sorted(selected_peers), k=len(selected_peers)
-                )
-                selected_peers = [self.peers[peer] for peer in selected_peers]
-                print(f"Selected peers: {selected_peers}")
-            else:
-                selected_peers = self.seeds
+            peers = set(self.peers) - {self.id}
+            peers = random.sample(sorted(peers), k=len(peers))
+            peers = [self.peers[p] for p in peers]
+            print(f"Selected peers: {peers}")
 
-            for peer in selected_peers:
+            for peer in peers:
                 await self.send(message, peer)
 
     async def send(self, message, peer):
         await self.loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
 
     async def handle(self, addr, message):
-        self.peers[message["node"]] = addr
-        for peer in message["peers"]:
-            self.peers[peer] = tuple(message["peers"][peer])
+        self.peers[message["id"]] = addr
+        for p in message["peers"]:
+            self.peers[p] = tuple(message["peers"][p])
 
 
 async def main():
@@ -64,16 +65,15 @@ async def main():
     assert port is not None, "PORT environment variable must be set"
     port = int(port)
 
-    seed = os.getenv("SEED")
-    if seed is None:
-        seeds = []
-    else:
-        seed = seed.split(":")
-        seeds = [(seed[0], int(seed[1]))]
-
-    node = Node(seeds, port=port)
+    node = Node(port=port)
     listen_task = asyncio.create_task(node.listen())
     gossip_task = asyncio.create_task(node.gossip())
+
+    seed = os.getenv("SEED")
+    if seed is not None:
+        seed = seed.split(":")
+        seeds = [(seed[0], int(seed[1]))]
+        await node.connect(seeds[0])
 
     await asyncio.gather(listen_task, gossip_task)
 
