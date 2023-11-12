@@ -7,8 +7,8 @@ import time
 
 
 class ServerNode:
-    def __init__(self, address, peers):
-        self.address = address
+    def __init__(self, peers, port=50000):
+        self.address = ("0.0.0.0", port)
         self.peers = peers
         self.configuration = {"timestamp": time.time(), "data": {}}
         self.gossip_interval = 5  # seconds
@@ -24,7 +24,7 @@ class ServerNode:
             data, addr = await loop.sock_recvfrom(self.sock, 1024)
             message = json.loads(data.decode())
             print(f"Received message from {addr}: {message}")
-            await self.handle_incoming_message(message)
+            await self.handle_incoming_message(addr, message)
 
     async def gossip(self):
         while True:
@@ -42,18 +42,18 @@ class ServerNode:
         loop = asyncio.get_running_loop()
         await loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
 
-    async def handle_incoming_message(self, message):
-        # Update configuration if the incoming message is newer
+    async def handle_incoming_message(self, addr, message):
+        if addr not in self.peers:
+            self.peers.append(addr)
+
         if message["timestamp"] > self.configuration["timestamp"]:
             self.configuration.update(message)
 
 
 async def main():
-    address = os.getenv("ADDRESS")
-    assert address is not None, "ADDRESS environment variable must be set"
-    address = address.split(":")
-    address = (address[0], int(address[1]))
-    print(f"Starting node at {address}")
+    port = os.getenv("PORT")
+    assert port is not None, "PORT environment variable must be set"
+    port = int(port)
 
     peer = os.getenv("PEER")
     if peer is None:
@@ -62,7 +62,7 @@ async def main():
         peer = peer.split(":")
         peers = [(peer[0], int(peer[1]))]
 
-    node = ServerNode(address, peers)
+    node = ServerNode(peers, port=port)
     listen_task = asyncio.create_task(node.listen())
     gossip_task = asyncio.create_task(node.gossip())
 
