@@ -9,16 +9,14 @@ import uuid
 class Node:
     GOSSIP_INTERVAL = 5
 
-    def __init__(self, port=50000, loop=None):
+    def __init__(self, host="0.0.0.0", port=49152, loop=None):
         self.loop = loop or asyncio.get_running_loop()
 
         self.node_id = uuid.uuid4()
-        self.address = ("0.0.0.0", port)
-
-        self.peers = {}
+        self.node_peers = {}
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind(self.address)
+        self.sock.bind((host, port))
         self.sock.setblocking(False)
 
     async def listen(self):
@@ -30,7 +28,7 @@ class Node:
     async def connect(self, seed):
         message = {
             "id": str(self.node_id),
-            "peers": self.peers,
+            "peers": self.node_peers,
         }
         await self.send(message, seed)
 
@@ -39,12 +37,12 @@ class Node:
             await asyncio.sleep(self.GOSSIP_INTERVAL)
             message = {
                 "id": str(self.node_id),
-                "peers": self.peers,
+                "peers": self.node_peers,
             }
 
-            peers = set(self.peers) - {self.node_id}
+            peers = set(self.node_peers) - {self.node_id}
             peers = random.sample(sorted(peers), k=len(peers))
-            peers = [self.peers[p] for p in peers]
+            peers = [self.node_peers[p] for p in peers]
             print(f"Selected peers: {peers}")
 
             for peer in peers:
@@ -54,9 +52,9 @@ class Node:
         await self.loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
 
     async def handle(self, addr, message):
-        self.peers[message["id"]] = addr
+        self.node_peers[message["id"]] = addr
         for p in message["peers"]:
-            self.peers[p] = tuple(message["peers"][p])
+            self.node_peers[p] = tuple(message["peers"][p])
 
 
 async def main():
