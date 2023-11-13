@@ -58,14 +58,11 @@ class Node:
 
     def __init__(self, host="0.0.0.0", port=49152, loop=None):
         self.loop = loop or asyncio.get_running_loop()
+        self.transport = Transport(host, port, loop)
         self.channel = Channel()
 
         self.node_id = uuid.uuid4()
         self.node_peers = {}
-
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((host, port))
-        self.sock.setblocking(False)
 
     async def connect(self, seed):
         message = {
@@ -76,14 +73,11 @@ class Node:
 
     async def recv(self):
         while True:
-            data, addr = await self.loop.sock_recvfrom(
-                self.sock, self.GOSSIP_MESSAGE_SIZE
-            )
-            message = json.loads(data.decode())
-            await self.handle(addr, message)
+            data, addr = await self.transport.recv()
+            await self.handle(data, addr)
 
     async def send(self, message, peer):
-        await self.loop.sock_sendto(self.sock, json.dumps(message).encode(), peer)
+        await self.transport.send(message, peer)
 
     async def broadcast(self):
         while True:
@@ -97,7 +91,7 @@ class Node:
             for peer in peers:
                 await self.ping(peer)
 
-    async def handle(self, addr, message):
+    async def handle(self, message, addr):
         print(f"Received message: {message}")
 
         if "id" in message:
@@ -125,7 +119,7 @@ class Node:
                 "node_id": str(self.node_id),
             },
         }
-        await self.send(message, peer)
+        await self.transport.send(message, peer)
         ack = await self.channel.recv(message_id)
         print(f"Received ack: {ack}")
 
@@ -137,7 +131,7 @@ class Node:
                 "node_id": str(self.node_id),
             },
         }
-        await self.send(message, peer)
+        await self.transport.send(message, peer)
 
 
 async def main():
