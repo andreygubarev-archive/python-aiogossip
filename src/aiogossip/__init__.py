@@ -33,11 +33,11 @@ class Channel:
 class Transport:
     PAYLOAD_SIZE = 4096
 
-    def __init__(self, host="0.0.0.0", port=49152, loop=None):
+    def __init__(self, bind, loop=None):
         self.loop = loop or asyncio.get_running_loop()
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((host, port))
+        self.sock.bind(bind)
         self.sock.setblocking(False)
 
     async def recv(self):
@@ -55,9 +55,9 @@ class Gossip:
     INTERVAL = 1
     TIMEOUT = 5
 
-    def __init__(self, host, port, loop=None):
+    def __init__(self, bind, loop=None):
         self.loop = loop or asyncio.get_running_loop()
-        self.transport = self.TRANSPORT(host, port, loop)
+        self.transport = self.TRANSPORT(bind, loop=self.loop)
 
         self.node_id = uuid.uuid4()
         self.node_peers = {}
@@ -91,7 +91,7 @@ class Gossip:
         }
         await self.transport.send(data, addr)
 
-    async def send_multicast(self, payload, node_peers=None):
+    async def send_broadcast(self, payload, node_peers=None):
         node_peers = node_peers or self.node_peers
         for peer in self.node_peers:
             addr = self.node_peers[peer]
@@ -120,7 +120,7 @@ class Gossip:
 class Node:
     def __init__(self, host="0.0.0.0", port=49152, loop=None):
         self.loop = loop or asyncio.get_running_loop()
-        self.gossip = Gossip(host, port, loop)
+        self.gossip = Gossip((host, port), loop=self.loop)
         self.channel = Channel()
 
     async def recv(self):
