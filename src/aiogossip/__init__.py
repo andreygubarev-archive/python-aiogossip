@@ -80,6 +80,12 @@ class Gossip:
         }
         await self.transport.send(data, addr)
 
+    async def send_multicast(self, payload, node_peers=None):
+        node_peers = node_peers or self.node_peers
+        for peer in self.node_peers:
+            addr = self.node_peers[peer]
+            await self.send(payload, addr)
+
 
 class Node:
     GOSSIP_INTERVAL = 5
@@ -110,14 +116,11 @@ class Node:
     async def broadcast(self):
         while True:
             await asyncio.sleep(self.GOSSIP_INTERVAL)
+            if len(self.gossip.node_peers) == 0:
+                continue
 
-            peers = set(self.node_peers) - {self.node_id}
-            peers = random.sample(sorted(peers), k=len(peers))
-            peers = [self.node_peers[p] for p in peers]
-            print(f"Selected peers: {peers}")
-
-            for peer in peers:
-                await self.ping(peer)
+            addr = random.choice(list(self.gossip.node_peers.values()))
+            await self.ping(addr)
 
     async def handle(self, message, addr):
         print(f"Received message: {message}")
