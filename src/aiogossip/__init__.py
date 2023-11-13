@@ -52,6 +52,29 @@ class Transport:
         await self.loop.sock_sendto(self.sock, data, addr)
 
 
+class Gossip:
+    TRANSPORT = Transport
+
+    def __init__(self, host, port, loop=None):
+        self.loop = loop or asyncio.get_running_loop()
+        self.transport = self.TRANSPORT(host, port, loop)
+
+        self.node_id = uuid.uuid4()
+        self.node_peers = {}
+
+    async def listen(self):
+        while True:
+            data, addr = await self.transport.recv()
+            payload = data["payload"]
+            yield (payload, addr)
+
+    async def send(self, payload, addr):
+        data = {
+            "payload": payload,
+        }
+        await self.transport.send(data, addr)
+
+
 class Node:
     GOSSIP_INTERVAL = 5
     GOSSIP_MESSAGE_SIZE = 4096
