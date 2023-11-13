@@ -66,6 +66,7 @@ class Gossip:
     async def listen(self):
         while True:
             data, addr = await self.transport.recv()
+            print(f"Received data: {data}")
 
             node_id = data["node_id"]
             if node_id not in self.node_peers:
@@ -75,9 +76,11 @@ class Gossip:
 
             if "ping" in payload:
                 await self.send({"ack": payload["ping"]}, addr)
+                continue
 
             if "ack" in payload:
                 await self.channel.send(payload["ack"], payload)
+                continue
 
             yield (payload, addr)
 
@@ -102,15 +105,16 @@ class Gossip:
             for peer in self.node_peers:
                 await asyncio.sleep(self.INTERVAL)
                 addr = self.node_peers[peer]
+                await self.ping(addr)
 
-                message_id = str(uuid.uuid4())
-                try:
-                    await self.send({"ping": message_id}, addr)
-                except Exception:
-                    print(f"Failed peer: {peer}")
+    async def ping(self, addr):
+        message_id = str(uuid.uuid4())
+        await self.send({"ping": message_id}, addr)
 
-                async with asyncio.timeout(self.TIMEOUT):
-                    await self.channel.recv(message_id)
+        async with asyncio.timeout(self.TIMEOUT):
+            await self.channel.recv(message_id)
+
+        await self.channel.close(message_id)
 
 
 class Node:
@@ -122,16 +126,6 @@ class Node:
         self.gossip = Gossip(host, port, loop)
         self.channel = Channel()
 
-        self.node_id = uuid.uuid4()
-        self.node_peers = {}
-
-    async def connect(self, seed):
-        message = {
-            "id": str(self.node_id),
-            "peers": self.node_peers,
-        }
-        await self.send(message, seed)
-
     async def recv(self):
         async for payload, addr in self.gossip.listen():
             await self.handle(payload, addr)
@@ -142,44 +136,8 @@ class Node:
     async def handle(self, message, addr):
         print(f"Received message: {message}")
 
-        if "id" in message:
-            self.node_peers[message["id"]] = addr
-
-        if "peers" in message:
-            for p in message["peers"]:
-                self.node_peers[p] = tuple(message["peers"][p])
-
         if "kind" not in message:
             return
-
-        if message["kind"] == "ping":
-            self.loop.create_task(self.ack(message["metadata"]["message_id"], addr))
-
-        if message["kind"] == "ack":
-            await self.channel.send(message["metadata"]["message_id"], message)
-
-    async def ping(self, peer):
-        message_id = str(uuid.uuid4())
-        message = {
-            "kind": "ping",
-            "metadata": {
-                "message_id": message_id,
-                "node_id": str(self.node_id),
-            },
-        }
-        await self.gossip.send(message, peer)
-        ack = await self.channel.recv(message_id)
-        print(f"Received ack: {ack}")
-
-    async def ack(self, message_id, peer):
-        message = {
-            "kind": "ack",
-            "metadata": {
-                "message_id": message_id,
-                "node_id": str(self.node_id),
-            },
-        }
-        await self.gossip.send(message, peer)
 
 
 async def main():
@@ -194,8 +152,8 @@ async def main():
     seed = os.getenv("SEED")
     if seed is not None:
         seed = seed.split(":")
-        seeds = [(seed[0], int(seed[1]))]
-        await node.connect(seeds[0])
+        seed = (seed[0], int(seed[1]))
+        await node.gossip.ping(seed)
 
     await asyncio.gather(recv_task, broadcast_task)
 
