@@ -63,6 +63,8 @@ class Gossip:
         self.node_peers = {}
         self.channel = Channel()
 
+        self.failure_detector = self.loop.create_task(self.failure_detect())
+
     async def listen(self):
         while True:
             data, addr = await self.transport.recv()
@@ -97,7 +99,7 @@ class Gossip:
             addr = self.node_peers[peer]
             await self.send(payload, addr)
 
-    async def detect_failure(self):
+    async def failure_detect(self):
         while True:
             if len(self.node_peers) == 0:
                 await asyncio.sleep(self.INTERVAL)
@@ -144,7 +146,6 @@ async def main():
 
     node = Node(port=port)
     recv_task = asyncio.create_task(node.recv())
-    broadcast_task = asyncio.create_task(node.gossip.detect_failure())
 
     seed = os.getenv("SEED")
     if seed is not None:
@@ -152,7 +153,7 @@ async def main():
         seed = (seed[0], int(seed[1]))
         await node.gossip.ping(seed)
 
-    await asyncio.gather(recv_task, broadcast_task)
+    await asyncio.gather(recv_task, node.gossip.failure_detector)
 
 
 if __name__ == "__main__":
