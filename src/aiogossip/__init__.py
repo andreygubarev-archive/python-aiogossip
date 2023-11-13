@@ -2,7 +2,6 @@ import asyncio
 import collections
 import json
 import os
-import random
 import socket
 import uuid
 
@@ -32,7 +31,6 @@ class Channel:
 
 
 class Transport:
-    INTERVAL = 5
     PAYLOAD_SIZE = 4096
 
     def __init__(self, host="0.0.0.0", port=49152, loop=None):
@@ -54,6 +52,8 @@ class Transport:
 
 class Gossip:
     TRANSPORT = Transport
+    INTERVAL = 1
+    TIMEOUT = 5
 
     def __init__(self, host, port, loop=None):
         self.loop = loop or asyncio.get_running_loop()
@@ -61,6 +61,7 @@ class Gossip:
 
         self.node_id = uuid.uuid4()
         self.node_peers = {}
+        self.channel = Channel()
 
     async def listen(self):
         while True:
@@ -71,6 +72,13 @@ class Gossip:
                 self.node_peers[node_id] = addr
 
             payload = data["payload"]
+
+            if "ping" in payload:
+                await self.send({"ack": payload["ping"]}, addr)
+
+            if "ack" in payload:
+                await self.channel.send(payload["ack"], payload)
+
             yield (payload, addr)
 
     async def send(self, payload, addr):
@@ -85,6 +93,24 @@ class Gossip:
         for peer in self.node_peers:
             addr = self.node_peers[peer]
             await self.send(payload, addr)
+
+    async def detect_failure(self):
+        while True:
+            if len(self.node_peers) == 0:
+                await asyncio.sleep(self.INTERVAL)
+
+            for peer in self.node_peers:
+                await asyncio.sleep(self.INTERVAL)
+                addr = self.node_peers[peer]
+
+                message_id = str(uuid.uuid4())
+                try:
+                    await self.send({"ping": message_id}, addr)
+                except Exception:
+                    print(f"Failed peer: {peer}")
+
+                async with asyncio.timeout(self.TIMEOUT):
+                    await self.channel.recv(message_id)
 
 
 class Node:
@@ -112,15 +138,6 @@ class Node:
 
     async def send(self, message, peer):
         await self.gossip.send(message, peer)
-
-    async def broadcast(self):
-        while True:
-            await asyncio.sleep(self.GOSSIP_INTERVAL)
-            if len(self.gossip.node_peers) == 0:
-                continue
-
-            addr = random.choice(list(self.gossip.node_peers.values()))
-            await self.ping(addr)
 
     async def handle(self, message, addr):
         print(f"Received message: {message}")
@@ -172,7 +189,7 @@ async def main():
 
     node = Node(port=port)
     recv_task = asyncio.create_task(node.recv())
-    broadcast_task = asyncio.create_task(node.broadcast())
+    broadcast_task = asyncio.create_task(node.gossip.detect_failure())
 
     seed = os.getenv("SEED")
     if seed is not None:
