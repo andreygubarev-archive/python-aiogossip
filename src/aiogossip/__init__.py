@@ -65,6 +65,18 @@ class Gossip:
 
         self.failure_detector = self.loop.create_task(self.failure_detect())
 
+    async def failure_detect(self):
+        # Round-Robin Probe Target Selection
+        # https://en.wikipedia.org/wiki/SWIM_Protocol#Extensions
+        while True:
+            if len(self.node_peers) == 0:
+                await asyncio.sleep(self.INTERVAL)
+
+            for peer in self.node_peers:
+                await asyncio.sleep(self.INTERVAL)
+                addr = self.node_peers[peer]
+                await self.ping(addr)
+
     async def listen(self):
         while True:
             data, addr = await self.transport.recv()
@@ -98,16 +110,6 @@ class Gossip:
         for peer in self.node_peers:
             addr = self.node_peers[peer]
             await self.send(payload, addr)
-
-    async def failure_detect(self):
-        while True:
-            if len(self.node_peers) == 0:
-                await asyncio.sleep(self.INTERVAL)
-
-            for peer in self.node_peers:
-                await asyncio.sleep(self.INTERVAL)
-                addr = self.node_peers[peer]
-                await self.ping(addr)
 
     async def ping(self, addr):
         message_id = str(uuid.uuid4())
