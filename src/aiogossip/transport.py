@@ -15,10 +15,10 @@ class Transport:
         self.sock.setblocking(False)
 
     async def recv(self):
-        data, addr = await self.loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
-        data = codec.decode(data)
-        return data, addr
+        message, addr = await self.loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
+        message = codec.decode(message)
+        return message, addr
 
-    async def send(self, data, addr):
-        data = codec.encode(data)
-        await self.loop.sock_sendto(self.sock, data, addr)
+    async def send(self, message, addr):
+        message = codec.encode(message)
+        await self.loop.sock_sendto(self.sock, message, addr)
