@@ -31,6 +31,27 @@ class Channel:
         self._channel.pop(key, None)
 
 
+class Transport:
+    INTERVAL = 5
+    PAYLOAD_SIZE = 4096
+
+    def __init__(self, host="0.0.0.0", port=49152, loop=None):
+        self.loop = loop or asyncio.get_running_loop()
+
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind((host, port))
+        self.sock.setblocking(False)
+
+    async def recv(self):
+        data, addr = await self.loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
+        data = json.loads(data.decode())
+        return data, addr
+
+    async def send(self, data, addr):
+        data = json.dumps(data).encode()
+        await self.loop.sock_sendto(self.sock, data, addr)
+
+
 class Node:
     GOSSIP_INTERVAL = 5
     GOSSIP_MESSAGE_SIZE = 4096
