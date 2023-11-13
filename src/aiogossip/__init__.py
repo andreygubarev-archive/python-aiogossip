@@ -65,11 +65,17 @@ class Gossip:
     async def listen(self):
         while True:
             data, addr = await self.transport.recv()
+
+            node_id = data["node_id"]
+            if node_id not in self.node_peers:
+                self.node_peers[node_id] = addr
+
             payload = data["payload"]
             yield (payload, addr)
 
     async def send(self, payload, addr):
         data = {
+            "node_id": str(self.node_id),
             "payload": payload,
         }
         await self.transport.send(data, addr)
