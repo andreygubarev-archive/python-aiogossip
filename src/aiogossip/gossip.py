@@ -27,11 +27,11 @@ class Gossip:
 
     async def listen(self):
         while True:
-            data, addr = await self.transport.recv()
-            metadata, data = data["metadata"], data["data"]
-            metadata["sender_addr"] = addr
-            print(f"Received message: {metadata} {data}")
+            message, addr = await self.transport.recv()
+            message["metadata"]["sender_addr"] = addr
+            print(f"Received message: {message}")
 
+            metadata, data = message["metadata"], message["data"]
             if metadata["sender_id"] not in self.node_peers:
                 self.node_peers[metadata["sender_id"]] = metadata["sender_addr"]
 
