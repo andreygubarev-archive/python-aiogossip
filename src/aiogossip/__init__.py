@@ -81,7 +81,7 @@ class Node:
 
     def __init__(self, host="0.0.0.0", port=49152, loop=None):
         self.loop = loop or asyncio.get_running_loop()
-        self.transport = Transport(host, port, loop)
+        self.gossip = Gossip(host, port, loop)
         self.channel = Channel()
 
         self.node_id = uuid.uuid4()
@@ -95,12 +95,11 @@ class Node:
         await self.send(message, seed)
 
     async def recv(self):
-        while True:
-            data, addr = await self.transport.recv()
-            await self.handle(data, addr)
+        async for payload, addr in self.gossip.listen():
+            await self.handle(payload, addr)
 
     async def send(self, message, peer):
-        await self.transport.send(message, peer)
+        await self.gossip.send(message, peer)
 
     async def broadcast(self):
         while True:
@@ -142,7 +141,7 @@ class Node:
                 "node_id": str(self.node_id),
             },
         }
-        await self.transport.send(message, peer)
+        await self.gossip.send(message, peer)
         ack = await self.channel.recv(message_id)
         print(f"Received ack: {ack}")
 
@@ -154,7 +153,7 @@ class Node:
                 "node_id": str(self.node_id),
             },
         }
-        await self.transport.send(message, peer)
+        await self.gossip.send(message, peer)
 
 
 async def main():
