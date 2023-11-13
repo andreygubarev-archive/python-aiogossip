@@ -118,9 +118,6 @@ class Gossip:
 
 
 class Node:
-    GOSSIP_INTERVAL = 5
-    GOSSIP_MESSAGE_SIZE = 4096
-
     def __init__(self, host="0.0.0.0", port=49152, loop=None):
         self.loop = loop or asyncio.get_running_loop()
         self.gossip = Gossip(host, port, loop)
