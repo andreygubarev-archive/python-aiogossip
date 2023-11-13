@@ -6,6 +6,11 @@ import socket
 import uuid
 
 
+class MESSAGE:
+    PING = 1
+    ACK = 2
+
+
 class Channel:
     TIMEOUT = 10
 
@@ -69,56 +74,66 @@ class Gossip:
         # Round-Robin Probe Target Selection
         # https://en.wikipedia.org/wiki/SWIM_Protocol#Extensions
         while True:
-            if len(self.node_peers) == 0:
+            if not self.node_peers:
                 await asyncio.sleep(self.INTERVAL)
 
-            for peer in self.node_peers:
+            for peer_id in self.node_peers:
                 await asyncio.sleep(self.INTERVAL)
-                addr = self.node_peers[peer]
-                await self.ping(addr)
+                addr = self.node_peers[peer_id]
+
+                topic = await self.ping_send(addr)
+                await self.ping_recv(topic)
 
     async def listen(self):
         while True:
             data, addr = await self.transport.recv()
-            print(f"Received data: {data}")
+            metadata, data = data["metadata"], data["data"]
+            metadata["sender_addr"] = addr
+            print(f"Received message: {metadata} {data}")
 
-            node_id = data["node_id"]
-            if node_id not in self.node_peers:
-                self.node_peers[node_id] = addr
+            if metadata["sender_id"] not in self.node_peers:
+                self.node_peers[metadata["sender_id"]] = metadata["sender_addr"]
 
-            payload = data["payload"]
+            # message_id = metadata["message_id"]
+            message_type = metadata["message_type"]
 
-            if "ping" in payload:
-                await self.send({"ack": payload["ping"]}, addr)
+            if message_type == MESSAGE.PING:
+                await self.ack_send(data["topic"], metadata["sender_addr"])
                 continue
-
-            if "ack" in payload:
-                await self.channel.send(payload["ack"], payload)
+            elif message_type == MESSAGE.ACK:
+                await self.ack_recv(data["topic"])
                 continue
+            else:
+                # TODO: Handle unknown message type
+                yield metadata, data
 
-            yield (payload, addr)
-
-    async def send(self, payload, addr):
+    async def send(self, message_type, data, addr):
         data = {
-            "node_id": str(self.node_id),
-            "payload": payload,
+            "metadata": {
+                "sender_id": str(self.node_id),
+                "message_id": str(uuid.uuid4()),
+                "message_type": message_type,
+            },
+            "data": data,
         }
         await self.transport.send(data, addr)
 
-    async def send_broadcast(self, payload, node_peers=None):
-        node_peers = node_peers or self.node_peers
-        for peer in self.node_peers:
-            addr = self.node_peers[peer]
-            await self.send(payload, addr)
+    async def ack_send(self, topic, addr):
+        await self.send(MESSAGE.ACK, {"topic": topic}, addr)
+        return topic
 
-    async def ping(self, addr):
-        message_id = str(uuid.uuid4())
-        await self.send({"ping": message_id}, addr)
+    async def ack_recv(self, topic):
+        await self.channel.send(topic, {})
 
+    async def ping_send(self, addr):
+        topic = str(uuid.uuid4())
+        await self.send(MESSAGE.PING, {"topic": topic}, addr)
+        return topic
+
+    async def ping_recv(self, topic):
         async with asyncio.timeout(self.TIMEOUT):
-            await self.channel.recv(message_id)
-
-        await self.channel.close(message_id)
+            await self.channel.recv(topic)
+        await self.channel.close(topic)
 
 
 class Node:
@@ -153,7 +168,7 @@ async def main():
     if seed is not None:
         seed = seed.split(":")
         seed = (seed[0], int(seed[1]))
-        await node.gossip.ping(seed)
+        await node.gossip.ping_send(seed)
 
     await asyncio.gather(recv_task, node.gossip.failure_detector)
 
