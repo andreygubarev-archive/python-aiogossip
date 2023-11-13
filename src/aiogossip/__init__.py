@@ -82,7 +82,7 @@ class Gossip:
                 addr = self.node_peers[peer_id]
 
                 topic = await self.ping_send(addr)
-                await self.ping_recv(topic)
+                await self.ping_wait(topic)
 
     async def listen(self):
         while True:
@@ -98,7 +98,7 @@ class Gossip:
             message_type = metadata["message_type"]
 
             if message_type == MESSAGE.PING:
-                await self.ack_send(data["topic"], metadata["sender_addr"])
+                await self.ping_recv(data["topic"], metadata["sender_addr"])
                 continue
             elif message_type == MESSAGE.ACK:
                 await self.ack_recv(data["topic"])
@@ -130,10 +130,13 @@ class Gossip:
         await self.send(MESSAGE.PING, {"topic": topic}, addr)
         return topic
 
-    async def ping_recv(self, topic):
+    async def ping_wait(self, topic):
         async with asyncio.timeout(self.TIMEOUT):
             await self.channel.recv(topic)
         await self.channel.close(topic)
+
+    async def ping_recv(self, topic, addr):
+        await self.ack_send(topic, addr)
 
 
 class Node:
