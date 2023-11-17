@@ -12,13 +12,16 @@ class GossipOperation:
     def __init__(self, gossip):
         self.gossip = gossip
 
-    async def ping(self, addr):
-        topic = str(uuid.uuid4())
-        await self.gossip.send(self.PING, {"topic": topic}, addr)
+    async def ack(self, addr, topic):
+        await self.gossip.send(self.ACK, {}, addr, topic=topic)
         return topic
 
-    async def ack(self, addr, topic):
-        await self.gossip.send(self.ACK, {"topic": topic}, addr)
+    async def ping(self, addr, ack=False):
+        topic = str(uuid.uuid4())
+        await self.gossip.send(self.PING, {}, addr, topic=topic)
+        if ack:
+            await self.gossip.channel.recv(topic)
+
         return topic
 
 
@@ -69,20 +72,24 @@ class Gossip:
     async def recv(self):
         while True:
             message = await self.channel.recv("gossip")
-            print(f"Received message: {message}")
+            metadata = message["metadata"]
 
-            metadata, data = message["metadata"], message["data"]
+            print(f"Received message: {message}")
+            if metadata.get("sender_topic") in self.channel:
+                await self.channel.send(metadata["sender_topic"], message)
+
             message_type = metadata["message_type"]
             if message_type == GossipOperation.PING:
-                await self.ping_recv(data["topic"], metadata["sender_addr"])
+                await self.op.ack(
+                    metadata["sender_addr"], topic=metadata["sender_topic"]
+                )
                 continue
             elif message_type == GossipOperation.ACK:
-                await self.ack_recv(data["topic"])
                 continue
 
             yield message
 
-    async def send(self, message_type, data, addr):
+    async def send(self, message_type, data, addr, topic=None):
         data = {
             "metadata": {
                 "sender_id": str(self.node_id),
@@ -91,18 +98,14 @@ class Gossip:
             },
             "data": data,
         }
+        if topic is not None:
+            data["metadata"]["sender_topic"] = topic
         await self.transport.send(data, addr)
-
-    async def ack_recv(self, topic):
-        await self.channel.send(topic, {})
 
     async def ping_wait(self, topic):
         async with asyncio.timeout(self.TIMEOUT):
             await self.channel.recv(topic)
         await self.channel.close(topic)
-
-    async def ping_recv(self, topic, addr):
-        await self.op.ack(addr, topic)
 
 
 class Node:

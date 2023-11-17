@@ -24,3 +24,8 @@ class Channel:
         async with asyncio.timeout(self.TIMEOUT):
             await chan.join()
         self._channel.pop(key, None)
+
+    def __contains__(self, key):
+        if key is None:
+            return False
+        return key in self._channel
