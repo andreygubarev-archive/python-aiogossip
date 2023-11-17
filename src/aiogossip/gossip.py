@@ -23,6 +23,7 @@ class Gossip:
         self.node_peers = {}
         self.channel = channel.Channel()
 
+        self.listener = self.loop.create_task(self.listen())
         self.failure_detector = self.loop.create_task(self.failure_detect())
 
     async def listen(self):
@@ -31,22 +32,16 @@ class Gossip:
             message["metadata"]["sender_addr"] = addr
             print(f"Received message: {message}")
 
-            metadata, data = message["metadata"], message["data"]
+            metadata = message["metadata"]
             if metadata["sender_id"] not in self.node_peers:
                 self.node_peers[metadata["sender_id"]] = metadata["sender_addr"]
 
-            # message_id = metadata["message_id"]
-            message_type = metadata["message_type"]
+            await self.channel.send("gossip", message)
 
-            if message_type == MESSAGE.PING:
-                await self.ping_recv(data["topic"], metadata["sender_addr"])
-                continue
-            elif message_type == MESSAGE.ACK:
-                await self.ack_recv(data["topic"])
-                continue
-            else:
-                # TODO: Handle unknown message type
-                yield metadata, data
+    async def recv(self):
+        while True:
+            message = await self.channel.recv("gossip")
+            yield message
 
     async def send(self, message_type, data, addr):
         data = {
@@ -101,16 +96,14 @@ class Node:
         self.channel = channel.Channel()
 
     async def recv(self):
-        async for payload, addr in self.gossip.listen():
-            await self.handle(payload, addr)
+        async for message in self.gossip.recv():
+            await self.handle(message)
 
     async def send(self, message, peer):
         await self.gossip.send(message, peer)
 
-    async def handle(self, message, addr):
+    async def handle(self, message):
         print(f"Handle message: {message}")
-        if "kind" not in message:
-            return
 
 
 async def main():
