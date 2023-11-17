@@ -9,6 +9,7 @@ class GossipOperation:
     PING = 1
     ACK = 2
     QUERY = 3
+    RESPOND = 4
 
     def __init__(self, gossip):
         self.gossip = gossip
@@ -40,13 +41,16 @@ class GossipOperation:
             await self.gossip.send(self.QUERY, data, addr, topic=topic)
 
         r = []
-        while len(r) <= len(self.gossip.node_peers):
+        while len(r) <= len(addresses):
             r.append(await recv)
 
         await self.gossip.channel.close(topic)
 
         print("Query result:", r)
         return r
+
+    async def respond(self, addr, topic, data):
+        await self.gossip.send(self.RESPOND, data, addr, topic=topic)
 
 
 class Gossip:
@@ -137,10 +141,13 @@ class Node:
 
     async def handle(self, message):
         print(f"Handling message: {message}")
-        await self.gossip.op.ack(
-            message["metadata"]["sender_addr"],
-            topic=message["metadata"]["sender_topic"],
-        )
+
+        if message["metadata"]["message_type"] == GossipOperation.QUERY:
+            await self.gossip.op.respond(
+                message["metadata"]["sender_addr"],
+                message["metadata"]["sender_topic"],
+                {"bar": "baz"},
+            )
 
 
 async def query(node, peer):
