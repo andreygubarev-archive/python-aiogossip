@@ -41,6 +41,17 @@ class Gossip:
     async def recv(self):
         while True:
             message = await self.channel.recv("gossip")
+            print(f"Received message: {message}")
+
+            metadata, data = message["metadata"], message["data"]
+            message_type = metadata["message_type"]
+            if message_type == MESSAGE.PING:
+                await self.ping_recv(data["topic"], metadata["sender_addr"])
+                continue
+            elif message_type == MESSAGE.ACK:
+                await self.ack_recv(data["topic"])
+                continue
+
             yield message
 
     async def send(self, message_type, data, addr):
@@ -103,7 +114,7 @@ class Node:
         await self.gossip.send(message, peer)
 
     async def handle(self, message):
-        print(f"Handle message: {message}")
+        pass
 
 
 async def main():
