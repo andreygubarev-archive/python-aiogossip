@@ -6,8 +6,6 @@ from . import channel, transport
 
 
 class GossipOperation:
-    TIMEOUT = 5
-
     PING = 1
     ACK = 2
 
@@ -25,8 +23,7 @@ class GossipOperation:
         if not ack:
             return topic
 
-        async with asyncio.timeout(self.TIMEOUT):
-            await self.gossip.channel.recv(topic)
+        await self.gossip.channel.recv(topic)
         await self.gossip.channel.close(topic)
 
         return topic
