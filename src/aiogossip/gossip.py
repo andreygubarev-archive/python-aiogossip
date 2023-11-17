@@ -6,6 +6,8 @@ from . import channel, transport
 
 
 class GossipOperation:
+    TIMEOUT = 5
+
     PING = 1
     ACK = 2
 
@@ -16,11 +18,16 @@ class GossipOperation:
         await self.gossip.send(self.ACK, {}, addr, topic=topic)
         return topic
 
-    async def ping(self, addr, ack=False):
+    async def ping(self, addr, ack=True):
         topic = str(uuid.uuid4())
         await self.gossip.send(self.PING, {}, addr, topic=topic)
-        if ack:
+
+        if not ack:
+            return topic
+
+        async with asyncio.timeout(self.TIMEOUT):
             await self.gossip.channel.recv(topic)
+        await self.gossip.channel.close(topic)
 
         return topic
 
@@ -61,13 +68,12 @@ class Gossip:
         while True:
             if not self.node_peers:
                 await asyncio.sleep(self.INTERVAL)
+                continue
 
             for peer_id in self.node_peers:
                 await asyncio.sleep(self.INTERVAL)
                 addr = self.node_peers[peer_id]
-
-                topic = await self.op.ping(addr)
-                await self.ping_wait(topic)
+                await self.op.ping(addr, ack=True)
 
     async def recv(self):
         while True:
@@ -93,19 +99,13 @@ class Gossip:
         data = {
             "metadata": {
                 "sender_id": str(self.node_id),
+                "sender_topic": topic,
                 "message_id": str(uuid.uuid4()),
                 "message_type": message_type,
             },
             "data": data,
         }
-        if topic is not None:
-            data["metadata"]["sender_topic"] = topic
         await self.transport.send(data, addr)
-
-    async def ping_wait(self, topic):
-        async with asyncio.timeout(self.TIMEOUT):
-            await self.channel.recv(topic)
-        await self.channel.close(topic)
 
 
 class Node:
@@ -117,9 +117,6 @@ class Node:
     async def recv(self):
         async for message in self.gossip.recv():
             await self.handle(message)
-
-    async def send(self, message, peer):
-        await self.gossip.send(message, peer)
 
     async def handle(self, message):
         pass
