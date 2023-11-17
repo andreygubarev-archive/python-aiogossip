@@ -5,9 +5,21 @@ import uuid
 from . import channel, transport
 
 
-class MESSAGE:
+class GossipOperation:
     PING = 1
     ACK = 2
+
+    def __init__(self, gossip):
+        self.gossip = gossip
+
+    async def ping(self, addr):
+        topic = str(uuid.uuid4())
+        await self.gossip.send(self.PING, {"topic": topic}, addr)
+        return topic
+
+    async def ack(self, addr, topic):
+        await self.gossip.send(self.ACK, {"topic": topic}, addr)
+        return topic
 
 
 class Gossip:
@@ -23,10 +35,13 @@ class Gossip:
         self.node_peers = {}
         self.channel = channel.Channel()
 
-        self.listener = self.loop.create_task(self.listen())
-        self.failure_detector = self.loop.create_task(self.failure_detect())
+        self.tasks = []
+        self.tasks.append(self.loop.create_task(self._recv()))
+        self.tasks.append(self.loop.create_task(self._ping()))
 
-    async def listen(self):
+        self.op = GossipOperation(self)
+
+    async def _recv(self):
         while True:
             message, addr = await self.transport.recv()
             message["metadata"]["sender_addr"] = addr
@@ -37,6 +52,20 @@ class Gossip:
 
             await self.channel.send("gossip", message)
 
+    async def _ping(self):
+        # Round-Robin Probe Target Selection
+        # https://en.wikipedia.org/wiki/SWIM_Protocol#Extensions
+        while True:
+            if not self.node_peers:
+                await asyncio.sleep(self.INTERVAL)
+
+            for peer_id in self.node_peers:
+                await asyncio.sleep(self.INTERVAL)
+                addr = self.node_peers[peer_id]
+
+                topic = await self.op.ping(addr)
+                await self.ping_wait(topic)
+
     async def recv(self):
         while True:
             message = await self.channel.recv("gossip")
@@ -44,10 +73,10 @@ class Gossip:
 
             metadata, data = message["metadata"], message["data"]
             message_type = metadata["message_type"]
-            if message_type == MESSAGE.PING:
+            if message_type == GossipOperation.PING:
                 await self.ping_recv(data["topic"], metadata["sender_addr"])
                 continue
-            elif message_type == MESSAGE.ACK:
+            elif message_type == GossipOperation.ACK:
                 await self.ack_recv(data["topic"])
                 continue
 
@@ -64,31 +93,8 @@ class Gossip:
         }
         await self.transport.send(data, addr)
 
-    async def failure_detect(self):
-        # Round-Robin Probe Target Selection
-        # https://en.wikipedia.org/wiki/SWIM_Protocol#Extensions
-        while True:
-            if not self.node_peers:
-                await asyncio.sleep(self.INTERVAL)
-
-            for peer_id in self.node_peers:
-                await asyncio.sleep(self.INTERVAL)
-                addr = self.node_peers[peer_id]
-
-                topic = await self.ping_send(addr)
-                await self.ping_wait(topic)
-
-    async def ack_send(self, topic, addr):
-        await self.send(MESSAGE.ACK, {"topic": topic}, addr)
-        return topic
-
     async def ack_recv(self, topic):
         await self.channel.send(topic, {})
-
-    async def ping_send(self, addr):
-        topic = str(uuid.uuid4())
-        await self.send(MESSAGE.PING, {"topic": topic}, addr)
-        return topic
 
     async def ping_wait(self, topic):
         async with asyncio.timeout(self.TIMEOUT):
@@ -96,7 +102,7 @@ class Gossip:
         await self.channel.close(topic)
 
     async def ping_recv(self, topic, addr):
-        await self.ack_send(topic, addr)
+        await self.op.ack(addr, topic)
 
 
 class Node:
@@ -129,9 +135,9 @@ async def main():
     if seed is not None:
         seed = seed.split(":")
         seed = (seed[0], int(seed[1]))
-        await node.gossip.ping_send(seed)
+        await node.gossip.op.ping(seed)
 
-    await asyncio.gather(recv_task, node.gossip.failure_detector)
+    await asyncio.gather(recv_task, *node.gossip.tasks)
 
 
 if __name__ == "__main__":
