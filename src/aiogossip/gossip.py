@@ -10,6 +10,7 @@ class GossipOperation:
     ACK = 2
     QUERY = 3
     RESPOND = 4
+    JOIN = 5
 
     def __init__(self, gossip):
         self.gossip = gossip
@@ -36,6 +37,7 @@ class GossipOperation:
             addresses = [addr]
         else:
             addresses = self.gossip.node_peers.values()
+        print("Querying addresses:", addresses)
 
         for addr in addresses:
             await self.gossip.send(self.QUERY, data, addr, topic=topic)
@@ -43,6 +45,7 @@ class GossipOperation:
         r = []
         while len(r) <= len(addresses):
             r.append(await recv)
+            print("Received query response:", r[-1])
 
         await self.gossip.channel.close(topic)
 
@@ -51,6 +54,11 @@ class GossipOperation:
 
     async def respond(self, addr, topic, data):
         await self.gossip.send(self.RESPOND, data, addr, topic=topic)
+
+    async def join(self, data):
+        addresses = self.gossip.node_peers.values()
+        for addr in addresses:
+            await self.gossip.send(self.JOIN, data, addr)
 
 
 class Gossip:
@@ -80,6 +88,12 @@ class Gossip:
             metadata = message["metadata"]
             if metadata["sender_id"] not in self.node_peers:
                 self.node_peers[metadata["sender_id"]] = metadata["sender_addr"]
+                await self.op.join(
+                    {
+                        "node_id": metadata["sender_id"],
+                        "node_addr": metadata["sender_addr"],
+                    }
+                )
 
             await self.channel.send("gossip", message)
 
@@ -100,7 +114,7 @@ class Gossip:
         while True:
             message = await self.channel.recv("gossip")
             # print(f"Received message: {message}")
-            metadata = message["metadata"]
+            metadata, data = message["metadata"], message["data"]
 
             if metadata.get("sender_topic") in self.channel:
                 await self.channel.send(metadata["sender_topic"], message)
@@ -108,10 +122,14 @@ class Gossip:
             message_type = metadata["message_type"]
             if message_type == GossipOperation.PING:
                 await self.op.ack(
-                    metadata["sender_addr"], topic=metadata["sender_topic"]
+                    metadata["sender_addr"],
+                    topic=metadata["sender_topic"],
                 )
                 continue
             elif message_type == GossipOperation.ACK:
+                continue
+            elif message_type == GossipOperation.JOIN:
+                self.node_peers[data["node_id"]] = tuple(data["node_addr"])
                 continue
 
             yield message
