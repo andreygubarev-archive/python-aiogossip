@@ -8,6 +8,7 @@ from . import channel, transport
 class GossipOperation:
     PING = 1
     ACK = 2
+    QUERY = 3
 
     def __init__(self, gossip):
         self.gossip = gossip
@@ -16,17 +17,29 @@ class GossipOperation:
         await self.gossip.send(self.ACK, {}, addr, topic=topic)
         return topic
 
-    async def ping(self, addr, ack=True):
+    async def ping(self, addr):
         topic = str(uuid.uuid4())
+        recv = self.gossip.loop.create_task(self.gossip.channel.recv(topic))
         await self.gossip.send(self.PING, {}, addr, topic=topic)
+        await recv
+        await self.gossip.channel.close(topic)
+        return topic
 
-        if not ack:
-            return topic
+    async def query(self, addr, data):
+        topic = str(uuid.uuid4())
 
-        await self.gossip.channel.recv(topic)
+        recv = self.gossip.channel.recv(topic)
+        recv = self.gossip.loop.create_task(recv)
+        await self.gossip.send(self.QUERY, data, addr, topic=topic)
+
+        r = []
+        while len(r) <= len(self.gossip.node_peers):
+            r.append(await recv)
+
         await self.gossip.channel.close(topic)
 
-        return topic
+        print("Query result:", r)
+        return r
 
 
 class Gossip:
@@ -70,14 +83,14 @@ class Gossip:
             for peer_id in self.node_peers:
                 await asyncio.sleep(self.INTERVAL)
                 addr = self.node_peers[peer_id]
-                await self.op.ping(addr, ack=True)
+                await self.op.ping(addr)
 
     async def recv(self):
         while True:
             message = await self.channel.recv("gossip")
+            # print(f"Received message: {message}")
             metadata = message["metadata"]
 
-            print(f"Received message: {message}")
             if metadata.get("sender_topic") in self.channel:
                 await self.channel.send(metadata["sender_topic"], message)
 
@@ -116,7 +129,16 @@ class Node:
             await self.handle(message)
 
     async def handle(self, message):
-        pass
+        print(f"Handling message: {message}")
+        await self.gossip.op.ack(
+            message["metadata"]["sender_addr"],
+            topic=message["metadata"]["sender_topic"],
+        )
+
+
+async def query(node, peer):
+    await asyncio.sleep(3)
+    await node.gossip.op.query(peer, {"foo": "bar"})
 
 
 async def main():
@@ -133,6 +155,7 @@ async def main():
         seed = seed.split(":")
         seed = (seed[0], int(seed[1]))
         await node.gossip.op.ping(seed)
+        asyncio.create_task(query(node, seed))
 
     await asyncio.gather(recv_task, *node.gossip.tasks)
 
