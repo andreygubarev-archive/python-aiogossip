@@ -30,7 +30,6 @@ class Gossip:
         while True:
             message, addr = await self.transport.recv()
             message["metadata"]["sender_addr"] = addr
-            print(f"Received message: {message}")
 
             metadata = message["metadata"]
             if metadata["sender_id"] not in self.node_peers:
