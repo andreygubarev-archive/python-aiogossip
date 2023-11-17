@@ -8,6 +8,7 @@ trap "kill 0" EXIT
 pushd $WORKSPACE/src
 PORT=40000 python3 -m aiogossip.gossip &
 PORT=40001 SEED=127.0.0.1:40000 python3 -m aiogossip.gossip &
+PORT=40002 SEED=127.0.0.1:40000 python3 -m aiogossip.gossip &
 popd
 
 wait
