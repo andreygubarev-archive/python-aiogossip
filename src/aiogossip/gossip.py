@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import uuid
 
@@ -30,26 +31,21 @@ class GossipOperation:
     async def query(self, data, addr=None):
         topic = str(uuid.uuid4())
 
-        recv = self.gossip.channel.recv(topic)
-        recv = self.gossip.loop.create_task(recv)
-
         if addr:
             addresses = [addr]
         else:
             addresses = self.gossip.node_peers.values()
-        print("Querying addresses:", addresses)
 
         for addr in addresses:
             await self.gossip.send(self.QUERY, data, addr, topic=topic)
 
         r = []
         while len(r) <= len(addresses):
-            r.append(await recv)
-            print("Received query response:", r[-1])
+            r.append(await self.gossip.channel.recv(topic))
 
         await self.gossip.channel.close(topic)
 
-        print("Query result:", r)
+        print("Query result:", json.dumps(r, indent=2))
         return r
 
     async def respond(self, addr, topic, data):
@@ -105,7 +101,8 @@ class Gossip:
                 await asyncio.sleep(self.INTERVAL)
                 continue
 
-            for peer_id in self.node_peers:
+            peer_ids = list(self.node_peers.keys())
+            for peer_id in peer_ids:
                 await asyncio.sleep(self.INTERVAL)
                 addr = self.node_peers[peer_id]
                 await self.op.ping(addr)
@@ -158,8 +155,6 @@ class Node:
             await self.handle(message)
 
     async def handle(self, message):
-        print(f"Handling message: {message}")
-
         if message["metadata"]["message_type"] == GossipOperation.QUERY:
             await self.gossip.op.respond(
                 message["metadata"]["sender_addr"],
