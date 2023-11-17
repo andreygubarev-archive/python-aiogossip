@@ -25,12 +25,19 @@ class GossipOperation:
         await self.gossip.channel.close(topic)
         return topic
 
-    async def query(self, addr, data):
+    async def query(self, data, addr=None):
         topic = str(uuid.uuid4())
 
         recv = self.gossip.channel.recv(topic)
         recv = self.gossip.loop.create_task(recv)
-        await self.gossip.send(self.QUERY, data, addr, topic=topic)
+
+        if addr:
+            addresses = [addr]
+        else:
+            addresses = self.gossip.node_peers.values()
+
+        for addr in addresses:
+            await self.gossip.send(self.QUERY, data, addr, topic=topic)
 
         r = []
         while len(r) <= len(self.gossip.node_peers):
@@ -138,7 +145,7 @@ class Node:
 
 async def query(node, peer):
     await asyncio.sleep(3)
-    await node.gossip.op.query(peer, {"foo": "bar"})
+    await node.gossip.op.query({"foo": "bar"})
 
 
 async def main():
