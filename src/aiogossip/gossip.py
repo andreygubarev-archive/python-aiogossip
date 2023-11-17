@@ -114,6 +114,7 @@ class Node:
 
 
 async def main():
+    print("Starting node...")
     port = os.getenv("PORT")
     assert port is not None, "PORT environment variable must be set"
     port = int(port)
