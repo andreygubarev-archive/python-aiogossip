@@ -32,15 +32,15 @@ class GossipOperation:
         topic = str(uuid.uuid4())
 
         if addr:
-            addresses = [addr]
+            fanout = [addr]
         else:
-            addresses = self.gossip.node_peers.values()
+            fanout = self.gossip.node_peers.values()
 
-        for addr in addresses:
+        for addr in fanout:
             await self.gossip.send(self.QUERY, data, addr, topic=topic)
 
         r = []
-        while len(r) < len(addresses):
+        while len(r) < len(fanout):
             message = await self.gossip.channel.recv(topic)
             if message["metadata"]["message_type"] == self.RESPOND:
                 r.append(message)
@@ -54,8 +54,8 @@ class GossipOperation:
         await self.gossip.send(self.RESPOND, data, addr, topic=topic)
 
     async def join(self, data):
-        addresses = self.gossip.node_peers.values()
-        for addr in addresses:
+        fanout = self.gossip.node_peers.values()
+        for addr in fanout:
             await self.gossip.send(self.JOIN, data, addr)
 
 
