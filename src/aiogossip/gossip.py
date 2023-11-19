@@ -40,8 +40,10 @@ class GossipOperation:
             await self.gossip.send(self.QUERY, data, addr, topic=topic)
 
         r = []
-        while len(r) <= len(addresses):
-            r.append(await self.gossip.channel.recv(topic))
+        while len(r) < len(addresses):
+            message = await self.gossip.channel.recv(topic)
+            if message["metadata"]["message_type"] == self.RESPOND:
+                r.append(message)
 
         await self.gossip.channel.close(topic)
 
