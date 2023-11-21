@@ -155,5 +155,6 @@ class Gossip:
             },
             "data": mdata,
         }
+        # TODO: Implement gossip protocol
         for peer in self.node_peers.values():
             await self.transport.send(data, peer)
