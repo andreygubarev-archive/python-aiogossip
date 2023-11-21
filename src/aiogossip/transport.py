@@ -16,6 +16,10 @@ class Transport:
 
     async def send(self, message, addr):
         message = codec.encode(message)
+        if len(message) > self.PAYLOAD_SIZE:
+            raise ValueError(
+                f"Message size exceeds payload size of {self.PAYLOAD_SIZE} bytes"
+            )
         await self.loop.sock_sendto(self.sock, message, addr)
 
     async def recv(self):
