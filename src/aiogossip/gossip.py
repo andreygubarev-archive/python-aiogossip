@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import json
 import uuid
 
@@ -21,10 +22,10 @@ class GossipOperation:
 
     async def ping(self, addr):
         topic = str(uuid.uuid4())
-        recv = self.gossip.loop.create_task(self.gossip.channel.recv(topic))
+        recv = self.gossip.loop.create_task(self.gossip.channels[topic].recv())
         await self.gossip.send(self.PING, {}, addr, topic=topic)
         await recv
-        await self.gossip.channel.close(topic)
+        await self.gossip.channels[topic].close()
         return topic
 
     async def query(self, data, addr=None):
@@ -40,11 +41,11 @@ class GossipOperation:
 
         r = []
         while len(r) < len(fanout):
-            message = await self.gossip.channel.recv(topic)
+            message = await self.gossip.channels[topic].recv()
             if message["metadata"]["message_type"] == self.RESPOND:
                 r.append(message)
 
-        await self.gossip.channel.close(topic)
+        await self.gossip.channels[topic].close()
 
         print("Query result:", json.dumps(r, indent=2))
         return r
@@ -69,7 +70,7 @@ class Gossip:
 
         self.node_id = uuid.uuid4()
         self.node_peers = {}
-        self.channel = channel.Channel()
+        self.channels = collections.defaultdict(channel.Channel)
 
         self.tasks = []
         self.tasks.append(self.loop.create_task(self._recv()))
@@ -92,7 +93,7 @@ class Gossip:
                     }
                 )
 
-            await self.channel.send("recv", message)
+            await self.channels["recv"].send(message)
 
     async def _ping(self):
         # Round-Robin Probe Target Selection
@@ -110,12 +111,12 @@ class Gossip:
 
     async def recv(self):
         while True:
-            message = await self.channel.recv("recv")
+            message = await self.channels["recv"].recv()
             # print(f"Received message: {message}")
             metadata, data = message["metadata"], message["data"]
 
-            if metadata.get("sender_topic") in self.channel:
-                await self.channel.send(metadata["sender_topic"], message)
+            if metadata.get("sender_topic") in self.channels:
+                await self.channels[metadata["sender_topic"]].send(message)
 
             message_type = metadata["message_type"]
             if message_type == GossipOperation.PING:
