@@ -19,7 +19,7 @@ test: ## Test Python Package
 
 .PHONY: run
 run: ## Run Python Package
-	bash scripts/bootstrap.sh
+	bash tests/test_orchestrator.sh
 
 .PHONY: build
 build: ## Build Python Package
