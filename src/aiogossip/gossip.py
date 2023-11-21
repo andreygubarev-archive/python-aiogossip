@@ -1,6 +1,5 @@
 import asyncio
 import json
-import os
 import uuid
 
 from . import channel, transport
@@ -64,9 +63,9 @@ class Gossip:
     INTERVAL = 1
     TIMEOUT = 5
 
-    def __init__(self, bind, loop=None):
+    def __init__(self, host="0.0.0.0", port=49152, loop=None):
         self.loop = loop or asyncio.get_running_loop()
-        self.transport = self.TRANSPORT(bind, loop=self.loop)
+        self.transport = self.TRANSPORT((host, port), loop=self.loop)
 
         self.node_id = uuid.uuid4()
         self.node_peers = {}
@@ -93,7 +92,7 @@ class Gossip:
                     }
                 )
 
-            await self.channel.send("gossip", message)
+            await self.channel.send("recv", message)
 
     async def _ping(self):
         # Round-Robin Probe Target Selection
@@ -111,7 +110,7 @@ class Gossip:
 
     async def recv(self):
         while True:
-            message = await self.channel.recv("gossip")
+            message = await self.channel.recv("recv")
             # print(f"Received message: {message}")
             metadata, data = message["metadata"], message["data"]
 
@@ -144,50 +143,3 @@ class Gossip:
             "data": data,
         }
         await self.transport.send(data, addr)
-
-
-class Node:
-    def __init__(self, host="0.0.0.0", port=49152, loop=None):
-        self.loop = loop or asyncio.get_running_loop()
-        self.gossip = Gossip((host, port), loop=self.loop)
-        self.channel = channel.Channel()
-
-    async def recv(self):
-        async for message in self.gossip.recv():
-            await self.handle(message)
-
-    async def handle(self, message):
-        if message["metadata"]["message_type"] == GossipOperation.QUERY:
-            await self.gossip.op.respond(
-                message["metadata"]["sender_addr"],
-                message["metadata"]["sender_topic"],
-                {"bar": "baz"},
-            )
-
-
-async def query(node, peer):
-    await asyncio.sleep(3)
-    await node.gossip.op.query({"foo": "bar"})
-
-
-async def main():
-    print("Starting node...")
-    port = os.getenv("PORT")
-    assert port is not None, "PORT environment variable must be set"
-    port = int(port)
-
-    node = Node(port=port)
-    recv_task = asyncio.create_task(node.recv())
-
-    seed = os.getenv("SEED")
-    if seed is not None:
-        seed = seed.split(":")
-        seed = (seed[0], int(seed[1]))
-        await node.gossip.op.ping(seed)
-        asyncio.create_task(query(node, seed))
-
-    await asyncio.gather(recv_task, *node.gossip.tasks)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
