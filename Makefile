@@ -17,6 +17,10 @@ lint: ## Lint Python Package
 test: ## Test Python Package
 	python -m pytest --full-trace --pdb
 
+.PHONY: run
+run: ## Run Python Package
+	bash tests/test_orchestrator.sh
+
 .PHONY: build
 build: ## Build Python Package
 	python -m build --sdist --wheel
