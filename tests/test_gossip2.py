@@ -19,4 +19,4 @@ async def test_send_and_receive(peers):
 
     await peers[0].send(message, peers[1].transport.addr)
     received_message = await anext(peers[1].recv())
-    assert received_message == message
+    assert received_message["message"] == message

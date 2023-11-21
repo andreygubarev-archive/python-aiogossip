@@ -7,7 +7,11 @@ class Gossip:
         self.transport = transport
 
     async def send(self, message, peer):
-        await self.transport.send(message, peer)
+        data = {
+            "message": message,
+            "metadata": {},
+        }
+        await self.transport.send(data, peer)
 
     async def gossip(self, message, peers):
         selected_peers = int(math.sqrt(len(peers))) or 1
@@ -18,5 +22,5 @@ class Gossip:
     async def recv(self):
         while True:
             message, peer = await self.transport.recv()
-            # message["metadata"]["sender"] = peer
+            message["metadata"]["sender"] = peer
             yield message
