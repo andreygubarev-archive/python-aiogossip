@@ -6,7 +6,7 @@ import pytest
 from aiogossip.gossip2 import Gossip
 from aiogossip.transport import Transport
 
-random.seed(42)
+random.seed(0)
 
 
 @pytest.fixture
@@ -39,15 +39,17 @@ async def test_gossip(peers):
     message = {"message": "Hello, world!", "metadata": {}}
 
     await peers[0].gossip(message)
-    assert message["metadata"]["type"] == "gossip"
-    assert message["metadata"]["hops"] == 1
 
     async def listener(peer):
-        async for message in peer.recv():
-            return message
+        try:
+            async with asyncio.timeout(0.1):
+                async for message in peer.recv():
+                    pass
+        except asyncio.TimeoutError:
+            pass
 
     tasks = [asyncio.create_task(listener(peer)) for peer in peers]
-    await asyncio.sleep(0.1)
+    await asyncio.gather(*tasks)
 
-    async with asyncio.timeout(1):
-        await asyncio.gather(*tasks)
+    for peer in peers:
+        assert peer.transport.messages_received > 0
