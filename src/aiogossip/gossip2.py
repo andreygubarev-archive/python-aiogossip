@@ -10,12 +10,15 @@ class Gossip:
     async def send(self, message, peer):
         await self.transport.send(message, peer)
 
-    async def gossip(self, message, peers):
+    async def gossip(self, message):
         message["metadata"]["type"] = "gossip"
         message["metadata"]["hops"] = message["metadata"].get("hops", 0) + 1
 
-        selected_peers = int(math.sqrt(len(peers)))
-        selected_peers = random.sample(peers, selected_peers)
+        if message["metadata"]["hops"] > 5:
+            return
+
+        selected_peers = int(math.sqrt(len(self.peers)))
+        selected_peers = random.sample(self.peers, selected_peers)
         for peer in selected_peers:
             await self.send(message, peer)
 
@@ -25,7 +28,7 @@ class Gossip:
             message["metadata"]["sender"] = peer
 
             if message["metadata"].get("type") == "gossip":
-                await self.gossip(message, self.peers)
+                await self.gossip(message)
                 continue
             else:
                 yield message
