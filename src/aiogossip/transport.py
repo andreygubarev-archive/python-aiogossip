@@ -14,6 +14,10 @@ class Transport:
         self.sock.bind(bind)
         self.sock.setblocking(False)
 
+    @property
+    def addr(self):
+        return self.sock.getsockname()
+
     async def send(self, message, addr):
         message = codec.encode(message)
         if len(message) > self.PAYLOAD_SIZE:

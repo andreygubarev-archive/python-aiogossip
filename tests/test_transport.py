@@ -28,3 +28,11 @@ async def test_send_large_payload():
 
     expected = f"Message size exceeds payload size of {transport.PAYLOAD_SIZE} bytes"
     assert str(excinfo.value) == expected
+
+
+@pytest.mark.asyncio
+async def test_addr_property():
+    transport = Transport(("localhost", 0))
+    assert transport.addr == transport.sock.getsockname()
+    assert transport.addr[0] == "127.0.0.1"
+    assert isinstance(transport.addr[1], int)
