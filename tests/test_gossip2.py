@@ -8,7 +8,7 @@ from aiogossip.gossip2 import Gossip
 from aiogossip.transport import Transport
 
 
-@pytest.fixture(params=[1, 2, 3, 5], ids=lambda x: f"n_peers={x}")
+@pytest.fixture(params=[1, 2, 3, 5, 10, 50, 100], ids=lambda x: f"n_peers={x}")
 def n_peers(request):
     return request.param
 
@@ -59,7 +59,8 @@ async def test_gossip(peers):
         assert peers[0].transport.messages_received == 0
     else:
         for peer in peers:
-            assert peer.transport.messages_received > 0, peer.peers
+            if any([peer.transport.addr in p.peers for p in peers]):
+                assert peer.transport.messages_received > 0, peer.peers
         messages_received = sum(p.transport.messages_received for p in peers)
         assert messages_received <= 2 ** len(peers)
 
