@@ -32,10 +32,11 @@ class Gossip:
                 return
 
             cycles = math.ceil(math.log(len(self.peers), self.fanout))
-            for _ in range(cycles):
+            while cycles > 0:
                 fanout_peers = random.sample(self.peers, self.fanout)
                 for fanout_peer in fanout_peers:
                     await self.send(message, fanout_peer)
+                cycles -= 1
 
         await multicast()
 
