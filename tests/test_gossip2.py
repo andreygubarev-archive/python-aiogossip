@@ -12,7 +12,7 @@ random.seed(0)
 
 @pytest.fixture
 def peers(event_loop):
-    n_peers = 15
+    n_peers = 20
     n_paths = math.ceil(math.sqrt(n_peers))
 
     def peer():
