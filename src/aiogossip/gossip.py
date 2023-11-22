@@ -133,28 +133,14 @@ class Gossip:
 
             yield message
 
-    async def send(self, mtype, mdata, addr, mtopic=None):
+    async def send(self, message_type, data, addr, topic=None):
         data = {
             "metadata": {
                 "sender_id": str(self.node_id),
-                "sender_topic": mtopic,
+                "sender_topic": topic,
                 "message_id": str(uuid.uuid4()),
-                "message_type": mtype,
+                "message_type": message_type,
             },
-            "data": mdata,
+            "data": data,
         }
         await self.transport.send(data, addr)
-
-    async def gossip(self, mtype, mdata, mtopic=None):
-        data = {
-            "metadata": {
-                "sender_id": str(self.node_id),
-                "sender_topic": mtopic,
-                "message_id": str(uuid.uuid4()),
-                "message_type": mtype,
-            },
-            "data": mdata,
-        }
-        # TODO: Implement gossip protocol
-        for peer in self.node_peers.values():
-            await self.transport.send(data, peer)
