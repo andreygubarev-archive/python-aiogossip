@@ -13,65 +13,65 @@ def rnd(request):
     random.seed(request.param)
 
 
-@pytest.fixture(params=[1, 2, 3, 5, 10, 25], ids=lambda x: f"n_nodes={x}")
-def n_nodes(request):
+@pytest.fixture(params=[1, 2, 3, 5, 10, 25], ids=lambda x: f"n_gossips={x}")
+def n_gossips(request):
     return request.param
 
 
 @pytest.fixture
-def nodes(event_loop, rnd, n_nodes):
-    def get_node():
+def gossips(event_loop, rnd, n_gossips):
+    def get_gossip():
         transport = Transport(("localhost", 0), loop=event_loop)
         return Gossip(transport=transport)
 
-    n_connections = math.ceil(math.sqrt(n_nodes))
-    nodes = [get_node() for _ in range(n_nodes)]
-    seed = nodes[0]
-    for node in nodes:
-        seed.topology.add(node.transport.addr)
+    n_connections = math.ceil(math.sqrt(n_gossips))
+    gossips = [get_gossip() for _ in range(n_gossips)]
+    seed = gossips[0]
+    for gossip in gossips:
+        seed.topology.add(gossip.transport.addr)
 
-        node.topology.add(seed.transport.addr)
-        for n in random.sample(nodes, n_connections):
-            node.topology.add(n.transport.addr)
+        gossip.topology.add(seed.transport.addr)
+        for g in random.sample(gossips, n_connections):
+            gossip.topology.add(g.transport.addr)
 
-        node.topology.remove(node.transport.addr)
-    return nodes
+        gossip.topology.remove(gossip.transport.addr)
+    return gossips
 
 
 @pytest.mark.asyncio
-async def test_gossip(nodes):
+async def test_gossip(gossips):
     message = {"message": "", "metadata": {}}
-    await nodes[0].gossip(message)
+    await gossips[0].gossip(message)
 
-    async def listener(node):
+    async def listener(gossip):
         try:
             async with asyncio.timeout(0.1):
-                async for message in node.recv():
+                async for message in gossip.recv():
                     pass
         except asyncio.TimeoutError:
             pass
 
-    listeners = [asyncio.create_task(listener(n)) for n in nodes]
+    listeners = [asyncio.create_task(listener(n)) for n in gossips]
     await asyncio.gather(*listeners)
 
-    if len(nodes) == 1:
-        assert nodes[0].transport.messages_received == 0
+    if len(gossips) == 1:
+        assert gossips[0].transport.messages_received == 0
     else:
-        for node in nodes:
-            if any([node.transport.addr in p.topology for p in nodes]):
-                assert node.transport.messages_received > 0, node.topology
-        messages_received = sum(p.transport.messages_received for p in nodes)
-        assert messages_received <= 2 ** len(nodes)
+        for gossip in gossips:
+            if any([gossip.transport.addr in p.topology for p in gossips]):
+                assert gossip.transport.messages_received > 0, gossip.topology
+        messages_received = sum(p.transport.messages_received for p in gossips)
+        assert messages_received <= 2 ** len(gossips)
 
-    for node in nodes:
-        node.transport.close()
+    for gossip in gossips:
+        gossip.transport.close()
 
 
 @pytest.mark.asyncio
 async def test_send_and_receive():
-    nodes = [Gossip(Transport(("localhost", 0)), []) for _ in range(2)]
+    gossips = [Gossip(Transport(("localhost", 0)), []) for _ in range(2)]
     message = {"message": "Hello, world!", "metadata": {}}
 
-    await nodes[0].send(message, nodes[1].transport.addr)
-    received_message = await anext(nodes[1].recv())
+    await gossips[0].send(message, gossips[1].transport.addr)
+    received_message = await anext(gossips[1].recv())
     assert received_message["message"] == message["message"]
