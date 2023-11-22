@@ -2,6 +2,8 @@ import math
 import random
 import uuid
 
+from .mutex import mutex
+
 
 class Gossip:
     FANOUT = 5
@@ -21,19 +23,16 @@ class Gossip:
         else:
             gossip_id = message["metadata"]["gossip"] = uuid.uuid4().hex
 
-        if gossip_id in self._gossip:
-            return
-        else:
-            self._gossip.add(gossip_id)
+        @mutex(gossip_id)
+        async def multicast():
+            fanout = min(self.fanout, len(self.peers))
+            cycles = math.ceil(math.log(len(self.peers), fanout)) if fanout > 0 else 0
+            for _ in range(cycles):
+                fanout_peers = random.sample(self.peers, fanout)
+                for fanout_peer in fanout_peers:
+                    await self.send(message, fanout_peer)
 
-        fanout = min(self.fanout, len(self.peers))
-        cycles = math.ceil(math.log(len(self.peers), fanout)) if fanout > 0 else 0
-        for _ in range(cycles):
-            fanout_peers = random.sample(self.peers, fanout)
-            for fanout_peer in fanout_peers:
-                await self.send(message, fanout_peer)
-
-        self._gossip.remove(gossip_id)
+        await multicast()
 
     async def recv(self):
         while True:
