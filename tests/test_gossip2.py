@@ -57,14 +57,14 @@ async def test_gossip(nodes):
     if len(nodes) == 1:
         assert nodes[0].transport.messages_received == 0
     else:
-        for peer in nodes:
-            if any([peer.transport.addr in p.topology for p in nodes]):
-                assert peer.transport.messages_received > 0, peer.topology
+        for node in nodes:
+            if any([node.transport.addr in p.topology for p in nodes]):
+                assert node.transport.messages_received > 0, node.topology
         messages_received = sum(p.transport.messages_received for p in nodes)
         assert messages_received <= 2 ** len(nodes)
 
-    for peer in nodes:
-        peer.transport.close()
+    for node in nodes:
+        node.transport.close()
 
 
 @pytest.mark.asyncio
