@@ -35,3 +35,6 @@ class Transport:
         message = codec.decode(message)
         self.messages_received += 1
         return message, addr
+
+    def close(self):
+        self.sock.close()
