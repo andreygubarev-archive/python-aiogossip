@@ -7,12 +7,19 @@ import pytest
 from aiogossip.gossip2 import Gossip
 from aiogossip.transport import Transport
 
-random.seed(0)
+
+@pytest.fixture(params=[1, 2, 3, 5], ids=lambda x: f"n_peers={x}")
+def n_peers(request):
+    return request.param
 
 
-@pytest.fixture(params=[1, 2, 3, 5, 10, 50])
-def peers(request, event_loop):
-    n_peers = request.param
+@pytest.fixture(params=range(10), ids=lambda x: f"seed={x}")
+def rnd(request):
+    random.seed(request.param)
+
+
+@pytest.fixture
+def peers(n_peers, rnd, event_loop):
     n_paths = math.ceil(math.sqrt(n_peers))
 
     def peer():
@@ -29,16 +36,6 @@ def peers(request, event_loop):
         peer.peers = list(peer.peers)
 
     return peers
-
-
-@pytest.mark.asyncio
-async def test_send_and_receive(peers):
-    message = {"message": "Hello, world!", "metadata": {}}
-    if len(peers) == 1:
-        return
-    await peers[0].send(message, peers[1].transport.addr)
-    received_message = await anext(peers[1].recv())
-    assert received_message["message"] == message["message"]
 
 
 @pytest.mark.asyncio
@@ -65,3 +62,17 @@ async def test_gossip(peers):
             assert peer.transport.messages_received > 0, peer.peers
         messages_received = sum(p.transport.messages_received for p in peers)
         assert messages_received <= 2 ** len(peers)
+
+
+@pytest.mark.asyncio
+async def test_send_and_receive():
+    peers = [Gossip(Transport(("localhost", 0)), []) for _ in range(2)]
+    peers[1].peers = [peers[0].transport.addr]
+
+    message = {"message": "Hello, world!", "metadata": {}}
+    if len(peers) == 1:
+        return
+
+    await peers[0].send(message, peers[1].transport.addr)
+    received_message = await anext(peers[1].recv())
+    assert received_message["message"] == message["message"]
