@@ -13,7 +13,7 @@ async def test_mutex():
 
     async def func2():
         await asyncio.sleep(0.05)
-        return False
+        return True
 
     mutex_id = "test_mutex"
 
@@ -36,9 +36,7 @@ async def test_mutex():
 
     await asyncio.sleep(0.02)
     assert (await decorated_func_task1) is True
-    assert mutex_id not in MUTEX[func1]
+    assert mutex_id in MUTEX[func1]
     assert mutex_id in MUTEX[func2]
 
-    assert (await decorated_func_task2) is False
-    assert mutex_id not in MUTEX[func1]
-    assert mutex_id not in MUTEX[func2]
+    assert (await decorated_func_task2) is True

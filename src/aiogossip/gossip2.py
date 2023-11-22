@@ -39,8 +39,11 @@ class Gossip:
         else:
             gossip_id = message["metadata"]["gossip"] = uuid.uuid4().hex
 
-        @mutex(gossip_id)
+        @mutex(gossip_id, owner=self.gossip)
         async def multicast():
+            print(
+                self.transport.addr, "multicast", self.fanout_cycles, "to", self.peers
+            )
             cycle = 0
             while cycle < self.fanout_cycles:
                 fanout_peers = random.sample(self.peers, self.fanout)

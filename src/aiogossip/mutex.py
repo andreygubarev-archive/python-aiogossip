@@ -1,19 +1,19 @@
 import collections
 
-MUTEX_CAPACITY = 100
+MUTEX_CAPACITY = 1024
 MUTEX = collections.defaultdict(lambda: collections.deque(maxlen=MUTEX_CAPACITY))
 
 
-def mutex(mutex_id):
+def mutex(mutex_id, owner=None):
     def decorator(func):
+        mutexes = MUTEX[owner or func]
+
         async def wrapper(*args, **kwargs):
-            if mutex_id in MUTEX[func]:
+            if mutex_id in mutexes:
                 return
-            try:
-                MUTEX[func].append(mutex_id)
-                return await func(*args, **kwargs)
-            finally:
-                MUTEX[func].remove(mutex_id)
+
+            mutexes.append(mutex_id)
+            return await func(*args, **kwargs)
 
         return wrapper
 
