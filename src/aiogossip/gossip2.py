@@ -19,6 +19,12 @@ class Gossip:
 
     @property
     def fanout_cycles(self):
+        if self.fanout == 0:
+            return 0
+
+        if self.fanout == 1:
+            return 1
+
         return math.ceil(math.log(len(self.peers), self.fanout))
 
     async def send(self, message, peer):
