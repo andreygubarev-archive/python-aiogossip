@@ -31,7 +31,8 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node):
-        await self.transport.send(message, node)
+        addr = node
+        await self.transport.send(message, addr)
 
     async def gossip(self, message):
         if "gossip" in message["metadata"]:
@@ -55,7 +56,9 @@ class Gossip:
         while True:
             message, addr = await self.transport.recv()
             message["metadata"]["sender_addr"] = addr
-            self.topology.add(addr)  # establish bidirectional connection
+
+            node = addr
+            self.topology.add(node)  # establish bidirectional connection
 
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
