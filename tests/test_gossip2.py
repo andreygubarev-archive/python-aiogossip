@@ -68,8 +68,6 @@ async def test_gossip(peers):
 async def test_send_and_receive():
     peers = [Gossip(Transport(("localhost", 0)), []) for _ in range(2)]
     message = {"message": "Hello, world!", "metadata": {}}
-    if len(peers) == 1:
-        return
 
     await peers[0].send(message, peers[1].transport.addr)
     received_message = await anext(peers[1].recv())
