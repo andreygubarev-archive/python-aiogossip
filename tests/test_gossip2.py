@@ -8,8 +8,8 @@ from aiogossip.gossip2 import Gossip
 from aiogossip.transport import Transport
 
 
-@pytest.fixture(params=[1, 2, 3, 5, 10, 25], ids=lambda x: f"n_peers={x}")
-def n_peers(request):
+@pytest.fixture(params=[1, 2, 3, 5, 10, 25], ids=lambda x: f"n_nodes={x}")
+def n_nodes(request):
     return request.param
 
 
@@ -19,13 +19,13 @@ def rnd(request):
 
 
 @pytest.fixture
-def peers(n_peers, rnd, event_loop):
-    n_paths = math.ceil(math.sqrt(n_peers))
+def peers(n_nodes, event_loop, rnd):
+    def node():
+        transport = Transport(("localhost", 0), loop=event_loop)
+        return Gossip(transport=transport)
 
-    def peer():
-        return Gossip(transport=Transport(("localhost", 0), loop=event_loop))
-
-    peers = [peer() for _ in range(n_peers)]
+    n_paths = math.ceil(math.sqrt(n_nodes))
+    peers = [node() for _ in range(n_nodes)]
     seed = peers[0]
     for peer in peers:
         seed.topology.add(peer.transport.addr)
