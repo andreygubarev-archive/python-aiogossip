@@ -1,9 +1,16 @@
+import ipaddress
 import random
 
 
 class Node:
     def __init__(self, addr):
-        self.addr = addr
+        ip, port = addr
+        self.ip = ipaddress.ip_address(ip)
+        self.port = int(port)
+
+    @property
+    def addr(self):
+        return (str(self.ip), self.port)
 
     def __eq__(self, other):
         return self.addr == other.addr
