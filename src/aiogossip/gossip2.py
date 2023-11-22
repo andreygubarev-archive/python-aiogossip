@@ -38,9 +38,6 @@ class Gossip:
 
         @mutex(gossip_id)
         async def multicast():
-            if self.fanout == 0:
-                return
-
             cycle = 0
             while cycle < self.fanout_cycles:
                 fanout_peers = random.sample(self.peers, self.fanout)
