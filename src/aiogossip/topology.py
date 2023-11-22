@@ -8,13 +8,13 @@ class Topology:
     def set(self, nodes):
         self.nodes = nodes
 
-    def add(self, peer):
-        if peer not in self.nodes:
-            self.nodes.append(peer)
+    def add(self, node):
+        if node not in self.nodes:
+            self.nodes.append(node)
 
-    def remove(self, peer):
-        if peer in self.nodes:
-            self.nodes.remove(peer)
+    def remove(self, node):
+        if node in self.nodes:
+            self.nodes.remove(node)
 
     def get(self, sample=None):
         if sample is not None:
@@ -25,8 +25,8 @@ class Topology:
     def __len__(self):
         return len(self.nodes)
 
-    def __contains__(self, peer):
-        return peer in self.nodes
+    def __contains__(self, node):
+        return node in self.nodes
 
     def __iter__(self):
         return iter(self.nodes)
