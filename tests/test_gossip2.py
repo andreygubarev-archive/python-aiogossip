@@ -23,18 +23,17 @@ def peers(n_peers, rnd, event_loop):
     n_paths = math.ceil(math.sqrt(n_peers))
 
     def peer():
-        return Gossip(Transport(("localhost", 0), loop=event_loop), [])
+        return Gossip(transport=Transport(("localhost", 0), loop=event_loop))
 
     peers = [peer() for _ in range(n_peers)]
     seed = peers[0]
     for peer in peers:
-        seed.peers = list(set(seed.peers) | {peer.transport.addr})
-        peer.peers = {seed.transport.addr} | {
-            p.transport.addr for p in random.sample(peers, n_paths)
-        }
-        peer.peers -= {peer.transport.addr}
-        peer.peers = list(peer.peers)
+        seed.topology.add(peer.transport.addr)
+        peer.topology.add(seed.transport.addr)
+        for p in random.sample(peers, n_paths):
+            peer.topology.add(p.transport.addr)
 
+        peer.topology.remove(peer.transport.addr)
     return peers
 
 
@@ -59,8 +58,8 @@ async def test_gossip(peers):
         assert peers[0].transport.messages_received == 0
     else:
         for peer in peers:
-            if any([peer.transport.addr in p.peers for p in peers]):
-                assert peer.transport.messages_received > 0, peer.peers
+            if any([peer.transport.addr in p.topology for p in peers]):
+                assert peer.transport.messages_received > 0, peer.topology
         messages_received = sum(p.transport.messages_received for p in peers)
         assert messages_received <= 2 ** len(peers)
 
