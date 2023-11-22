@@ -1,9 +1,20 @@
 import random
 
 
+class Node:
+    def __init__(self, addr):
+        self.addr = addr
+
+    def __eq__(self, other):
+        return self.addr == other.addr
+
+    def __hash__(self):
+        return hash(self.addr)
+
+
 class Topology:
-    def __init__(self, nodes=None):
-        self.nodes = nodes or []
+    def __init__(self):
+        self.nodes = []
 
     def set(self, nodes):
         self.nodes = nodes

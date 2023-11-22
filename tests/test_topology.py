@@ -1,4 +1,20 @@
-from aiogossip.topology import Topology
+from aiogossip.topology import Node, Topology
+
+
+def test_node_initialization():
+    node = Node(("localhost", 8000))
+    assert node.addr == ("localhost", 8000)
+
+
+def test_node_equality():
+    node1 = Node(("localhost", 8000))
+    node2 = Node(("localhost", 8000))
+    assert node1 == node2
+
+
+def test_node_hash():
+    node = Node(("localhost", 8000))
+    assert hash(node) == hash(("localhost", 8000))
 
 
 def test_topology_initialization():

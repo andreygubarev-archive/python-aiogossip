@@ -3,7 +3,7 @@ import math
 import uuid
 
 from .mutex import mutex
-from .topology import Topology
+from .topology import Node, Topology
 
 
 class Gossip:
@@ -31,8 +31,7 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node):
-        addr = node
-        await self.transport.send(message, addr)
+        await self.transport.send(message, node.addr)
 
     async def gossip(self, message):
         if "gossip" in message["metadata"]:
@@ -57,7 +56,7 @@ class Gossip:
             message, addr = await self.transport.recv()
             message["metadata"]["sender_addr"] = addr
 
-            node = addr
+            node = Node(addr)
             self.topology.add(node)  # establish bidirectional connection
 
             if "gossip" in message["metadata"]:
