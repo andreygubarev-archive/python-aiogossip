@@ -14,6 +14,13 @@ class Transport:
         self.sock.bind(bind)
         self.sock.setblocking(False)
 
+        self.messages_received = 0
+        self.messages_sent = 0
+
+    @property
+    def addr(self):
+        return self.sock.getsockname()
+
     async def send(self, message, addr):
         message = codec.encode(message)
         if len(message) > self.PAYLOAD_SIZE:
@@ -21,8 +28,13 @@ class Transport:
                 f"Message size exceeds payload size of {self.PAYLOAD_SIZE} bytes"
             )
         await self.loop.sock_sendto(self.sock, message, addr)
+        self.messages_sent += 1
 
     async def recv(self):
         message, addr = await self.loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
         message = codec.decode(message)
+        self.messages_received += 1
         return message, addr
+
+    def close(self):
+        self.sock.close()
