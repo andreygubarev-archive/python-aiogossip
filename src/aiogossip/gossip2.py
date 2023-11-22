@@ -30,8 +30,8 @@ class Gossip:
 
         return math.ceil(math.log(len(self.topology), self.fanout))
 
-    async def send(self, message, peer):
-        await self.transport.send(message, peer)
+    async def send(self, message, node):
+        await self.transport.send(message, node)
 
     async def gossip(self, message):
         if "gossip" in message["metadata"]:
@@ -43,9 +43,9 @@ class Gossip:
         async def multicast():
             cycle = 0
             while cycle < self.fanout_cycles:
-                fanout_peers = self.topology.get(sample=self.fanout)
-                for fanout_peer in fanout_peers:
-                    await self.send(message, fanout_peer)
+                nodes = self.topology.get(sample=self.fanout)
+                for node in nodes:
+                    await self.send(message, node)
                 cycle += 1
                 await asyncio.sleep(self._interval)
 
@@ -53,9 +53,9 @@ class Gossip:
 
     async def recv(self):
         while True:
-            message, peer = await self.transport.recv()
-            message["metadata"]["sender"] = peer
-            self.topology.add(peer)  # establish bidirectional connection
+            message, addr = await self.transport.recv()
+            message["metadata"]["sender_addr"] = addr
+            self.topology.add(addr)  # establish bidirectional connection
 
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
