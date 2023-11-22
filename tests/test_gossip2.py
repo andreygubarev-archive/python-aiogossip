@@ -1,4 +1,5 @@
 import asyncio
+import math
 import random
 
 import pytest
@@ -12,6 +13,7 @@ random.seed(0)
 @pytest.fixture
 def peers(event_loop):
     n_peers = 30
+    n_paths = math.ceil(math.sqrt(n_peers))
 
     def peer():
         return Gossip(Transport(("localhost", 0), loop=event_loop), [])
@@ -19,7 +21,7 @@ def peers(event_loop):
     peers = [peer() for _ in range(n_peers)]
     seed = peers[0].transport.addr
     for peer in peers:
-        peer.peers = {seed} | {p.transport.addr for p in random.sample(peers, 3)}
+        peer.peers = {seed} | {p.transport.addr for p in random.sample(peers, n_paths)}
         peer.peers -= {peer.transport.addr}
         peer.peers = list(peer.peers)
 
