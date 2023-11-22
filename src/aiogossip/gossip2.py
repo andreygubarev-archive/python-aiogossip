@@ -1,3 +1,4 @@
+import asyncio
 import math
 import random
 import uuid
@@ -7,11 +8,13 @@ from .mutex import mutex
 
 class Gossip:
     FANOUT = 5
+    INTERVAL = 0.01  # 10ms
 
-    def __init__(self, transport, peers, fanout=FANOUT):
+    def __init__(self, transport, peers, fanout=FANOUT, interval=INTERVAL):
         self.transport = transport
         self.peers = peers
         self._fanout = fanout
+        self._interval = interval
 
     @property
     def fanout(self):
@@ -44,6 +47,7 @@ class Gossip:
                 for fanout_peer in fanout_peers:
                     await self.send(message, fanout_peer)
                 cycle += 1
+                await asyncio.sleep(self._interval)
 
         await multicast()
 
