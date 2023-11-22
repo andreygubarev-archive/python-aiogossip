@@ -28,11 +28,10 @@ class Gossip:
 
         @mutex(gossip_id)
         async def multicast():
-            cycles = (
-                math.ceil(math.log(len(self.peers), self.fanout))
-                if self.fanout > 0
-                else 0
-            )
+            if self.fanout == 0:
+                return
+
+            cycles = math.ceil(math.log(len(self.peers), self.fanout))
             for _ in range(cycles):
                 fanout_peers = random.sample(self.peers, self.fanout)
                 for fanout_peer in fanout_peers:
