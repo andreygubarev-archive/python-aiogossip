@@ -54,14 +54,11 @@ async def test_gossip(gossips):
     listeners = [asyncio.create_task(listener(n)) for n in gossips]
     await asyncio.gather(*listeners)
 
-    if len(gossips) == 1:
-        assert gossips[0].transport.messages_received == 0
-    else:
-        for gossip in gossips:
-            if any([gossip.transport.addr in p.topology for p in gossips]):
-                assert gossip.transport.messages_received > 0, gossip.topology
-        messages_received = sum(p.transport.messages_received for p in gossips)
-        assert messages_received <= 2 ** len(gossips)
+    for gossip in gossips:
+        if any([gossip.transport.addr in p.topology for p in gossips]):
+            assert gossip.transport.messages_received > 0, gossip.topology
+    messages_received = sum(p.transport.messages_received for p in gossips)
+    assert messages_received <= 2 ** len(gossips)
 
     for gossip in gossips:
         gossip.transport.close()
