@@ -35,6 +35,28 @@ def test_topology_get():
     assert topology.get() == peers
 
 
+def test_topology_len():
+    topology = Topology()
+    peers = [("localhost", 8000), ("localhost", 8001)]
+    topology.set(peers)
+    assert len(topology) == 2
+
+
+def test_topology_contains():
+    topology = Topology()
+    peer = ("localhost", 8000)
+    topology.add(peer)
+    assert peer in topology
+
+
+def test_topology_iter():
+    topology = Topology()
+    peers = [("localhost", 8000), ("localhost", 8001)]
+    topology.set(peers)
+    for peer in topology:
+        assert peer in peers
+
+
 def test_topology_get_sample():
     topology = Topology()
     peers = [("localhost", 8000), ("localhost", 8001), ("localhost", 8002)]

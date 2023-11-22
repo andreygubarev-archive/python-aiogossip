@@ -21,3 +21,12 @@ class Topology:
             return random.sample(self.peers, sample)
         else:
             return self.peers
+
+    def __len__(self):
+        return len(self.peers)
+
+    def __contains__(self, peer):
+        return peer in self.peers
+
+    def __iter__(self):
+        return iter(self.peers)
