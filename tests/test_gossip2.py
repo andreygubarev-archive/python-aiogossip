@@ -19,29 +19,30 @@ def rnd(request):
 
 
 @pytest.fixture
-def peers(n_nodes, event_loop, rnd):
-    def node():
+def nodes(n_nodes, event_loop, rnd):
+    def get_node():
         transport = Transport(("localhost", 0), loop=event_loop)
         return Gossip(transport=transport)
 
-    n_paths = math.ceil(math.sqrt(n_nodes))
-    peers = [node() for _ in range(n_nodes)]
-    seed = peers[0]
-    for peer in peers:
-        seed.topology.add(peer.transport.addr)
-        peer.topology.add(seed.transport.addr)
-        for p in random.sample(peers, n_paths):
-            peer.topology.add(p.transport.addr)
+    n_connections = math.ceil(math.sqrt(n_nodes))
+    nodes = [get_node() for _ in range(n_nodes)]
+    seed = nodes[0]
+    for node in nodes:
+        seed.topology.add(node.transport.addr)
 
-        peer.topology.remove(peer.transport.addr)
-    return peers
+        node.topology.add(seed.transport.addr)
+        for n in random.sample(nodes, n_connections):
+            node.topology.add(n.transport.addr)
+
+        node.topology.remove(node.transport.addr)
+    return nodes
 
 
 @pytest.mark.asyncio
-async def test_gossip(peers):
+async def test_gossip(nodes):
     message = {"message": "Hello, world!", "metadata": {}}
 
-    await peers[0].gossip(message)
+    await nodes[0].gossip(message)
 
     async def listener(peer):
         try:
@@ -51,27 +52,27 @@ async def test_gossip(peers):
         except asyncio.TimeoutError:
             pass
 
-    tasks = [asyncio.create_task(listener(peer)) for peer in peers]
+    tasks = [asyncio.create_task(listener(peer)) for peer in nodes]
     await asyncio.gather(*tasks)
 
-    if len(peers) == 1:
-        assert peers[0].transport.messages_received == 0
+    if len(nodes) == 1:
+        assert nodes[0].transport.messages_received == 0
     else:
-        for peer in peers:
-            if any([peer.transport.addr in p.topology for p in peers]):
+        for peer in nodes:
+            if any([peer.transport.addr in p.topology for p in nodes]):
                 assert peer.transport.messages_received > 0, peer.topology
-        messages_received = sum(p.transport.messages_received for p in peers)
-        assert messages_received <= 2 ** len(peers)
+        messages_received = sum(p.transport.messages_received for p in nodes)
+        assert messages_received <= 2 ** len(nodes)
 
-    for peer in peers:
+    for peer in nodes:
         peer.transport.close()
 
 
 @pytest.mark.asyncio
 async def test_send_and_receive():
-    peers = [Gossip(Transport(("localhost", 0)), []) for _ in range(2)]
+    nodes = [Gossip(Transport(("localhost", 0)), []) for _ in range(2)]
     message = {"message": "Hello, world!", "metadata": {}}
 
-    await peers[0].send(message, peers[1].transport.addr)
-    received_message = await anext(peers[1].recv())
+    await nodes[0].send(message, nodes[1].transport.addr)
+    received_message = await anext(nodes[1].recv())
     assert received_message["message"] == message["message"]
