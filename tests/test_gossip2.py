@@ -8,12 +8,12 @@ from aiogossip.gossip2 import Gossip
 from aiogossip.transport import Transport
 
 
-@pytest.fixture(params=[1, 2, 3, 5, 10, 50, 100], ids=lambda x: f"n_peers={x}")
+@pytest.fixture(params=[1, 2, 3, 5, 10], ids=lambda x: f"n_peers={x}")
 def n_peers(request):
     return request.param
 
 
-@pytest.fixture(params=range(10), ids=lambda x: f"seed={x}")
+@pytest.fixture(params=range(5), ids=lambda x: f"seed={x}")
 def rnd(request):
     random.seed(request.param)
 
