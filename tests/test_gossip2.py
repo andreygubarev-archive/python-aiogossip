@@ -10,7 +10,7 @@ from aiogossip.transport import Transport
 random.seed(0)
 
 
-@pytest.fixture(params=[1, 2, 3, 5, 10, 40, 80])
+@pytest.fixture(params=[1, 2, 3, 5, 10, 50])
 def peers(request, event_loop):
     n_peers = request.param
     n_paths = math.ceil(math.sqrt(n_peers))
@@ -63,3 +63,5 @@ async def test_gossip(peers):
     else:
         for peer in peers:
             assert peer.transport.messages_received > 0, peer.peers
+        messages_received = sum(p.transport.messages_received for p in peers)
+        assert messages_received <= 2 ** len(peers)
