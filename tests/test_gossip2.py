@@ -11,7 +11,7 @@ random.seed(0)
 
 @pytest.fixture
 def peers(event_loop):
-    n_peers = 5
+    n_peers = 30
 
     def peer():
         return Gossip(Transport(("localhost", 0), loop=event_loop), [])
@@ -53,6 +53,4 @@ async def test_gossip(peers):
     await asyncio.gather(*tasks)
 
     for peer in peers:
-        assert peer.transport.messages_received > 0, [
-            p.transport.messages_received for p in peers
-        ]
+        assert peer.transport.messages_received > 0, peer.peers

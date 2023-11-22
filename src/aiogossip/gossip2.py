@@ -1,52 +1,46 @@
 import math
 import random
+import uuid
 
 
 class Gossip:
-    FANOUT = 3
+    FANOUT = 5
 
     def __init__(self, transport, peers, fanout=FANOUT):
         self.transport = transport
         self.peers = peers
         self.fanout = fanout
+        self._gossip = set()
 
     async def send(self, message, peer):
         await self.transport.send(message, peer)
 
     async def gossip(self, message):
-        message["metadata"]["type"] = "gossip"
-        message["metadata"]["time-to-live"] = message["metadata"].get(
-            "time-to-live", math.ceil(math.log(len(self.peers), self.fanout))
-        )
+        if "gossip" in message["metadata"]:
+            gossip_id = message["metadata"]["gossip"]
+        else:
+            gossip_id = message["metadata"]["gossip"] = uuid.uuid4().hex
 
-        if message["metadata"]["time-to-live"] == 0:
+        if gossip_id in self._gossip:
             return
         else:
-            message["metadata"]["time-to-live"] -= 1
+            self._gossip.add(gossip_id)
 
-        fanout_peers = random.sample(self.peers, min(self.fanout, len(self.peers)))
-        print(self.transport.addr, "fanout peers", fanout_peers)
-        for peer in fanout_peers:
-            print(
-                self.transport.addr,
-                "sending gossip to",
-                peer,
-                message["metadata"]["time-to-live"],
-            )
-            await self.send(message, peer)
+        fanout = min(self.fanout, len(self.peers))
+        cycles = math.ceil(math.log(len(self.peers), fanout)) if fanout > 0 else 0
+        for _ in range(cycles):
+            fanout_peers = random.sample(self.peers, fanout)
+            for fanout_peer in fanout_peers:
+                await self.send(message, fanout_peer)
+
+        self._gossip.remove(gossip_id)
 
     async def recv(self):
         while True:
             message, peer = await self.transport.recv()
             message["metadata"]["sender"] = peer
 
-            if message["metadata"].get("type") == "gossip":
-                print(
-                    self.transport.addr,
-                    "received gossip",
-                    message["metadata"]["sender"],
-                    message["metadata"]["time-to-live"],
-                )
+            if "gossip" in message["metadata"]:
                 await self.gossip(message)
 
             yield message
