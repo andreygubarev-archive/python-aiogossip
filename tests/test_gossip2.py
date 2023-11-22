@@ -17,10 +17,11 @@ def peers(event_loop):
         return Gossip(Transport(("localhost", 0), loop=event_loop), [])
 
     peers = [peer() for _ in range(n_peers)]
+    seed = peers[0].transport.addr
     for peer in peers:
-        peer.peers = [p.transport.addr for p in random.sample(peers, 3)]
-        if peer.transport.addr in peer.peers:
-            peer.peers.remove(peer.transport.addr)
+        peer.peers = {seed} | {p.transport.addr for p in random.sample(peers, 3)}
+        peer.peers -= {peer.transport.addr}
+        peer.peers = list(peer.peers)
 
     return peers
 
@@ -52,4 +53,6 @@ async def test_gossip(peers):
     await asyncio.gather(*tasks)
 
     for peer in peers:
-        assert peer.transport.messages_received > 0
+        assert peer.transport.messages_received > 0, [
+            p.transport.messages_received for p in peers
+        ]
