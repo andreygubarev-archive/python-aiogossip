@@ -8,18 +8,18 @@ from aiogossip.gossip2 import Gossip
 from aiogossip.transport import Transport
 
 
-@pytest.fixture(params=[1, 2, 3, 5, 10, 25], ids=lambda x: f"n_nodes={x}")
-def n_nodes(request):
-    return request.param
-
-
 @pytest.fixture(params=range(5), ids=lambda x: f"seed={x}")
 def rnd(request):
     random.seed(request.param)
 
 
+@pytest.fixture(params=[1, 2, 3, 5, 10, 25], ids=lambda x: f"n_nodes={x}")
+def n_nodes(request):
+    return request.param
+
+
 @pytest.fixture
-def nodes(n_nodes, event_loop, rnd):
+def nodes(event_loop, rnd, n_nodes):
     def get_node():
         transport = Transport(("localhost", 0), loop=event_loop)
         return Gossip(transport=transport)
@@ -40,20 +40,19 @@ def nodes(n_nodes, event_loop, rnd):
 
 @pytest.mark.asyncio
 async def test_gossip(nodes):
-    message = {"message": "Hello, world!", "metadata": {}}
-
+    message = {"message": "", "metadata": {}}
     await nodes[0].gossip(message)
 
-    async def listener(peer):
+    async def listener(node):
         try:
             async with asyncio.timeout(0.1):
-                async for message in peer.recv():
+                async for message in node.recv():
                     pass
         except asyncio.TimeoutError:
             pass
 
-    tasks = [asyncio.create_task(listener(peer)) for peer in nodes]
-    await asyncio.gather(*tasks)
+    listeners = [asyncio.create_task(listener(n)) for n in nodes]
+    await asyncio.gather(*listeners)
 
     if len(nodes) == 1:
         assert nodes[0].transport.messages_received == 0
