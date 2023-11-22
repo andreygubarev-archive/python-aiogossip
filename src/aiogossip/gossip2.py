@@ -11,8 +11,11 @@ class Gossip:
     def __init__(self, transport, peers, fanout=FANOUT):
         self.transport = transport
         self.peers = peers
-        self.fanout = fanout
-        self._gossip = set()
+        self._fanout = fanout
+
+    @property
+    def fanout(self):
+        return min(self._fanout, len(self.peers))
 
     async def send(self, message, peer):
         await self.transport.send(message, peer)
@@ -25,10 +28,13 @@ class Gossip:
 
         @mutex(gossip_id)
         async def multicast():
-            fanout = min(self.fanout, len(self.peers))
-            cycles = math.ceil(math.log(len(self.peers), fanout)) if fanout > 0 else 0
+            cycles = (
+                math.ceil(math.log(len(self.peers), self.fanout))
+                if self.fanout > 0
+                else 0
+            )
             for _ in range(cycles):
-                fanout_peers = random.sample(self.peers, fanout)
+                fanout_peers = random.sample(self.peers, self.fanout)
                 for fanout_peer in fanout_peers:
                     await self.send(message, fanout_peer)
 
