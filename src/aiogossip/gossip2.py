@@ -55,6 +55,7 @@ class Gossip:
         while True:
             message, peer = await self.transport.recv()
             message["metadata"]["sender"] = peer
+            self.topology.add(peer)  # establish bidirectional connection
 
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
