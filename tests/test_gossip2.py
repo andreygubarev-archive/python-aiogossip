@@ -67,8 +67,6 @@ async def test_gossip(peers):
 @pytest.mark.asyncio
 async def test_send_and_receive():
     peers = [Gossip(Transport(("localhost", 0)), []) for _ in range(2)]
-    peers[1].peers = [peers[0].transport.addr]
-
     message = {"message": "Hello, world!", "metadata": {}}
     if len(peers) == 1:
         return
