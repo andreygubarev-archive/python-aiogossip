@@ -28,13 +28,13 @@ def gossips(event_loop, rnd, n_gossips):
     gossips = [get_gossip() for _ in range(n_gossips)]
     seed = gossips[0]
     for gossip in gossips:
-        seed.topology.add(gossip.node)
+        seed.topology.add([gossip.node])
 
-        gossip.topology.add(seed.node)
+        gossip.topology.add([seed.node])
         for g in random.sample(gossips, n_connections):
-            gossip.topology.add(g.node)
+            gossip.topology.add([g.node])
 
-        gossip.topology.remove(gossip.node)
+        gossip.topology.remove([gossip.node])
     return gossips
 
 

@@ -18,6 +18,7 @@ class Gossip:
         self.node = Node(self.identity, self.transport.addr)
 
         self.topology = topology or Topology()
+        self.topology.node = self.node
 
         self._fanout = fanout
         self._interval = interval
@@ -65,7 +66,7 @@ class Gossip:
             # message["metadata"]["sender_addr"] = addr
 
             node = Node(message["metadata"]["source_id"], addr)
-            self.topology.add(node)  # establish bidirectional connection
+            self.topology.add([node])  # establish bidirectional connection
 
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
