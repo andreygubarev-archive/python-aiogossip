@@ -57,9 +57,9 @@ async def test_gossip(gossips):
 
     for gossip in gossips:
         if any([Node(gossip.transport.addr) in p.topology for p in gossips]):
-            assert gossip.transport.messages_received > 0, gossip.topology
-    messages_received = sum(p.transport.messages_received for p in gossips)
-    assert messages_received <= 2 ** len(gossips)
+            assert gossip.transport.rx_packets > 0, gossip.topology
+    rx_packets = sum(p.transport.rx_packets for p in gossips)
+    assert rx_packets <= 2 ** len(gossips)
 
     for gossip in gossips:
         gossip.transport.close()
