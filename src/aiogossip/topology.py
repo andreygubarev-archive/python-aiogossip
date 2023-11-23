@@ -3,7 +3,8 @@ import random
 
 
 class Node:
-    def __init__(self, addr):
+    def __init__(self, identity, addr):
+        self.identity = identity
         ip, port = addr
         self.ip = ipaddress.ip_address(ip)
         self.port = int(port)

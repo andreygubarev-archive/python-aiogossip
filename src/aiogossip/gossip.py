@@ -10,7 +10,10 @@ class Gossip:
     FANOUT = 5
     INTERVAL = 0.01  # 10ms
 
-    def __init__(self, transport, topology=None, fanout=FANOUT, interval=INTERVAL):
+    def __init__(
+        self, transport, topology=None, fanout=FANOUT, interval=INTERVAL, identity=None
+    ):
+        self.identity = identity or uuid.uuid4().hex
         self.transport = transport
         self.topology = topology or Topology()
         self._fanout = fanout
@@ -31,6 +34,8 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node):
+        message["metadata"]["source_id"] = self.identity
+        message["metadata"]["source_addr"] = self.transport.addr
         await self.transport.send(message, node.addr)
 
     async def gossip(self, message):
@@ -54,9 +59,9 @@ class Gossip:
     async def recv(self):
         while True:
             message, addr = await self.transport.recv()
-            message["metadata"]["sender_addr"] = addr
+            # message["metadata"]["sender_addr"] = addr
 
-            node = Node(addr)
+            node = Node(message["metadata"]["source_id"], addr)
             self.topology.add(node)  # establish bidirectional connection
 
             if "gossip" in message["metadata"]:

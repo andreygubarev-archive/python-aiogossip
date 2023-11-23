@@ -2,18 +2,18 @@ from aiogossip.topology import Node, Topology
 
 
 def test_node_initialization():
-    node = Node(("127.0.0.1", 8000))
+    node = Node("n1", ("127.0.0.1", 8000))
     assert node.addr == ("127.0.0.1", 8000)
 
 
 def test_node_equality():
-    node1 = Node(("127.0.0.1", 8000))
-    node2 = Node(("127.0.0.1", 8000))
+    node1 = Node("n1", ("127.0.0.1", 8000))
+    node2 = Node("n1", ("127.0.0.1", 8000))
     assert node1 == node2
 
 
 def test_node_hash():
-    node = Node(("127.0.0.1", 8000))
+    node = Node("n1", ("127.0.0.1", 8000))
     assert hash(node) == hash(("127.0.0.1", 8000))
 
 
