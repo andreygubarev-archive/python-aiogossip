@@ -14,8 +14,10 @@ class Transport:
         self.sock.bind(bind)
         self.sock.setblocking(False)
 
-        self.messages_received = 0
-        self.messages_sent = 0
+        self.rx_bytes = 0
+        self.rx_packets = 0
+        self.tx_bytes = 0
+        self.tx_packets = 0
 
     @property
     def addr(self):
@@ -28,12 +30,14 @@ class Transport:
                 f"Message size exceeds payload size of {self.PAYLOAD_SIZE} bytes"
             )
         await self.loop.sock_sendto(self.sock, message, addr)
-        self.messages_sent += 1
+        self.tx_packets += 1
+        self.tx_bytes += len(message)
 
     async def recv(self):
         message, addr = await self.loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
+        self.rx_packets += 1
+        self.rx_bytes += len(message)
         message = codec.decode(message)
-        self.messages_received += 1
         return message, addr
 
     def close(self):
