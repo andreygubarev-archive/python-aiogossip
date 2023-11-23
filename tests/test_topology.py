@@ -49,18 +49,48 @@ def test_node_initialization():
     assert node.addresses["wan"] is None
 
 
-def test_node_set_address():
+def test_node_set_address_local():
+    node = Node("node1", ("127.0.0.1", 8000))
+    node.set_address(("127.0.0.1", 8001))
+    assert node.address == Address("127.0.0.1", 8001)
+    assert node.addresses["local"] == Address("127.0.0.1", 8001)
+    assert node.addresses["lan"] is None
+    assert node.addresses["wan"] is None
+
+
+def test_node_set_address_lan():
     node = Node("node1", ("127.0.0.1", 8000))
     node.set_address(("192.168.1.1", 8000))
     assert node.address == Address("192.168.1.1", 8000)
+    assert node.addresses["local"] == Address("127.0.0.1", 8000)
     assert node.addresses["lan"] == Address("192.168.1.1", 8000)
+    assert node.addresses["wan"] is None
+
+
+def test_node_set_address_wan():
+    node = Node("node1", ("127.0.0.1", 8000))
+    node.set_address(("8.8.8.8", 8000))
+    assert node.address == Address("8.8.8.8", 8000)
+    assert node.addresses["local"] == Address("127.0.0.1", 8000)
+    assert node.addresses["lan"] is None
+    assert node.addresses["wan"] == Address("8.8.8.8", 8000)
 
 
 def test_node_merge_addresses():
     node1 = Node("node1", ("127.0.0.1", 8000))
+    node1.addresses["lan"] = Address("192.168.1.2", 8000)
+    node1.addresses["wan"] = Address("192.168.1.3", 8000)
+
     node2 = Node("node2", ("192.168.1.1", 8000))
+    node2.addresses["lan"] = Address("192.168.1.4", 8000)
+    node2.addresses["wan"] = Address("192.168.1.5", 8000)
+
     node1.merge_addresses(node2)
-    assert node1.addresses["lan"] == Address("192.168.1.1", 8000)
+
+    assert node1.addresses["local"] == Address("127.0.0.1", 8000)
+    assert node1.addresses["lan"] == Address("192.168.1.4", 8000)
+    assert node1.addresses["wan"] == Address("192.168.1.5", 8000)
+    assert node1.address == Address("192.168.1.1", 8000)
 
 
 def test_node_equality():
@@ -78,8 +108,6 @@ def test_node_repr():
     node = Node("node1", ("127.0.0.1", 8000))
     assert repr(node) == "<Node: node1>"
 
-
-# Topology ###################################################################
 
 # Topology ###################################################################
 

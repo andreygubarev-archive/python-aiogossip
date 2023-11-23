@@ -39,15 +39,12 @@ class Node:
 
     def set_address(self, addr):
         self.address = Address(*addr)
-
         if self.address.ip.is_loopback:
             self.addresses["local"] = self.address
         elif self.address.ip.is_private:
             self.addresses["lan"] = self.address
         elif self.address.ip.is_global:
             self.addresses["wan"] = self.address
-        else:
-            raise ValueError(f"Invalid IP address: {self.address.ip}")
 
     def merge_addresses(self, other):
         if other.addresses["local"] is not None:
