@@ -26,16 +26,44 @@ class Address:
 
 
 class Node:
-    def __init__(self, identity, local, lan=None, wan=None):
+    def __init__(self, identity, local=None, lan=None, wan=None):
         self.identity = identity
 
-        self.local = Address(*local)
+        self._local = Address(*local) if local else None
         self._lan = Address(*lan) if lan else None
         self._wan = Address(*wan) if wan else None
 
+        self._connection = self._local or self._lan or self._wan
+
     @property
-    def addr(self):
-        return self.local.addr
+    def connection(self):
+        return self._connection
+
+    @connection.setter
+    def connection(self, addr):
+        ip, port = addr
+        ip = ipaddress.ip_address(ip)
+        port = int(port)
+
+        if ip.is_loopback:
+            self.local = addr
+            self._connection = self.local
+        elif ip.is_private:
+            self.lan = addr
+            self._connection = self.lan
+        elif ip.is_global:
+            self.wan = addr
+            self._connection = self.wan
+        else:
+            raise ValueError(f"Invalid IP address: {ip}")
+
+    @property
+    def local(self):
+        return self._local
+
+    @local.setter
+    def local(self, addr):
+        self._local = Address(*addr)
 
     @property
     def lan(self):
@@ -53,11 +81,21 @@ class Node:
     def wan(self, addr):
         self._wan = Address(*addr)
 
+    def merge(self, other):
+        if other.local:
+            self.local = other.local.addr
+        if other.lan:
+            self.lan = other.lan.addr
+        if other.wan:
+            self.wan = other.wan.addr
+        if other.connection:
+            self.connection = other.connection.addr
+
     def __eq__(self, other):
         return self.identity == other.identity
 
     def __hash__(self):
-        return hash(self.addr)
+        return hash(self.identity)
 
     def __repr__(self):
         return f"<Node: {self.identity}>"
@@ -71,7 +109,9 @@ class Topology:
     def add(self, nodes: Iterable[Node]):
         assert isinstance(nodes, Iterable)
         for node in nodes:
-            if node not in self.nodes:
+            if node in self.nodes:
+                self.nodes[self.nodes.index(node)].merge(node)
+            else:
                 self.nodes.append(node)
 
     def remove(self, nodes: Iterable[Node]):

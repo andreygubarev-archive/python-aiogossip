@@ -37,7 +37,7 @@ def test_address_repr():
 
 def test_node_initialization():
     node = Node("n1", ("127.0.0.1", 8000))
-    assert node.addr == ("127.0.0.1", 8000)
+    assert node.local.addr == ("127.0.0.1", 8000)
 
 
 def test_node_equality():
@@ -48,7 +48,7 @@ def test_node_equality():
 
 def test_node_hash():
     node = Node("n1", ("127.0.0.1", 8000))
-    assert hash(node) == hash(("127.0.0.1", 8000))
+    assert hash(node) == hash("n1")
 
 
 def test_node_repr():
