@@ -26,70 +26,41 @@ class Address:
 
 
 class Node:
-    def __init__(self, identity, local=None, lan=None, wan=None):
+    def __init__(self, identity, addr):
         self.identity = identity
 
-        self._local = Address(*local) if local else None
-        self._lan = Address(*lan) if lan else None
-        self._wan = Address(*wan) if wan else None
+        self.address = None
+        self.addresses = {
+            "local": None,
+            "lan": None,
+            "wan": None,
+        }
+        self.set_address(addr)
 
-        self._connection = self._local or self._lan or self._wan
+    def set_address(self, addr):
+        self.address = Address(*addr)
 
-    @property
-    def connection(self):
-        return self._connection
-
-    @connection.setter
-    def connection(self, addr):
-        ip, port = addr
-        ip = ipaddress.ip_address(ip)
-        port = int(port)
-
-        if ip.is_loopback:
-            self.local = addr
-            self._connection = self.local
-        elif ip.is_private:
-            self.lan = addr
-            self._connection = self.lan
-        elif ip.is_global:
-            self.wan = addr
-            self._connection = self.wan
+        if self.address.ip.is_loopback:
+            self.addresses["local"] = self.address
+        elif self.address.ip.is_private:
+            self.addresses["lan"] = self.address
+        elif self.address.ip.is_global:
+            self.addresses["wan"] = self.address
         else:
-            raise ValueError(f"Invalid IP address: {ip}")
+            raise ValueError(f"Invalid IP address: {self.address.ip}")
 
-    @property
-    def local(self):
-        return self._local
+    def merge_addresses(self, other):
+        if other.addresses["local"] is not None:
+            self.addresses["local"] = other.addresses["local"]
 
-    @local.setter
-    def local(self, addr):
-        self._local = Address(*addr)
+        if other.addresses["lan"] is not None:
+            self.addresses["lan"] = other.addresses["lan"]
 
-    @property
-    def lan(self):
-        return self._lan
+        if other.addresses["wan"] is not None:
+            self.addresses["wan"] = other.addresses["wan"]
 
-    @lan.setter
-    def lan(self, addr):
-        self._lan = Address(*addr)
-
-    @property
-    def wan(self):
-        return self._wan
-
-    @wan.setter
-    def wan(self, addr):
-        self._wan = Address(*addr)
-
-    def merge(self, other):
-        if other.local:
-            self.local = other.local.addr
-        if other.lan:
-            self.lan = other.lan.addr
-        if other.wan:
-            self.wan = other.wan.addr
-        if other.connection:
-            self.connection = other.connection.addr
+        if other.address is not None:
+            self.address = other.address
 
     def __eq__(self, other):
         return self.identity == other.identity
@@ -110,7 +81,7 @@ class Topology:
         assert isinstance(nodes, Iterable)
         for node in nodes:
             if node in self.nodes:
-                self.nodes[self.nodes.index(node)].merge(node)
+                self.nodes[self.nodes.index(node)].merge_addresses(node)
             else:
                 self.nodes.append(node)
 

@@ -2,6 +2,8 @@ import ipaddress
 
 from aiogossip.topology import Address, Node, Topology
 
+# Address ####################################################################
+
 
 def test_address_initialization():
     address = Address("127.0.0.1", 8000)
@@ -35,52 +37,49 @@ def test_address_repr():
     assert repr(address) == "<Address: 127.0.0.1:8000>"
 
 
+# Node #######################################################################
+
+
 def test_node_initialization():
-    node = Node("n1", ("127.0.0.1", 8000))
-    assert node.local.addr == ("127.0.0.1", 8000)
+    node = Node("node1", ("127.0.0.1", 8000))
+    assert node.identity == "node1"
+    assert node.address == Address("127.0.0.1", 8000)
+    assert node.addresses["local"] == Address("127.0.0.1", 8000)
+    assert node.addresses["lan"] is None
+    assert node.addresses["wan"] is None
+
+
+def test_node_set_address():
+    node = Node("node1", ("127.0.0.1", 8000))
+    node.set_address(("192.168.1.1", 8000))
+    assert node.address == Address("192.168.1.1", 8000)
+    assert node.addresses["lan"] == Address("192.168.1.1", 8000)
+
+
+def test_node_merge_addresses():
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    node1.merge_addresses(node2)
+    assert node1.addresses["lan"] == Address("192.168.1.1", 8000)
 
 
 def test_node_equality():
-    node1 = Node("n1", ("127.0.0.1", 8000))
-    node2 = Node("n1", ("127.0.0.1", 8000))
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node1", ("192.168.1.1", 8000))
     assert node1 == node2
 
 
 def test_node_hash():
-    node = Node("n1", ("127.0.0.1", 8000))
-    assert hash(node) == hash("n1")
+    node = Node("node1", ("127.0.0.1", 8000))
+    assert hash(node) == hash("node1")
 
 
 def test_node_repr():
-    node = Node("n1", ("127.0.0.1", 8000))
-    assert repr(node) == "<Node: n1>"
+    node = Node("node1", ("127.0.0.1", 8000))
+    assert repr(node) == "<Node: node1>"
 
 
-def test_topology_initialization():
-    topology = Topology()
-    assert topology.nodes == []
-
-
-def test_node_lan_property():
-    node = Node("n1", ("127.0.0.1", 8000), lan=("192.168.1.1", 8000))
-    assert node.lan.addr == ("192.168.1.1", 8000)
-
-
-def test_node_wan_property():
-    node = Node("n1", ("127.0.0.1", 8000), wan=("172.16.1.1", 8000))
-    assert node.wan.addr == ("172.16.1.1", 8000)
-
-
-def test_node_lan_setter():
-    node = Node("n1", ("127.0.0.1", 8000))
-    node.lan = ("192.168.1.1", 8000)
-    assert node.lan.addr == ("192.168.1.1", 8000)
-
-
-def test_node_wan_setter():
-    node = Node("n1", ("127.0.0.1", 8000))
-    node.wan = ("172.16.1.1", 8000)
-    assert node.wan.addr == ("172.16.1.1", 8000)
+# Topology ###################################################################
 
 
 def test_topology_set():

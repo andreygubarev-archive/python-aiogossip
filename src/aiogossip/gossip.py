@@ -38,7 +38,7 @@ class Gossip:
 
     async def send(self, message, node):
         message["metadata"]["source_id"] = self.identity
-        await self.transport.send(message, node.connection.addr)
+        await self.transport.send(message, node.address.addr)
 
     async def gossip(self, message):
         if "gossip" in message["metadata"]:
