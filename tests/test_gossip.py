@@ -5,7 +5,6 @@ import random
 import pytest
 
 from aiogossip.gossip import Gossip
-from aiogossip.topology import Node
 from aiogossip.transport import Transport
 
 
@@ -29,13 +28,13 @@ def gossips(event_loop, rnd, n_gossips):
     gossips = [get_gossip() for _ in range(n_gossips)]
     seed = gossips[0]
     for gossip in gossips:
-        seed.topology.add(Node(gossip.identity, gossip.transport.addr))
+        seed.topology.add(gossip.node)
 
-        gossip.topology.add(Node(seed.identity, seed.transport.addr))
+        gossip.topology.add(seed.node)
         for g in random.sample(gossips, n_connections):
-            gossip.topology.add(Node(g.identity, g.transport.addr))
+            gossip.topology.add(g.node)
 
-        gossip.topology.remove(Node(g.identity, gossip.transport.addr))
+        gossip.topology.remove(gossip.node)
     return gossips
 
 
@@ -56,12 +55,7 @@ async def test_gossip(gossips):
     await asyncio.gather(*listeners)
 
     for gossip in gossips:
-        if any(
-            [
-                Node(gossip.identity, gossip.transport.addr) in p.topology
-                for p in gossips
-            ]
-        ):
+        if any([gossip.node in p.topology for p in gossips]):
             assert gossip.transport.rx_packets > 0, gossip.topology
     rx_packets = sum(p.transport.rx_packets for p in gossips)
     assert rx_packets <= 2 ** len(gossips)
@@ -75,6 +69,6 @@ async def test_send_and_receive():
     gossips = [Gossip(Transport(("localhost", 0)), []) for _ in range(2)]
     message = {"message": "Hello, world!", "metadata": {}}
 
-    await gossips[0].send(message, Node(gossips[1].identity, gossips[1].transport.addr))
+    await gossips[0].send(message, gossips[1].node)
     received_message = await anext(gossips[1].recv())
     assert received_message["message"] == message["message"]
