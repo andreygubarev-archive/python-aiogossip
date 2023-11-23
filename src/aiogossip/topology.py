@@ -3,10 +3,8 @@ import random
 from typing import Iterable
 
 
-class Node:
-    def __init__(self, identity, addr):
-        self.identity = identity
-        ip, port = addr
+class Address:
+    def __init__(self, ip, port):
         self.ip = ipaddress.ip_address(ip)
         self.port = int(port)
 
@@ -14,8 +12,33 @@ class Node:
     def addr(self):
         return (str(self.ip), self.port)
 
+    def __str__(self):
+        return f"{self.ip}:{self.port}"
+
     def __eq__(self, other):
         return self.addr == other.addr
+
+    def __hash__(self):
+        return hash(self.addr)
+
+    def __repr__(self):
+        return f"<Address: {self}>"
+
+
+class Node:
+    def __init__(self, identity, local, lan=None, wan=None):
+        self.identity = identity
+
+        self.local = Address(*local)
+        self.lan = Address(*lan) if lan else None
+        self.wan = Address(*wan) if wan else None
+
+    @property
+    def addr(self):
+        return self.local.addr
+
+    def __eq__(self, other):
+        return self.identity == other.identity
 
     def __hash__(self):
         return hash(self.addr)

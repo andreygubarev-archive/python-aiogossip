@@ -1,4 +1,38 @@
-from aiogossip.topology import Node, Topology
+import ipaddress
+
+from aiogossip.topology import Address, Node, Topology
+
+
+def test_address_initialization():
+    address = Address("127.0.0.1", 8000)
+    assert address.ip == ipaddress.ip_address("127.0.0.1")
+    assert address.port == 8000
+
+
+def test_address_addr_property():
+    address = Address("127.0.0.1", 8000)
+    assert address.addr == ("127.0.0.1", 8000)
+
+
+def test_address_str_representation():
+    address = Address("127.0.0.1", 8000)
+    assert str(address) == "127.0.0.1:8000"
+
+
+def test_address_equality():
+    address1 = Address("127.0.0.1", 8000)
+    address2 = Address("127.0.0.1", 8000)
+    assert address1 == address2
+
+
+def test_address_hash():
+    address = Address("127.0.0.1", 8000)
+    assert hash(address) == hash(("127.0.0.1", 8000))
+
+
+def test_address_repr():
+    address = Address("127.0.0.1", 8000)
+    assert repr(address) == "<Address: 127.0.0.1:8000>"
 
 
 def test_node_initialization():
