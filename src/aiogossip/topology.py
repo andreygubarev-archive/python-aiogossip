@@ -1,6 +1,6 @@
-import collections.abc
 import ipaddress
 import random
+from typing import Iterable
 
 
 class Node:
@@ -29,14 +29,14 @@ class Topology:
         self.node = None
         self.nodes = []
 
-    def add(self, nodes):
-        assert isinstance(nodes, collections.abc.Iterable)
+    def add(self, nodes: Iterable[Node]):
+        assert isinstance(nodes, Iterable)
         for node in nodes:
             if node not in self.nodes:
                 self.nodes.append(node)
 
-    def remove(self, nodes):
-        assert isinstance(nodes, collections.abc.Iterable)
+    def remove(self, nodes: Iterable[Node]):
+        assert isinstance(nodes, Iterable)
         for node in nodes:
             if node in self.nodes:
                 self.nodes.remove(node)
