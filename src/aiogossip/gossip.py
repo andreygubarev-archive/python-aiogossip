@@ -38,7 +38,6 @@ class Gossip:
 
     async def send(self, message, node):
         message["metadata"]["source_id"] = self.identity
-        message["metadata"]["source_addr"] = self.transport.addr
         await self.transport.send(message, node.addr)
 
     async def gossip(self, message):
@@ -62,8 +61,6 @@ class Gossip:
     async def recv(self):
         while True:
             message, addr = await self.transport.recv()
-            # message["metadata"]["sender_addr"] = addr
-
             node = Node(message["metadata"]["source_id"], addr)
             self.topology.add([node])  # establish bidirectional connection
 
