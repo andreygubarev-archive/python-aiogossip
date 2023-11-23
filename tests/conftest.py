@@ -7,7 +7,7 @@ from aiogossip.gossip import Gossip
 from aiogossip.transport import Transport
 
 
-@pytest.fixture(params=range(5), ids=lambda x: f"seed={x}")
+@pytest.fixture(params=range(5), ids=lambda x: f"randomize={x}")
 def randomize(request):
     random.seed(request.param)
 
