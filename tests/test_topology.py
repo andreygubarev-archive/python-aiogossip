@@ -51,6 +51,11 @@ def test_node_hash():
     assert hash(node) == hash(("127.0.0.1", 8000))
 
 
+def test_node_repr():
+    node = Node("n1", ("127.0.0.1", 8000))
+    assert repr(node) == "<Node: n1>"
+
+
 def test_topology_initialization():
     topology = Topology()
     assert topology.nodes == []
