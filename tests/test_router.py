@@ -9,8 +9,8 @@ from aiogossip.router import Router
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
 async def test_subscribe(event_loop, gossips):
-    sub = Router(gossips[0], loop=event_loop)
-    pub = Router(gossips[1], loop=event_loop)
+    pub = Router(gossips[0], loop=event_loop)
+    sub = Router(gossips[1], loop=event_loop)
 
     callback_message = None
 
@@ -31,3 +31,6 @@ async def test_subscribe(event_loop, gossips):
 
     assert callback_message["metadata"]["topic"] == topic
     assert callback_message["message"] == message["message"]
+
+    await pub.close()
+    await sub.close()
