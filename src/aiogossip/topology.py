@@ -75,33 +75,33 @@ class Node:
 class Topology:
     def __init__(self):
         self.node = None
-        self.nodes = []
+        self.nodes = {}
 
     def add(self, nodes: Iterable[Node]):
         assert isinstance(nodes, Iterable)
         for node in nodes:
-            if node in self.nodes:
-                self.nodes[self.nodes.index(node)].merge_addresses(node)
+            if node.identity in self.nodes:
+                self.nodes[node.identity].merge_addresses(node)
             else:
-                self.nodes.append(node)
+                self.nodes[node.identity] = node
 
     def remove(self, nodes: Iterable[Node]):
         assert isinstance(nodes, Iterable)
         for node in nodes:
-            if node in self.nodes:
-                self.nodes.remove(node)
+            if node.identity in self.nodes:
+                self.nodes.pop(node.identity)
 
     def get(self, sample=None):
+        nodes = list(self.nodes.values())
         if sample is not None:
-            return random.sample(self.nodes, sample)
-        else:
-            return self.nodes
+            nodes = random.sample(nodes, sample)
+        return nodes
 
     def __len__(self):
         return len(self.nodes)
 
     def __contains__(self, node):
-        return node in self.nodes
+        return node.identity in self.nodes
 
     def __iter__(self):
-        return iter(self.nodes)
+        return iter(self.nodes.values())

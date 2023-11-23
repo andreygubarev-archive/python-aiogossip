@@ -81,63 +81,70 @@ def test_node_repr():
 
 # Topology ###################################################################
 
+# Topology ###################################################################
 
-def test_topology_set():
+
+def test_topology_initialization():
     topology = Topology()
-    nodes = [("127.0.0.1", 8000), ("127.0.0.1", 8001)]
-    topology.add(nodes)
-    assert topology.nodes == nodes
+    assert topology.node is None
+    assert topology.nodes == {}
 
 
 def test_topology_add():
     topology = Topology()
-    node = ("127.0.0.1", 8000)
-    topology.add([node])
-    assert node in topology.nodes
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    topology.add([node1, node2])
+    assert len(topology) == 2
+    assert node1 in topology
+    assert node2 in topology
 
 
 def test_topology_remove():
     topology = Topology()
-    node = ("127.0.0.1", 8000)
-    topology.add([node])
-    topology.remove([node])
-    assert node not in topology.nodes
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    topology.add([node1, node2])
+    topology.remove([node1])
+    assert len(topology) == 1
+    assert node1 not in topology
+    assert node2 in topology
 
 
 def test_topology_get():
     topology = Topology()
-    nodes = [("127.0.0.1", 8000), ("127.0.0.1", 8001)]
-    topology.add(nodes)
-    assert topology.get() == nodes
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    topology.add([node1, node2])
+    nodes = topology.get()
+    assert len(nodes) == 2
+    assert node1 in nodes
+    assert node2 in nodes
 
 
 def test_topology_len():
     topology = Topology()
-    nodes = [("127.0.0.1", 8000), ("127.0.0.1", 8001)]
-    topology.add(nodes)
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    topology.add([node1, node2])
     assert len(topology) == 2
 
 
 def test_topology_contains():
     topology = Topology()
-    node = ("127.0.0.1", 8000)
-    topology.add([node])
-    assert node in topology
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    topology.add([node1])
+    assert node1 in topology
+    assert node2 not in topology
 
 
 def test_topology_iter():
     topology = Topology()
-    nodes = [("127.0.0.1", 8000), ("127.0.0.1", 8001)]
-    topology.add(nodes)
-    for node in topology:
-        assert node in nodes
-
-
-def test_topology_get_sample():
-    topology = Topology()
-    nodes = [("127.0.0.1", 8000), ("127.0.0.1", 8001), ("127.0.0.1", 8002)]
-    topology.add(nodes)
-    sample = topology.get(sample=2)
-    assert len(sample) == 2
-    for node in sample:
-        assert node in nodes
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    topology.add([node1, node2])
+    nodes = list(topology)
+    assert len(nodes) == 2
+    assert node1 in nodes
+    assert node2 in nodes
