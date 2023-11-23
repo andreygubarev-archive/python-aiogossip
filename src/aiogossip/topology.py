@@ -19,6 +19,9 @@ class Node:
     def __hash__(self):
         return hash(self.addr)
 
+    def __repr__(self):
+        return f"<Node: {self.identity}>"
+
 
 class Topology:
     def __init__(self):
