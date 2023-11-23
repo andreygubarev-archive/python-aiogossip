@@ -30,12 +30,28 @@ class Node:
         self.identity = identity
 
         self.local = Address(*local)
-        self.lan = Address(*lan) if lan else None
-        self.wan = Address(*wan) if wan else None
+        self._lan = Address(*lan) if lan else None
+        self._wan = Address(*wan) if wan else None
 
     @property
     def addr(self):
         return self.local.addr
+
+    @property
+    def lan(self):
+        return self._lan
+
+    @lan.setter
+    def lan(self, addr):
+        self._lan = Address(*addr)
+
+    @property
+    def wan(self):
+        return self._wan
+
+    @wan.setter
+    def wan(self, addr):
+        self._wan = Address(*addr)
 
     def __eq__(self, other):
         return self.identity == other.identity

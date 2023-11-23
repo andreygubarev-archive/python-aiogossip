@@ -61,6 +61,28 @@ def test_topology_initialization():
     assert topology.nodes == []
 
 
+def test_node_lan_property():
+    node = Node("n1", ("127.0.0.1", 8000), lan=("192.168.1.1", 8000))
+    assert node.lan.addr == ("192.168.1.1", 8000)
+
+
+def test_node_wan_property():
+    node = Node("n1", ("127.0.0.1", 8000), wan=("172.16.1.1", 8000))
+    assert node.wan.addr == ("172.16.1.1", 8000)
+
+
+def test_node_lan_setter():
+    node = Node("n1", ("127.0.0.1", 8000))
+    node.lan = ("192.168.1.1", 8000)
+    assert node.lan.addr == ("192.168.1.1", 8000)
+
+
+def test_node_wan_setter():
+    node = Node("n1", ("127.0.0.1", 8000))
+    node.wan = ("172.16.1.1", 8000)
+    assert node.wan.addr == ("172.16.1.1", 8000)
+
+
 def test_topology_set():
     topology = Topology()
     nodes = [("127.0.0.1", 8000), ("127.0.0.1", 8001)]
