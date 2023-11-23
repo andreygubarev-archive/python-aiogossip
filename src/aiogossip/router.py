@@ -1,5 +1,6 @@
 import asyncio
 import collections
+import itertools
 
 from .channel import Channel
 from .gossip import Gossip
@@ -11,7 +12,7 @@ class Router:
 
         self.gossip = gossip
         self.chan = collections.defaultdict(Channel)
-        self.subs = []
+        self.subs = collections.defaultdict(list)
 
     async def listen(self):
         async for message in self.gossip.recv():
@@ -30,11 +31,14 @@ class Router:
                 except asyncio.CancelledError:
                     break
 
-        sub = self.loop.create_task(sub())
-        self.subs.append(sub)
+        task = self.loop.create_task(sub())
+        self.subs[topic].append(task)
 
     async def close(self):
-        for sub in self.subs:
-            sub.cancel()
-        await asyncio.gather(*self.subs, return_exceptions=True)
+        for tasks in self.subs.values():
+            for task in tasks:
+                task.cancel()
+        await asyncio.gather(
+            *itertools.chain(*self.subs.values()), return_exceptions=True
+        )
         await self.gossip.close()
