@@ -4,7 +4,7 @@ import random
 
 import pytest
 
-from aiogossip.gossip2 import Gossip
+from aiogossip.gossip import Gossip
 from aiogossip.topology import Node
 from aiogossip.transport import Transport
 
