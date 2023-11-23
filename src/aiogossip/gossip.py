@@ -15,10 +15,9 @@ class Gossip:
     ):
         self.identity = identity or uuid.uuid4().hex
         self.transport = transport
-        self.node = Node(self.identity, self.transport.addr)
 
         self.topology = topology or Topology()
-        self.topology.node = self.node
+        self.topology.node = Node(self.identity, self.transport.addr)
 
         self._fanout = fanout
         self._interval = interval
