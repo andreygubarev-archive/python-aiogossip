@@ -15,7 +15,11 @@ lint: ## Lint Python Package
 
 .PHONY: test
 test: ## Test Python Package
-	python -m pytest --full-trace --pdb
+ifeq ($(TEST),)
+	python -m pytest --pdb
+else
+	python -m pytest --pdb --no-cov $(MAKEFILE_DIR)/tests/test_$(TEST).py
+endif
 
 .PHONY: run
 run: ## Run Python Package
