@@ -68,3 +68,6 @@ class Gossip:
                 await self.gossip(message)
 
             yield message
+
+    async def close(self):
+        self.transport.close()

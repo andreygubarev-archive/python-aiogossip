@@ -30,31 +30,29 @@ class Node:
         self.identity = identity
 
         self.address = None
-        self.addresses = {
-            "local": None,
-            "lan": None,
-            "wan": None,
-        }
+        self.network_interface = {"local": None, "lan": None, "wan": None}
         self.set_address(addr)
 
     def set_address(self, addr):
         self.address = Address(*addr)
+
         if self.address.ip.is_loopback:
-            self.addresses["local"] = self.address
+            self.network_interface["local"] = self.address
         elif self.address.ip.is_private:
-            self.addresses["lan"] = self.address
-        elif self.address.ip.is_global:
-            self.addresses["wan"] = self.address
+            self.network_interface["lan"] = self.address
 
-    def merge_addresses(self, other):
-        if other.addresses["local"] is not None:
-            self.addresses["local"] = other.addresses["local"]
+        if self.address.ip.is_global:
+            self.network_interface["wan"] = self.address
 
-        if other.addresses["lan"] is not None:
-            self.addresses["lan"] = other.addresses["lan"]
+    def merge_network_interface(self, other):
+        if other.network_interface["local"] is not None:
+            self.network_interface["local"] = other.network_interface["local"]
 
-        if other.addresses["wan"] is not None:
-            self.addresses["wan"] = other.addresses["wan"]
+        if other.network_interface["lan"] is not None:
+            self.network_interface["lan"] = other.network_interface["lan"]
+
+        if other.network_interface["wan"] is not None:
+            self.network_interface["wan"] = other.network_interface["wan"]
 
         if other.address is not None:
             self.address = other.address
@@ -78,7 +76,7 @@ class Topology:
         assert isinstance(nodes, Iterable)
         for node in nodes:
             if node.identity in self.nodes:
-                self.nodes[node.identity].merge_addresses(node)
+                self.nodes[node.identity].merge_network_interface(node)
             else:
                 self.nodes[node.identity] = node
 
