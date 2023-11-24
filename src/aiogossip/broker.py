@@ -37,6 +37,8 @@ class Broker:
     async def connect(self):
         """Connect to the gossip network and start receiving messages."""
         async for message in self.gossip.recv():
+            # FIXME: make messages idempotent (prevent duplicate processing)
+
             if "topic" not in message["metadata"]:
                 continue
 
