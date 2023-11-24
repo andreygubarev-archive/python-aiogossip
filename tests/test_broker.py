@@ -25,12 +25,12 @@ async def test_subscribe(event_loop, gossips):
         async with asyncio.timeout(0.1):
             sub.subscribe(topic, callback)
             await pub.publish(topic, message)
-            await sub.listen()
+            await sub.connect()
     except asyncio.TimeoutError:
         pass
 
     assert callback_message["metadata"]["topic"] == topic
     assert callback_message["message"] == message["message"]
 
-    await pub.close()
-    await sub.close()
+    await pub.disconnect()
+    await sub.disconnect()

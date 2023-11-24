@@ -14,14 +14,21 @@ class Broker:
         self.chan = collections.defaultdict(Channel)
         self.subs = collections.defaultdict(list)
 
-    async def listen(self):
+    async def connect(self):
+        """Connect to the gossip network and start receiving messages."""
         async for message in self.gossip.recv():
             # FIXME: handle messages with no topic
             await self.chan[message["metadata"]["topic"]].send(message)
 
-    async def publish(self, topic, message, nodes=None):
-        message["metadata"]["topic"] = topic
-        await self.gossip.gossip(message)
+    async def disconnect(self):
+        """Disconnect from the gossip network and stop receiving messages."""
+        for tasks in self.subs.values():
+            for task in tasks:
+                task.cancel()
+        await asyncio.gather(
+            *itertools.chain(*self.subs.values()), return_exceptions=True
+        )
+        await self.gossip.close()
 
     def subscribe(self, topic, callback):
         async def sub():
@@ -35,11 +42,6 @@ class Broker:
         task = self.loop.create_task(sub())
         self.subs[topic].append(task)
 
-    async def close(self):
-        for tasks in self.subs.values():
-            for task in tasks:
-                task.cancel()
-        await asyncio.gather(
-            *itertools.chain(*self.subs.values()), return_exceptions=True
-        )
-        await self.gossip.close()
+    async def publish(self, topic, message, nodes=None):
+        message["metadata"]["topic"] = topic
+        await self.gossip.gossip(message)
