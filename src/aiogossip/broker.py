@@ -58,14 +58,17 @@ class Broker:
         await self.gossip.close()
 
     def subscribe(self, topic, callback):
+        """Subscribe to a topic and register a callback."""
         callback = Callback(topic, callback, loop=self.loop)
         self.callbacks[topic].append(callback)
         return callback
 
     async def unsubscribe(self, callback):
+        """Unsubscribe from a topic and unregister a callback."""
         await callback.cancel()
         self.callbacks[callback.topic].remove(callback)
 
     async def publish(self, topic, message, nodes=None):
+        """Publish a message to a topic."""
         message["metadata"]["topic"] = topic
         await self.gossip.gossip(message)
