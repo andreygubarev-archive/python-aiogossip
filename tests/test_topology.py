@@ -44,52 +44,52 @@ def test_node_initialization():
     node = Node("node1", ("127.0.0.1", 8000))
     assert node.identity == "node1"
     assert node.address == Address("127.0.0.1", 8000)
-    assert node.network["local"] == Address("127.0.0.1", 8000)
-    assert node.network["lan"] is None
-    assert node.network["wan"] is None
+    assert node.network_interface["local"] == Address("127.0.0.1", 8000)
+    assert node.network_interface["lan"] is None
+    assert node.network_interface["wan"] is None
 
 
 def test_node_set_address_local():
     node = Node("node1", ("127.0.0.1", 8000))
     node.set_address(("127.0.0.1", 8001))
     assert node.address == Address("127.0.0.1", 8001)
-    assert node.network["local"] == Address("127.0.0.1", 8001)
-    assert node.network["lan"] is None
-    assert node.network["wan"] is None
+    assert node.network_interface["local"] == Address("127.0.0.1", 8001)
+    assert node.network_interface["lan"] is None
+    assert node.network_interface["wan"] is None
 
 
 def test_node_set_address_lan():
     node = Node("node1", ("127.0.0.1", 8000))
     node.set_address(("192.168.1.1", 8000))
     assert node.address == Address("192.168.1.1", 8000)
-    assert node.network["local"] == Address("127.0.0.1", 8000)
-    assert node.network["lan"] == Address("192.168.1.1", 8000)
-    assert node.network["wan"] is None
+    assert node.network_interface["local"] == Address("127.0.0.1", 8000)
+    assert node.network_interface["lan"] == Address("192.168.1.1", 8000)
+    assert node.network_interface["wan"] is None
 
 
 def test_node_set_address_wan():
     node = Node("node1", ("127.0.0.1", 8000))
     node.set_address(("8.8.8.8", 8000))
     assert node.address == Address("8.8.8.8", 8000)
-    assert node.network["local"] == Address("127.0.0.1", 8000)
-    assert node.network["lan"] is None
-    assert node.network["wan"] == Address("8.8.8.8", 8000)
+    assert node.network_interface["local"] == Address("127.0.0.1", 8000)
+    assert node.network_interface["lan"] is None
+    assert node.network_interface["wan"] == Address("8.8.8.8", 8000)
 
 
-def test_node_merge_network():
+def test_node_merge_network_interface():
     node1 = Node("node1", ("127.0.0.1", 8000))
-    node1.network["lan"] = Address("192.168.1.2", 8000)
-    node1.network["wan"] = Address("192.168.1.3", 8000)
+    node1.network_interface["lan"] = Address("192.168.1.2", 8000)
+    node1.network_interface["wan"] = Address("192.168.1.3", 8000)
 
     node2 = Node("node2", ("192.168.1.1", 8000))
-    node2.network["lan"] = Address("192.168.1.4", 8000)
-    node2.network["wan"] = Address("192.168.1.5", 8000)
+    node2.network_interface["lan"] = Address("192.168.1.4", 8000)
+    node2.network_interface["wan"] = Address("192.168.1.5", 8000)
 
-    node1.merge_network(node2)
+    node1.merge_network_interface(node2)
 
-    assert node1.network["local"] == Address("127.0.0.1", 8000)
-    assert node1.network["lan"] == Address("192.168.1.4", 8000)
-    assert node1.network["wan"] == Address("192.168.1.5", 8000)
+    assert node1.network_interface["local"] == Address("127.0.0.1", 8000)
+    assert node1.network_interface["lan"] == Address("192.168.1.4", 8000)
+    assert node1.network_interface["wan"] == Address("192.168.1.5", 8000)
     assert node1.address == Address("192.168.1.1", 8000)
 
 
