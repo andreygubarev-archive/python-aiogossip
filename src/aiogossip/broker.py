@@ -18,15 +18,12 @@ class Callback:
 
     async def __call__(self):
         while True:
-            try:
-                message = await self.chan.recv()
-                await self.func(message)
-            except asyncio.CancelledError:
-                break
+            message = await self.chan.recv()
+            await self.func(message)
 
     async def cancel(self):
+        await self.chan.close()
         self.task.cancel()
-        await self.task
 
 
 class Broker:
@@ -47,8 +44,8 @@ class Broker:
                 await callback.chan.send(message)
 
             # Remove empty topics
-            for topic in self.callbacks:
-                if not self.callbacks[topic]:
+            for topic in list(self.callbacks.keys()):
+                if len(self.callbacks[topic]) == 0:
                     del self.callbacks[topic]
 
     async def disconnect(self):

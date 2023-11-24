@@ -57,3 +57,28 @@ async def test_connect_ignores_messages_without_topic(event_loop, brokers):
 
     callback.chan.send.assert_not_called()
     await broker.disconnect()
+
+
+@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("instances", [1])
+@pytest.mark.asyncio
+async def test_connect_cleans_up_empty_topics(event_loop, brokers):
+    broker = brokers[0]
+    topic = "test"
+
+    async def recv():
+        yield {"metadata": {"topic": topic}}
+
+    broker.gossip.recv = recv
+
+    callback = broker.subscribe(topic, MagicMock())
+    assert topic in broker.callbacks
+    await broker.unsubscribe(callback)
+    assert topic in broker.callbacks
+    assert len(broker.callbacks[topic]) == 0
+
+    async with asyncio.timeout(0.1):
+        await broker.connect()
+
+    assert topic not in broker.callbacks
+    await broker.disconnect()
