@@ -35,11 +35,13 @@ class Node:
 
     def set_address(self, addr):
         self.address = Address(*addr)
+
         if self.address.ip.is_loopback:
             self.network_interface["local"] = self.address
         elif self.address.ip.is_private:
             self.network_interface["lan"] = self.address
-        elif self.address.ip.is_global:
+
+        if self.address.ip.is_global:
             self.network_interface["wan"] = self.address
 
     def merge_network_interface(self, other):
