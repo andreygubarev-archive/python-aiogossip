@@ -3,6 +3,7 @@ import random
 
 import pytest
 
+from aiogossip.broker import Broker
 from aiogossip.gossip import Gossip
 from aiogossip.transport import Transport
 
@@ -18,7 +19,7 @@ def instances(request):
 
 
 @pytest.fixture
-def gossips(event_loop, randomize, instances):
+def gossips(randomize, event_loop, instances):
     def get_gossip():
         transport = Transport(("localhost", 0), loop=event_loop)
         return Gossip(transport=transport)
@@ -35,3 +36,9 @@ def gossips(event_loop, randomize, instances):
 
         gossip.topology.remove([gossip.topology.node])
     return gossips
+
+
+@pytest.fixture
+def brokers(randomize, event_loop, instances, gossips):
+    brokers = [Broker(gossip, loop=event_loop) for gossip in gossips]
+    return brokers

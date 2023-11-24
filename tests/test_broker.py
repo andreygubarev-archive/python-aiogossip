@@ -2,15 +2,13 @@ import asyncio
 
 import pytest
 
-from aiogossip.broker import Broker
-
 
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
-async def test_subscribe(event_loop, gossips):
-    pub = Broker(gossips[0], loop=event_loop)
-    sub = Broker(gossips[1], loop=event_loop)
+async def test_subscribe(event_loop, brokers):
+    pub = brokers[0]
+    sub = brokers[1]
 
     callback_message = None
 
