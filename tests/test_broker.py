@@ -4,6 +4,11 @@ from unittest.mock import MagicMock
 import pytest
 
 
+class AsyncMagicMock(MagicMock):
+    async def __call__(self, *args, **kwargs):
+        return super(AsyncMagicMock, self).__call__(*args, **kwargs)
+
+
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
@@ -77,4 +82,26 @@ async def test_connect_cleans_up_empty_topics(event_loop, brokers):
 
     await broker.connect()
     assert topic not in broker.callbacks
+    await broker.disconnect()
+
+
+@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("instances", [1])
+@pytest.mark.asyncio
+async def test_wildcard_topic(event_loop, brokers):
+    broker = brokers[0]
+    topic = "test.*"
+
+    async def recv():
+        yield {"metadata": {"topic": "test.1"}}
+        yield {"metadata": {"topic": "test.2"}}
+
+    broker.gossip.recv = recv
+
+    callback = MagicMock()
+    callback = broker.subscribe(topic, callback)
+    callback.chan.send = AsyncMagicMock()
+
+    await broker.connect()
+    assert callback.chan.send.call_count == 2
     await broker.disconnect()

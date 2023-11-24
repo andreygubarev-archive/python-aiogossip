@@ -1,5 +1,6 @@
 import asyncio
 import collections
+import fnmatch
 import itertools
 
 from .channel import Channel
@@ -36,15 +37,17 @@ class Broker:
     async def connect(self):
         """Connect to the gossip network and start receiving messages."""
         async for message in self.gossip.recv():
-            # Ignore messages without a topic
             if "topic" not in message["metadata"]:
                 continue
 
-            for callback in self.callbacks[message["metadata"]["topic"]]:
-                await callback.chan.send(message)
+            topics = list(self.callbacks.keys())
 
-            # Remove empty topics
-            for topic in list(self.callbacks.keys()):
+            for topic in topics:
+                if fnmatch.fnmatch(message["metadata"]["topic"], topic):
+                    for callback in self.callbacks[topic]:
+                        await callback.chan.send(message)
+
+            for topic in topics:
                 if len(self.callbacks[topic]) == 0:
                     del self.callbacks[topic]
 
