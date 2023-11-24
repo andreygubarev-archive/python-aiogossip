@@ -1,5 +1,6 @@
 import collections
 
+# FIXME: use time-based mutexes
 MUTEX_CAPACITY = 1024
 MUTEX = collections.defaultdict(lambda: collections.deque(maxlen=MUTEX_CAPACITY))
 
