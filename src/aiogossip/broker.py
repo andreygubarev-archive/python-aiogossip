@@ -6,7 +6,7 @@ from .channel import Channel
 from .gossip import Gossip
 
 
-class Router:
+class Broker:
     def __init__(self, gossip: Gossip, loop=None):
         self.loop = loop or asyncio.get_running_loop()
 
