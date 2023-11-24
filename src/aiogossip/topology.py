@@ -58,6 +58,8 @@ class Node:
             self.address = other.address
 
     def __eq__(self, other):
+        if not other:
+            return False
         return self.identity == other.identity
 
     def __hash__(self):
@@ -74,9 +76,10 @@ class Topology:
 
     def add(self, nodes: Iterable[Node]):
         assert isinstance(nodes, Iterable)
-        # FIXME: prevent adding self
         for node in nodes:
-            if node.identity in self.nodes:
+            if node == self.node:
+                self.node.merge_network_interface(node)
+            elif node.identity in self.nodes:
                 self.nodes[node.identity].merge_network_interface(node)
             else:
                 self.nodes[node.identity] = node

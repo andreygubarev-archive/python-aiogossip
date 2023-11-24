@@ -34,7 +34,6 @@ def gossips(randomize, event_loop, instances):
         for g in random.sample(gossips, connections):
             gossip.topology.add([g.topology.node])
 
-        gossip.topology.remove([gossip.topology.node])
     return gossips
 
 
