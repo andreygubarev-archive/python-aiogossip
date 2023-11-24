@@ -7,10 +7,10 @@ from .gossip import Gossip
 
 
 class Callback:
-    def __init__(self, coroutine, loop=None):
+    def __init__(self, func, loop=None):
         self.loop = loop or asyncio.get_running_loop()
 
-        self.coroutine = coroutine
+        self.func = func
         self.chan = Channel()
 
         self.task = self.loop.create_task(self())
@@ -19,7 +19,7 @@ class Callback:
         while True:
             try:
                 message = await self.chan.recv()
-                await self.coroutine(message)
+                await self.func(message)
             except asyncio.CancelledError:
                 break
 
@@ -48,8 +48,8 @@ class Broker:
         await asyncio.gather(*[cb.cancel() for cb in callbacks], return_exceptions=True)
         await self.gossip.close()
 
-    def subscribe(self, topic, coro):
-        callback = Callback(coro, loop=self.loop)
+    def subscribe(self, topic, func):
+        callback = Callback(func, loop=self.loop)
         self.callbacks[topic].append(callback)
         return callback
 
