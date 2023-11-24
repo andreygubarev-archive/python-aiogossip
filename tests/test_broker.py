@@ -38,7 +38,7 @@ async def test_subscribe(event_loop, brokers):
 
 
 @pytest.mark.parametrize("randomize", [0])
-@pytest.mark.parametrize("instances", [2])
+@pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
 async def test_connect_ignores_messages_without_topic(event_loop, brokers):
     broker = brokers[0]
@@ -52,11 +52,8 @@ async def test_connect_ignores_messages_without_topic(event_loop, brokers):
     callback = broker.subscribe("test", callback)
     callback.chan.send = MagicMock()
 
-    try:
-        async with asyncio.timeout(0.1):
-            await broker.connect()
-    except asyncio.TimeoutError:
-        pass
+    async with asyncio.timeout(0.1):
+        await broker.connect()
 
     callback.chan.send.assert_not_called()
     await broker.disconnect()
