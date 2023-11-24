@@ -15,10 +15,10 @@ lint: ## Lint Python Package
 
 .PHONY: test
 test: ## Test Python Package
-ifeq ($(TEST),)
+ifeq ($(MODULE),)
 	python -m pytest --pdb
 else
-	python -m pytest --pdb --no-cov $(MAKEFILE_DIR)/tests/test_$(TEST).py
+	python -m pytest --pdb --no-cov $(MAKEFILE_DIR)/tests/test_$(MODULE).py
 endif
 
 .PHONY: run
