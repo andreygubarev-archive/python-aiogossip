@@ -18,6 +18,7 @@ class Broker:
         """Connect to the gossip network and start receiving messages."""
         async for message in self.gossip.recv():
             # FIXME: handle messages with no topic
+            # FIXME: implement ventilator pattern
             await self.chan[message["metadata"]["topic"]].send(message)
 
     async def disconnect(self):
@@ -39,6 +40,9 @@ class Broker:
 
         task = self.loop.create_task(sub())
         self.subs[topic].append(task)
+
+    def unsubscribe(self, topic, callback):
+        raise NotImplementedError
 
     async def publish(self, topic, message, nodes=None):
         message["metadata"]["topic"] = topic
