@@ -7,9 +7,10 @@ from .gossip import Gossip
 
 
 class Callback:
-    def __init__(self, func, loop=None):
+    def __init__(self, topic, func, loop=None):
         self.loop = loop or asyncio.get_running_loop()
 
+        self.topic = topic
         self.func = func
         self.chan = Channel()
 
@@ -38,10 +39,17 @@ class Broker:
     async def connect(self):
         """Connect to the gossip network and start receiving messages."""
         async for message in self.gossip.recv():
+            # Ignore messages without a topic
             if "topic" not in message["metadata"]:
                 continue
+
             for callback in self.callbacks[message["metadata"]["topic"]]:
                 await callback.chan.send(message)
+
+            # Remove empty topics
+            for topic in self.callbacks:
+                if not self.callbacks[topic]:
+                    del self.callbacks[topic]
 
     async def disconnect(self):
         """Disconnect from the gossip network and stop receiving messages."""
@@ -50,13 +58,13 @@ class Broker:
         await self.gossip.close()
 
     def subscribe(self, topic, callback):
-        callback = Callback(callback, loop=self.loop)
+        callback = Callback(topic, callback, loop=self.loop)
         self.callbacks[topic].append(callback)
         return callback
 
-    async def unsubscribe(self, topic, callback):
+    async def unsubscribe(self, callback):
         await callback.cancel()
-        self.callbacks[topic].remove(callback)
+        self.callbacks[callback.topic].remove(callback)
 
     async def publish(self, topic, message, nodes=None):
         message["metadata"]["topic"] = topic

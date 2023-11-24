@@ -31,7 +31,7 @@ async def test_subscribe(event_loop, brokers):
     assert callback_message["metadata"]["topic"] == topic
     assert callback_message["message"] == message["message"]
 
-    await sub.unsubscribe(topic, callback)
+    await sub.unsubscribe(callback)
     assert callback not in sub.callbacks[topic]
     await pub.disconnect()
     await sub.disconnect()
