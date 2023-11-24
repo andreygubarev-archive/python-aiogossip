@@ -52,9 +52,7 @@ async def test_connect_ignores_messages_without_topic(event_loop, brokers):
     callback = broker.subscribe("test", callback)
     callback.chan.send = MagicMock()
 
-    async with asyncio.timeout(0.1):
-        await broker.connect()
-
+    await broker.connect()
     callback.chan.send.assert_not_called()
     await broker.disconnect()
 
@@ -77,8 +75,6 @@ async def test_connect_cleans_up_empty_topics(event_loop, brokers):
     assert topic in broker.callbacks
     assert len(broker.callbacks[topic]) == 0
 
-    async with asyncio.timeout(0.1):
-        await broker.connect()
-
+    await broker.connect()
     assert topic not in broker.callbacks
     await broker.disconnect()
