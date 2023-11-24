@@ -16,6 +16,7 @@ class Router:
 
     async def listen(self):
         async for message in self.gossip.recv():
+            # FIXME: handle messages with no topic
             await self.chan[message["metadata"]["topic"]].send(message)
 
     async def publish(self, topic, message, nodes=None):
