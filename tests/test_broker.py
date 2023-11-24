@@ -52,12 +52,11 @@ async def test_connect_ignores_messages_without_topic(event_loop, brokers):
     callback = broker.subscribe("test", callback)
     callback.chan.send = MagicMock()
 
-    async with asyncio.timeout(0.1):
-        try:
-            async with asyncio.timeout(0.1):
-                await broker.connect()
-        except asyncio.TimeoutError:
-            pass
+    try:
+        async with asyncio.timeout(0.1):
+            await broker.connect()
+    except asyncio.TimeoutError:
+        pass
 
     callback.chan.send.assert_not_called()
     await broker.disconnect()
