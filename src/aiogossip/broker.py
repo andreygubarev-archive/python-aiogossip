@@ -22,12 +22,10 @@ class Broker:
 
     async def disconnect(self):
         """Disconnect from the gossip network and stop receiving messages."""
-        for tasks in self.subs.values():
-            for task in tasks:
-                task.cancel()
-        await asyncio.gather(
-            *itertools.chain(*self.subs.values()), return_exceptions=True
-        )
+        tasks = list(itertools.chain(*self.subs.values()))
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
         await self.gossip.close()
 
     def subscribe(self, topic, callback):
