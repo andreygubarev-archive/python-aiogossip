@@ -38,7 +38,8 @@ class Broker:
     async def connect(self):
         """Connect to the gossip network and start receiving messages."""
         async for message in self.gossip.recv():
-            # FIXME: handle messages with no topic
+            if "topic" not in message["metadata"]:
+                continue
             for callback in self.callbacks[message["metadata"]["topic"]]:
                 await callback.chan.send(message)
 
