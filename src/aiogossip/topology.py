@@ -30,7 +30,7 @@ class Node:
         self.identity = identity
 
         self.address = None
-        self.addresses = {
+        self.network = {
             "local": None,
             "lan": None,
             "wan": None,
@@ -40,21 +40,21 @@ class Node:
     def set_address(self, addr):
         self.address = Address(*addr)
         if self.address.ip.is_loopback:
-            self.addresses["local"] = self.address
+            self.network["local"] = self.address
         elif self.address.ip.is_private:
-            self.addresses["lan"] = self.address
+            self.network["lan"] = self.address
         elif self.address.ip.is_global:
-            self.addresses["wan"] = self.address
+            self.network["wan"] = self.address
 
-    def merge_addresses(self, other):
-        if other.addresses["local"] is not None:
-            self.addresses["local"] = other.addresses["local"]
+    def merge_network(self, other):
+        if other.network["local"] is not None:
+            self.network["local"] = other.network["local"]
 
-        if other.addresses["lan"] is not None:
-            self.addresses["lan"] = other.addresses["lan"]
+        if other.network["lan"] is not None:
+            self.network["lan"] = other.network["lan"]
 
-        if other.addresses["wan"] is not None:
-            self.addresses["wan"] = other.addresses["wan"]
+        if other.network["wan"] is not None:
+            self.network["wan"] = other.network["wan"]
 
         if other.address is not None:
             self.address = other.address
@@ -78,7 +78,7 @@ class Topology:
         assert isinstance(nodes, Iterable)
         for node in nodes:
             if node.identity in self.nodes:
-                self.nodes[node.identity].merge_addresses(node)
+                self.nodes[node.identity].merge_network(node)
             else:
                 self.nodes[node.identity] = node
 
