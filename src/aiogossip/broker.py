@@ -48,8 +48,8 @@ class Broker:
         await asyncio.gather(*[cb.cancel() for cb in callbacks], return_exceptions=True)
         await self.gossip.close()
 
-    def subscribe(self, topic, func):
-        callback = Callback(func, loop=self.loop)
+    def subscribe(self, topic, callback):
+        callback = Callback(callback, loop=self.loop)
         self.callbacks[topic].append(callback)
         return callback
 

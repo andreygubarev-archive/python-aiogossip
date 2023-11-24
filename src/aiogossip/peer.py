@@ -1,8 +1,8 @@
 import asyncio
 import uuid
 
+from .broker import Broker
 from .gossip import Gossip
-from .router import Router
 from .transport import Transport
 
 
@@ -14,16 +14,16 @@ class Peer:
 
         self.transport = Transport((host, port), loop=self.loop)
         self.gossip = Gossip(self.transport, identity=self.identity)
-        self.router = Router(self.gossip, loop=self.loop)
+        self.broker = Broker(self.gossip, loop=self.loop)
 
     def subscribe(self, topic):
         def decorator(callback):
-            self.router.subscribe(topic, callback)
+            self.broker.subscribe(topic, callback)
 
         return decorator
 
     def run_forever(self):
-        asyncio.run(self.router.listen())
+        asyncio.run(self.broker.connect())
 
 
 # peer = Peer()
