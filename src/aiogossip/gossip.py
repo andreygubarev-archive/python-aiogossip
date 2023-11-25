@@ -46,13 +46,19 @@ class Gossip:
         else:
             gossip_id = message["metadata"]["gossip"] = uuid.uuid4().hex
 
+        fanout_excludes = [self.topology.node.identity]
+        if "sender_id" in message["metadata"]:
+            fanout_excludes.append(message["metadata"]["sender_id"])
+
         @mutex(gossip_id, owner=self.gossip)
         async def multicast():
             cycle = 0
             while cycle < self.fanout_cycles:
                 # FIXME: exclude source node and sender node
-                nodes = self.topology.get(sample=self.fanout)
-                for node in nodes:
+                fanout_nodes = self.topology.get(
+                    sample=self.fanout, exclude=fanout_excludes
+                )
+                for node in fanout_nodes:
                     await self.send(message, node)
                 cycle += 1
                 await asyncio.sleep(self._interval)
@@ -62,8 +68,8 @@ class Gossip:
     async def recv(self):
         while True:
             message, addr = await self.transport.recv()
-            node = Node(message["metadata"]["sender_id"], addr)
-            self.topology.add([node])  # establish bidirectional connection
+            sender_node = Node(message["metadata"]["sender_id"], addr)
+            self.topology.add([sender_node])  # establish bidirectional connection
 
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
