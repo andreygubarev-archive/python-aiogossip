@@ -37,6 +37,7 @@ async def handler3(message):
 
 async def main():
     message = {"message": "foo", "metadata": {}}
+    await asyncio.sleep(0.1)  # wait for connections to be established
     await peer2.publish("test", message)
     await asyncio.sleep(1)
 
