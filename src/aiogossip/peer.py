@@ -19,8 +19,12 @@ class Peer:
     def node(self):
         return self.gossip.topology.node
 
+    async def _connect(self):
+        await self.publish("connect", {"metadata": {}})
+
     def connect(self, nodes):
         self.gossip.topology.add(nodes)
+        self.loop.create_task(self._connect())
 
     async def disconnect(self):
         await self.broker.disconnect()
