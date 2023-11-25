@@ -91,12 +91,15 @@ class Topology:
                 self.nodes.pop(node.identity)
 
     def get(self, sample=None, exclude=None):
-        nodes = list(self.nodes.values())
+        nodes = [n for n in self.nodes]
         if exclude is not None:
             nodes = [n for n in nodes if n not in exclude]
+
         if sample is not None:
+            sample = min(sample, len(nodes))
             nodes = random.sample(nodes, sample)
-        return nodes
+
+        return [self.nodes[n] for n in nodes]
 
     def __len__(self):
         return len(self.nodes)
