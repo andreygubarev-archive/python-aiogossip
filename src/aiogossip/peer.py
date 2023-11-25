@@ -8,9 +8,11 @@ from .transport import Transport
 
 class Peer:
     def __init__(self, host="0.0.0.0", port=0, identity=None, loop=None):
+        # FIXME: loop shouldn't be optional
         self.loop = loop or asyncio.get_running_loop()
 
         self.identity = identity or uuid.uuid4().hex
+        # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self.loop)
         self.gossip = Gossip(self.transport, identity=self.identity)
         self.broker = Broker(self.gossip, loop=self.loop)
