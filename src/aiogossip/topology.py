@@ -90,6 +90,9 @@ class Topology:
             if node.identity in self.nodes:
                 self.nodes.pop(node.identity)
 
+    # FIXME: get is a bad name
+    # FIXME: sample is a bad name
+    # FIXME: exclude is list of strings, not list of nodes
     def get(self, sample=None, exclude=None):
         nodes = [n for n in self.nodes.keys()]
         if exclude is not None:
