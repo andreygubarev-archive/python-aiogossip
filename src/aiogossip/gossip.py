@@ -41,12 +41,14 @@ class Gossip:
         await self.transport.send(message, node.address.addr)
 
     async def gossip(self, message):
-        if "gossip" in message["metadata"]:
-            gossip_id = message["metadata"]["gossip"]
+        if "gossip_id" in message["metadata"]:
+            gossip_id = message["metadata"]["gossip_id"]
+            gossip_sender_id = message["metadata"]["gossip_sender_id"]
         else:
-            gossip_id = message["metadata"]["gossip"] = uuid.uuid4().hex
+            gossip_id = message["metadata"]["gossip_id"] = uuid.uuid4().hex
+            gossip_sender_id = message["metadata"]["gossip_sender_id"] = self.identity
 
-        fanout_excludes = [self.topology.node.identity]
+        fanout_excludes = [self.identity, gossip_sender_id]
         if "sender_id" in message["metadata"]:
             fanout_excludes.append(message["metadata"]["sender_id"])
 
