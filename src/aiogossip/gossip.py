@@ -37,7 +37,7 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node):
-        message["metadata"]["source_id"] = self.identity
+        message["metadata"]["sender_id"] = self.identity
         await self.transport.send(message, node.address.addr)
 
     async def gossip(self, message):
@@ -50,6 +50,7 @@ class Gossip:
         async def multicast():
             cycle = 0
             while cycle < self.fanout_cycles:
+                # FIXME: exclude source node and sender node
                 nodes = self.topology.get(sample=self.fanout)
                 for node in nodes:
                     await self.send(message, node)
@@ -61,7 +62,7 @@ class Gossip:
     async def recv(self):
         while True:
             message, addr = await self.transport.recv()
-            node = Node(message["metadata"]["source_id"], addr)
+            node = Node(message["metadata"]["sender_id"], addr)
             self.topology.add([node])  # establish bidirectional connection
 
             if "gossip" in message["metadata"]:
