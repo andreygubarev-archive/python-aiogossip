@@ -72,5 +72,7 @@ class Broker:
 
     async def publish(self, topic, message, nodes=None):
         """Publish a message to a topic."""
+        # FIXME: make messages idempotent (prevent duplicate processing)
+        # FIXME: allow sending to specific nodes
         message["metadata"]["topic"] = topic
         await self.gossip.gossip(message)
