@@ -1,4 +1,3 @@
-import asyncio
 import math
 import uuid
 
@@ -8,11 +7,8 @@ from .topology import Node, Topology
 
 class Gossip:
     FANOUT = 5
-    INTERVAL = 0.01  # 10ms
 
-    def __init__(
-        self, transport, topology=None, fanout=FANOUT, interval=INTERVAL, identity=None
-    ):
+    def __init__(self, transport, topology=None, fanout=FANOUT, identity=None):
         self.identity = identity or uuid.uuid4().hex
         self.transport = transport
 
@@ -20,7 +16,6 @@ class Gossip:
         self.topology.node = Node(self.identity, self.transport.addr)
 
         self._fanout = fanout
-        self._interval = interval
 
     @property
     def fanout(self):
@@ -60,12 +55,12 @@ class Gossip:
                     sample=self.fanout,
                     exclude=fanout_excludes,
                 )
+
                 for node in fanout_nodes:
                     await self.send(message, node)
+                cycle += 1
 
                 fanout_excludes.extend([n.identity for n in fanout_nodes])
-                cycle += 1
-                await asyncio.sleep(self._interval)
 
         await multicast()
 
