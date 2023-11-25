@@ -5,6 +5,7 @@ import pytest
 
 from aiogossip.broker import Broker
 from aiogossip.gossip import Gossip
+from aiogossip.peer import Peer
 from aiogossip.transport import Transport
 
 
@@ -41,3 +42,9 @@ def gossips(randomize, event_loop, instances):
 def brokers(randomize, event_loop, instances, gossips):
     brokers = [Broker(gossip, loop=event_loop) for gossip in gossips]
     return brokers
+
+
+@pytest.fixture
+def peers(randomize, event_loop, instances):
+    peers = [Peer(loop=event_loop) for _ in range(instances)]
+    return peers
