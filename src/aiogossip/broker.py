@@ -75,4 +75,8 @@ class Broker:
         # FIXME: make messages idempotent (prevent duplicate processing)
         # FIXME: allow sending to specific nodes
         message["metadata"]["topic"] = topic
-        await self.gossip.gossip(message)
+        if nodes:
+            for node in nodes:
+                await self.gossip.send(message, node)
+        else:
+            await self.gossip.gossip(message)

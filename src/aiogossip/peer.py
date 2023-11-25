@@ -29,8 +29,12 @@ class Peer:
     async def disconnect(self):
         await self.broker.disconnect()
 
-    async def publish(self, topic, message):
-        await self.broker.publish(topic, message)
+    async def publish(self, topic, message, nodes=None):
+        if nodes:
+            nodes = [self.gossip.topology.nodes[n] for n in nodes or []]
+            await self.broker.publish(topic, message, nodes=nodes)
+        else:
+            await self.broker.publish(topic, message)
 
     def subscribe(self, topic):
         def decorator(callback):
