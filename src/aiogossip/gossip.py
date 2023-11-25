@@ -54,14 +54,16 @@ class Gossip:
 
         @mutex(gossip_id, owner=self.gossip)
         async def multicast():
-            cycle = 0
+            cycle = -1  # one extra cycle
             while cycle < self.fanout_cycles:
-                # FIXME: exclude source node and sender node
                 fanout_nodes = self.topology.get(
-                    sample=self.fanout, exclude=fanout_excludes
+                    sample=self.fanout,
+                    exclude=fanout_excludes,
                 )
                 for node in fanout_nodes:
                     await self.send(message, node)
+
+                fanout_excludes.extend([n.identity for n in fanout_nodes])
                 cycle += 1
                 await asyncio.sleep(self._interval)
 
