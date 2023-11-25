@@ -49,17 +49,15 @@ class Gossip:
 
         @mutex(gossip_id, owner=self.gossip)
         async def multicast():
-            cycle = -1  # one extra cycle
+            cycle = 0
             while cycle < self.fanout_cycles:
                 fanout_nodes = self.topology.get(
                     sample=self.fanout,
                     exclude=fanout_excludes,
                 )
-
                 for node in fanout_nodes:
                     await self.send(message, node)
                 cycle += 1
-
                 fanout_excludes.extend([n.identity for n in fanout_nodes])
 
         await multicast()
@@ -70,7 +68,7 @@ class Gossip:
             sender_node = Node(message["metadata"]["sender_id"], addr)
             self.topology.add([sender_node])  # establish bidirectional connection
 
-            if "gossip" in message["metadata"]:
+            if "gossip_id" in message["metadata"]:
                 await self.gossip(message)
 
             yield message

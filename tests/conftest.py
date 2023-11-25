@@ -14,7 +14,7 @@ def randomize(request):
     random.seed(request.param)
 
 
-@pytest.fixture(params=[1, 2, 3, 5, 10, 25], ids=lambda x: f"instances={x}")
+@pytest.fixture(params=[1, 2, 3, 5, 10, 50], ids=lambda x: f"instances={x}")
 def instances(request):
     return request.param
 
