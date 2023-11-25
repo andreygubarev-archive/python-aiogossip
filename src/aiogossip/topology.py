@@ -90,8 +90,10 @@ class Topology:
             if node.identity in self.nodes:
                 self.nodes.pop(node.identity)
 
-    def get(self, sample=None):
+    def get(self, sample=None, exclude=None):
         nodes = list(self.nodes.values())
+        if exclude is not None:
+            nodes = [n for n in nodes if n not in exclude]
         if sample is not None:
             nodes = random.sample(nodes, sample)
         return nodes
