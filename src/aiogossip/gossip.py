@@ -54,8 +54,8 @@ class Gossip:
                 fanout_nodes = self.topology.sample(self.fanout, ignore=fanout_ignore)
                 for node in fanout_nodes:
                     await self.send(message, node)
-                cycle += 1
                 fanout_ignore.update([n.identity for n in fanout_nodes])
+                cycle += 1
 
         await multicast()
 
