@@ -23,6 +23,8 @@ async def test_gossip(gossips):
     await asyncio.gather(*listeners)
 
     for gossip in gossips:
+        if gossip.topology.node == gossips[0].topology.node:
+            continue
         if any([gossip.topology.node in p.topology for p in gossips]):
             assert gossip.transport.rx_packets > 0, gossip.topology
     rx_packets = sum(p.transport.rx_packets for p in gossips)

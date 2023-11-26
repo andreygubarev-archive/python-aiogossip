@@ -58,6 +58,8 @@ class Node:
             self.address = other.address
 
     def __eq__(self, other):
+        if not other:
+            return False
         return self.identity == other.identity
 
     def __hash__(self):
@@ -75,7 +77,9 @@ class Topology:
     def add(self, nodes: Iterable[Node]):
         assert isinstance(nodes, Iterable)
         for node in nodes:
-            if node.identity in self.nodes:
+            if node == self.node:
+                self.node.merge_network_interface(node)
+            elif node.identity in self.nodes:
                 self.nodes[node.identity].merge_network_interface(node)
             else:
                 self.nodes[node.identity] = node
@@ -86,11 +90,17 @@ class Topology:
             if node.identity in self.nodes:
                 self.nodes.pop(node.identity)
 
-    def get(self, sample=None):
-        nodes = list(self.nodes.values())
+    # FIXME: get is a bad name
+    # FIXME: sample is a bad name
+    # FIXME: exclude is list of strings, not list of nodes
+    def get(self, sample=None, exclude=None):
+        nodes = [n for n in self.nodes.keys()]
+        if exclude is not None:
+            nodes = [n for n in nodes if n not in exclude]
         if sample is not None:
+            sample = min(sample, len(nodes))
             nodes = random.sample(nodes, sample)
-        return nodes
+        return [self.nodes[n] for n in nodes]
 
     def __len__(self):
         return len(self.nodes)

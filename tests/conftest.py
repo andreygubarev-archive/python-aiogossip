@@ -5,6 +5,7 @@ import pytest
 
 from aiogossip.broker import Broker
 from aiogossip.gossip import Gossip
+from aiogossip.peer import Peer
 from aiogossip.transport import Transport
 
 
@@ -13,7 +14,7 @@ def randomize(request):
     random.seed(request.param)
 
 
-@pytest.fixture(params=[1, 2, 3, 5, 10, 25], ids=lambda x: f"instances={x}")
+@pytest.fixture(params=[1, 2, 3, 5, 10, 50], ids=lambda x: f"instances={x}")
 def instances(request):
     return request.param
 
@@ -34,7 +35,6 @@ def gossips(randomize, event_loop, instances):
         for g in random.sample(gossips, connections):
             gossip.topology.add([g.topology.node])
 
-        gossip.topology.remove([gossip.topology.node])
     return gossips
 
 
@@ -42,3 +42,9 @@ def gossips(randomize, event_loop, instances):
 def brokers(randomize, event_loop, instances, gossips):
     brokers = [Broker(gossip, loop=event_loop) for gossip in gossips]
     return brokers
+
+
+@pytest.fixture
+def peers(randomize, event_loop, instances):
+    peers = [Peer(loop=event_loop) for _ in range(instances)]
+    return peers

@@ -1,4 +1,3 @@
-import asyncio
 import math
 import uuid
 
@@ -8,11 +7,8 @@ from .topology import Node, Topology
 
 class Gossip:
     FANOUT = 5
-    INTERVAL = 0.01  # 10ms
 
-    def __init__(
-        self, transport, topology=None, fanout=FANOUT, interval=INTERVAL, identity=None
-    ):
+    def __init__(self, transport, topology=None, fanout=FANOUT, identity=None):
         self.identity = identity or uuid.uuid4().hex
         self.transport = transport
 
@@ -20,7 +16,6 @@ class Gossip:
         self.topology.node = Node(self.identity, self.transport.addr)
 
         self._fanout = fanout
-        self._interval = interval
 
     @property
     def fanout(self):
@@ -37,34 +32,44 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node):
-        message["metadata"]["source_id"] = self.identity
+        message["metadata"]["sender_id"] = self.identity
         await self.transport.send(message, node.address.addr)
 
     async def gossip(self, message):
-        if "gossip" in message["metadata"]:
-            gossip_id = message["metadata"]["gossip"]
+        if "gossip_id" in message["metadata"]:
+            gossip_id = message["metadata"]["gossip_id"]
+            gossip_sender_id = message["metadata"]["gossip_sender_id"]
         else:
-            gossip_id = message["metadata"]["gossip"] = uuid.uuid4().hex
+            gossip_id = message["metadata"]["gossip_id"] = uuid.uuid4().hex
+            gossip_sender_id = message["metadata"]["gossip_sender_id"] = self.identity
+
+        fanout_excludes = [self.identity, gossip_sender_id]
+        if "sender_id" in message["metadata"]:
+            fanout_excludes.append(message["metadata"]["sender_id"])
 
         @mutex(gossip_id, owner=self.gossip)
         async def multicast():
             cycle = 0
             while cycle < self.fanout_cycles:
-                nodes = self.topology.get(sample=self.fanout)
-                for node in nodes:
+                fanout_nodes = self.topology.get(
+                    sample=self.fanout,
+                    exclude=fanout_excludes,
+                )
+                for node in fanout_nodes:
                     await self.send(message, node)
                 cycle += 1
-                await asyncio.sleep(self._interval)
+                fanout_excludes.extend([n.identity for n in fanout_nodes])
 
         await multicast()
 
     async def recv(self):
         while True:
             message, addr = await self.transport.recv()
-            node = Node(message["metadata"]["source_id"], addr)
-            self.topology.add([node])  # establish bidirectional connection
+            message["metadata"]["sender_addr"] = addr
+            sender_node = Node(message["metadata"]["sender_id"], addr)
+            self.topology.add([sender_node])  # establish bidirectional connection
 
-            if "gossip" in message["metadata"]:
+            if "gossip_id" in message["metadata"]:
                 await self.gossip(message)
 
             yield message

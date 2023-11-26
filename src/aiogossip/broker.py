@@ -37,6 +37,8 @@ class Broker:
     async def connect(self):
         """Connect to the gossip network and start receiving messages."""
         async for message in self.gossip.recv():
+            # FIXME: make messages idempotent (prevent duplicate processing)
+
             if "topic" not in message["metadata"]:
                 continue
 
@@ -58,14 +60,24 @@ class Broker:
         await self.gossip.close()
 
     def subscribe(self, topic, callback):
+        """Subscribe to a topic and register a callback."""
+        # FIXME: handle exceptions in callback
         callback = Callback(topic, callback, loop=self.loop)
         self.callbacks[topic].append(callback)
         return callback
 
     async def unsubscribe(self, callback):
+        """Unsubscribe from a topic and unregister a callback."""
         await callback.cancel()
         self.callbacks[callback.topic].remove(callback)
 
     async def publish(self, topic, message, nodes=None):
+        """Publish a message to a topic."""
+        # FIXME: make messages idempotent (prevent duplicate processing)
+        # FIXME: allow sending to specific nodes
         message["metadata"]["topic"] = topic
-        await self.gossip.gossip(message)
+        if nodes:
+            for node in nodes:
+                await self.gossip.send(message, node)
+        else:
+            await self.gossip.gossip(message)
