@@ -28,7 +28,7 @@ class Callback:
 
 
 class Broker:
-    def __init__(self, gossip: Gossip, loop):
+    def __init__(self, gossip: Gossip, loop: asyncio.AbstractEventLoop):
         self._loop = loop
 
         self.gossip = gossip
