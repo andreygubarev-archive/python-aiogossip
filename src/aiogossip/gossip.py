@@ -51,20 +51,21 @@ class Gossip:
         gossip_id = message["metadata"]["gossip"] = message["metadata"].get(
             "gossip", uuid.uuid4().hex
         )
+
         fanout_ignore = set([self.identity])
         fanout_ignore.update([r[0] for r in message["metadata"].get("route", [])])
 
         @mutex(gossip_id, owner=self.gossip)
-        async def multicast():
+        async def fanout():
             cycle = 0
             while cycle < self.fanout_cycles:
                 fanout_nodes = self.topology.sample(self.fanout, ignore=fanout_ignore)
-                for node in fanout_nodes:
-                    await self.send(message, node)
+                for fanout_node in fanout_nodes:
+                    await self.send(message, fanout_node)
                 fanout_ignore.update([n.identity for n in fanout_nodes])
                 cycle += 1
 
-        await multicast()
+        await fanout()
 
     async def recv(self):
         while True:
