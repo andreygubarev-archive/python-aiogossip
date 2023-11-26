@@ -30,7 +30,8 @@ class Peer:
         return self.gossip.topology.node
 
     async def _connect(self):
-        await self.publish("connect", {"metadata": {}})
+        message = {"metadata": {"type": "CONNECT"}}
+        await self.publish("connect", message)
 
     def connect(self, nodes):
         self.gossip.topology.add(nodes)
