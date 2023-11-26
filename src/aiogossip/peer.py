@@ -2,6 +2,7 @@ import asyncio
 import uuid
 
 from .broker import Broker
+from .errors import handle_exception
 from .gossip import Gossip
 from .transport import Transport
 
@@ -40,7 +41,7 @@ class Peer:
     async def disconnect(self):
         await self.broker.close()
         self.task.cancel()
-        asyncio.gather(self.task, return_exceptions=True)
+        await asyncio.gather(self.task, return_exceptions=True)
 
     async def publish(self, topic, message, nodes=None):
         await self.broker.publish(topic, message, nodes=nodes)
@@ -53,10 +54,14 @@ class Peer:
         return decorator
 
     def run_forever(self):
+        self._loop.set_exception_handler(handle_exception)
         try:
             self._loop.run_forever()
         except KeyboardInterrupt:
             pass
+        finally:
+            self._loop.run_until_complete(self.disconnect())
+            self._loop.close()
 
 
 # peer = Peer()
