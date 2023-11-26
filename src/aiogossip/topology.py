@@ -82,6 +82,10 @@ class Topology:
         self.node = None
         self.nodes = {}
 
+    @property
+    def route(self):
+        return [self.node.identity, str(self.node.address)]
+
     def add(self, nodes: Iterable[Node]):
         if not isinstance(nodes, Iterable):
             raise TypeError("nodes must be Iterable[Node]")
