@@ -48,11 +48,9 @@ class Gossip:
         await self.transport.send(message, node.address.addr)
 
     async def gossip(self, message):
-        if "gossip" in message["metadata"]:
-            gossip_id = message["metadata"]["gossip"]
-        else:
-            gossip_id = message["metadata"]["gossip"] = uuid.uuid4().hex
-
+        gossip_id = message["metadata"]["gossip"] = message["metadata"].get(
+            "gossip", uuid.uuid4().hex
+        )
         fanout_ignore = set([self.identity])
         if "route" in message["metadata"]:
             fanout_ignore.update([r[0] for r in message["metadata"]["route"]])
