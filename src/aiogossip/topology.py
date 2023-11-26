@@ -1,5 +1,6 @@
 import ipaddress
 import random
+import time
 from typing import Iterable
 
 
@@ -84,7 +85,7 @@ class Topology:
 
     @property
     def route(self):
-        return [self.node.identity, list(self.node.address.addr)]
+        return [self.node.identity, time.time_ns(), list(self.node.address.addr)]
 
     def add(self, nodes: Iterable[Node]):
         if not isinstance(nodes, Iterable):
