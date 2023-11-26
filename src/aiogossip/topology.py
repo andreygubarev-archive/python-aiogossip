@@ -106,7 +106,20 @@ class Topology:
         return len(self.nodes)
 
     def __contains__(self, node):
-        return node.identity in self.nodes
+        if isinstance(node, Node):
+            return node.identity in self.nodes
+        elif isinstance(node, str):
+            return node in self.nodes
+        else:
+            raise TypeError("node must be Node or str")
+
+    def __getitem__(self, node):
+        if isinstance(node, Node):
+            return self.nodes[node.identity]
+        elif isinstance(node, str):
+            return self.nodes[node]
+        else:
+            raise TypeError("node must be Node or str")
 
     def __iter__(self):
         return iter(self.nodes.values())
