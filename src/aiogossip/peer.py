@@ -43,11 +43,7 @@ class Peer:
         asyncio.gather(self.task, return_exceptions=True)
 
     async def publish(self, topic, message, nodes=None):
-        if nodes:
-            nodes = [self.gossip.topology.nodes[n] for n in nodes or []]
-            await self.broker.publish(topic, message, nodes=nodes)
-        else:
-            await self.broker.publish(topic, message)
+        await self.broker.publish(topic, message, nodes=None)
 
     def subscribe(self, topic):
         def decorator(callback):

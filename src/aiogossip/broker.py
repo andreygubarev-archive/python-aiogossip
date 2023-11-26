@@ -5,6 +5,7 @@ import itertools
 
 from .channel import Channel
 from .gossip import Gossip
+from .topology import Node
 
 
 class Callback:
@@ -80,6 +81,10 @@ class Broker:
             for node in nodes:
                 if isinstance(node, str):
                     node = self.gossip.topology[node]
-                await self.gossip.send(message, node)
+                    await self.gossip.send(message, node)
+                elif isinstance(node, Node):
+                    await self.gossip.send(message, node)
+                else:
+                    raise TypeError("node must be Node or str")
         else:
             await self.gossip.gossip(message)
