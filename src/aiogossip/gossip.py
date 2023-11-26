@@ -62,7 +62,7 @@ class Gossip:
     async def recv(self):
         while True:
             message, addr = await self.transport.recv()
-            message["metadata"]["route"][-1].append(addr)
+            message["metadata"]["route"][-1].append(list(addr))
 
             nodes = [Node(r[0], r[-1]) for r in message["metadata"]["route"]]
             self.topology.add(nodes)  # establish bidirectional connection
