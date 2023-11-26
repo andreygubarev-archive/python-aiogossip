@@ -34,14 +34,14 @@ class Gossip:
 
     async def send(self, message, node):
         message = copy.deepcopy(message)
-        route = message["metadata"].get("route", [])
 
+        route = message["metadata"].get("route", [])
         if not route:
             route.append([self.identity, list(self.transport.addr)])
         if route[-1][0] != self.identity:
             route.append([self.identity, list(self.transport.addr)])
-
         message["metadata"]["route"] = route
+
         await self.transport.send(message, node.address.addr)
 
     async def gossip(self, message):
