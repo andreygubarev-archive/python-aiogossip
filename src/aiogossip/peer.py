@@ -51,6 +51,12 @@ class Peer:
 
         return decorator
 
+    def run_forever(self):
+        try:
+            self._loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+
 
 # peer = Peer()
 
