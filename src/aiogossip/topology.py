@@ -91,13 +91,15 @@ class Topology:
                 self.nodes.pop(node.identity)
 
     def sample(self, n, ignore=None):
-        nodes = [n for n in self.nodes.keys()]
+        nodes = [node for node in self.nodes.keys()]
         if ignore is not None:
-            ignore = [n.identity if isinstance(n, Node) else n for n in ignore]
-            nodes = [n for n in nodes if n not in ignore]
+            ignore = [
+                node.identity if isinstance(node, Node) else node for node in ignore
+            ]
+            nodes = [node for node in nodes if n not in ignore]
         n = min(n, len(nodes))
         nodes = random.sample(nodes, n)
-        return [self.nodes[n] for n in nodes]
+        return [self.nodes[node] for node in nodes]
 
     def __len__(self):
         return len(self.nodes)
