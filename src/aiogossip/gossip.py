@@ -38,10 +38,7 @@ class Gossip:
 
         if not route:
             route.append([self.identity, list(self.transport.addr)])
-
-        if route[-1][0] == self.identity:
-            pass
-        else:
+        if route[-1][0] != self.identity:
             route.append([self.identity, list(self.transport.addr)])
 
         message["metadata"]["route"] = route
