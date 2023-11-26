@@ -12,7 +12,7 @@ class AsyncMagicMock(MagicMock):
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
-async def test_subscribe(event_loop, brokers):
+async def test_subscribe(brokers):
     pub = brokers[0]
     sub = brokers[1]
 
@@ -45,7 +45,7 @@ async def test_subscribe(event_loop, brokers):
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
-async def test_connect_ignores_messages_without_topic(event_loop, brokers):
+async def test_connect_ignores_messages_without_topic(brokers):
     broker = brokers[0]
 
     async def recv():
@@ -65,7 +65,7 @@ async def test_connect_ignores_messages_without_topic(event_loop, brokers):
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
-async def test_connect_cleans_up_empty_topics(event_loop, brokers):
+async def test_connect_cleans_up_empty_topics(brokers):
     broker = brokers[0]
     topic = "test"
 
@@ -88,7 +88,7 @@ async def test_connect_cleans_up_empty_topics(event_loop, brokers):
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
-async def test_wildcard_topic(event_loop, brokers):
+async def test_wildcard_topic(brokers):
     broker = brokers[0]
     topic = "test.*"
 

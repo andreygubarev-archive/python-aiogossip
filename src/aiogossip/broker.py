@@ -8,14 +8,14 @@ from .gossip import Gossip
 
 
 class Callback:
-    def __init__(self, topic, func, loop=None):
-        self.loop = loop or asyncio.get_running_loop()
+    def __init__(self, topic, func, loop):
+        self._loop = loop
 
         self.topic = topic
         self.func = func
         self.chan = Channel()
 
-        self.task = self.loop.create_task(self())
+        self.task = self._loop.create_task(self())
 
     async def __call__(self):
         while True:
