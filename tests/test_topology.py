@@ -1,5 +1,7 @@
 import ipaddress
 
+import pytest
+
 from aiogossip.topology import Address, Node, Topology
 
 # Address ####################################################################
@@ -176,3 +178,29 @@ def test_topology_iter():
     assert len(nodes) == 2
     assert node1 in nodes
     assert node2 in nodes
+
+
+def test_topology_getitem_with_node():
+    topology = Topology()
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    topology.add([node1, node2])
+    assert topology[node1] == node1
+    assert topology[node2] == node2
+
+
+def test_topology_getitem_with_string():
+    topology = Topology()
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    topology.add([node1, node2])
+    assert topology["node1"] == node1
+    assert topology["node2"] == node2
+
+
+def test_topology_getitem_with_invalid_type():
+    topology = Topology()
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    topology.add([node1])
+    with pytest.raises(TypeError):
+        topology[123]
