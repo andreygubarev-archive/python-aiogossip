@@ -28,8 +28,8 @@ class Callback:
 
 
 class Broker:
-    def __init__(self, gossip: Gossip, loop=None):
-        self.loop = loop or asyncio.get_running_loop()
+    def __init__(self, gossip: Gossip, loop):
+        self._loop = loop
 
         self.gossip = gossip
         self.callbacks = collections.defaultdict(list)
@@ -62,7 +62,7 @@ class Broker:
     def subscribe(self, topic, callback):
         """Subscribe to a topic and register a callback."""
         # FIXME: handle exceptions in callback
-        callback = Callback(topic, callback, loop=self.loop)
+        callback = Callback(topic, callback, loop=self._loop)
         self.callbacks[topic].append(callback)
         return callback
 
