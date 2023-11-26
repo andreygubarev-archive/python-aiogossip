@@ -1,4 +1,3 @@
-import asyncio
 import socket
 
 from . import codec
@@ -8,7 +7,7 @@ class Transport:
     PAYLOAD_SIZE = 4096
 
     def __init__(self, bind, loop):
-        self.loop = loop or asyncio.get_running_loop()
+        self._loop = loop
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(bind)
@@ -29,12 +28,12 @@ class Transport:
             raise ValueError(
                 f"Message size exceeds payload size of {self.PAYLOAD_SIZE} bytes"
             )
-        await self.loop.sock_sendto(self.sock, message, addr)
+        await self._loop.sock_sendto(self.sock, message, addr)
         self.tx_packets += 1
         self.tx_bytes += len(message)
 
     async def recv(self):
-        message, addr = await self.loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
+        message, addr = await self._loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
         self.rx_packets += 1
         self.rx_bytes += len(message)
         message = codec.decode(message)
