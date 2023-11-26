@@ -39,7 +39,6 @@ class Peer:
 
     async def disconnect(self):
         await self.broker.disconnect()
-        await self.gossip.close()
         self.task.cancel()
         asyncio.gather(self.task, return_exceptions=True)
 
