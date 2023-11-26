@@ -53,7 +53,7 @@ class Broker:
                 if len(self.callbacks[topic]) == 0:
                     del self.callbacks[topic]
 
-    async def disconnect(self):
+    async def close(self):
         """Disconnect from the gossip network and stop receiving messages."""
         callbacks = [cb for cb in itertools.chain(*self.callbacks.values())]
         await asyncio.gather(*[cb.cancel() for cb in callbacks], return_exceptions=True)

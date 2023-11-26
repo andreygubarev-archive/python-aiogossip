@@ -38,8 +38,8 @@ async def test_subscribe(brokers):
 
     await sub.unsubscribe(callback)
     assert callback not in sub.callbacks[topic]
-    await pub.disconnect()
-    await sub.disconnect()
+    await pub.close()
+    await sub.close()
 
 
 @pytest.mark.parametrize("randomize", [0])
@@ -59,7 +59,7 @@ async def test_connect_ignores_messages_without_topic(brokers):
 
     await broker.listen()
     callback.chan.send.assert_not_called()
-    await broker.disconnect()
+    await broker.close()
 
 
 @pytest.mark.parametrize("randomize", [0])
@@ -82,7 +82,7 @@ async def test_connect_cleans_up_empty_topics(brokers):
 
     await broker.listen()
     assert topic not in broker.callbacks
-    await broker.disconnect()
+    await broker.close()
 
 
 @pytest.mark.parametrize("randomize", [0])
@@ -104,7 +104,7 @@ async def test_wildcard_topic(brokers):
 
     await broker.listen()
     assert callback.chan.send.call_count == 2
-    await broker.disconnect()
+    await broker.close()
 
 
 @pytest.mark.parametrize("randomize", [0])
@@ -129,5 +129,5 @@ async def test_publish_to_specific_nodes(brokers):
     await pub.publish(topic, message, [sub.gossip.topology.node.identity])
     pub.gossip.send.assert_called_once_with(message, nodes[0])
 
-    await pub.disconnect()
-    await sub.disconnect()
+    await pub.close()
+    await sub.close()
