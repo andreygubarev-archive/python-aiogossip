@@ -9,7 +9,7 @@ peer1 = Peer(loop=loop, identity="p1")
 
 @peer1.subscribe("test")
 async def handler1(message):
-    print("handler1", message)
+    print("handler1", message, "\n")
     reply = {"message": "bar", "metadata": {}}
     await peer1.publish("test", reply)
 
@@ -20,7 +20,7 @@ peer2.connect([peer1.node])
 
 @peer2.subscribe("test")
 async def handler2(message):
-    print("handler2", message)
+    print("handler2", message, "\n")
 
 
 peer3 = Peer(loop=loop, identity="p3")
@@ -29,7 +29,7 @@ peer3.connect([peer1.node])
 
 @peer3.subscribe("*")
 async def handler3(message):
-    print("handler3", message)
+    print("handler3", message, "\n")
 
 
 async def main():
