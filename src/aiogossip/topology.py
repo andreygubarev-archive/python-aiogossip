@@ -84,7 +84,7 @@ class Topology:
 
     @property
     def route(self):
-        return [self.node.identity, str(self.node.address)]
+        return [self.node.identity, self.node.address.addr]
 
     def add(self, nodes: Iterable[Node]):
         if not isinstance(nodes, Iterable):
