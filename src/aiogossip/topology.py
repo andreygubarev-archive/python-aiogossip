@@ -34,6 +34,9 @@ class Node:
         self.set_address(addr)
 
     def set_address(self, addr):
+        if isinstance(addr, str):
+            addr = addr.split(":")
+
         self.address = Address(*addr)
 
         if self.address.ip.is_loopback:
