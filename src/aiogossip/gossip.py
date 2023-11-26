@@ -43,9 +43,9 @@ class Gossip:
         else:
             gossip_id = message["metadata"]["gossip"] = uuid.uuid4().hex
 
-        fanout_ignore = [self.identity]
+        fanout_ignore = set([self.identity])
         if "route" in message["metadata"]:
-            fanout_ignore.extend([r[0] for r in message["metadata"]["route"]])
+            fanout_ignore.update([r[0] for r in message["metadata"]["route"]])
 
         @mutex(gossip_id, owner=self.gossip)
         async def multicast():
@@ -55,7 +55,7 @@ class Gossip:
                 for node in fanout_nodes:
                     await self.send(message, node)
                 cycle += 1
-                fanout_ignore.extend([n.identity for n in fanout_nodes])
+                fanout_ignore.update([n.identity for n in fanout_nodes])
 
         await multicast()
 
