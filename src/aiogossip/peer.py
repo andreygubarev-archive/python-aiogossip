@@ -51,9 +51,6 @@ class Peer:
 
         return decorator
 
-    def run_forever(self):
-        return self._loop.create_task(self.broker.connect())
-
 
 # peer = Peer()
 
