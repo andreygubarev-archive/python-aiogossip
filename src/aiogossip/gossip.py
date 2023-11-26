@@ -38,10 +38,10 @@ class Gossip:
         await self.transport.send(message, node.address.addr)
 
     async def gossip(self, message):
-        if "gossip_id" in message["metadata"]:
-            gossip_id = message["metadata"]["gossip_id"]
+        if "gossip" in message["metadata"]:
+            gossip_id = message["metadata"]["gossip"]
         else:
-            gossip_id = message["metadata"]["gossip_id"] = uuid.uuid4().hex
+            gossip_id = message["metadata"]["gossip"] = uuid.uuid4().hex
 
         fanout_ignore = [self.identity]
         if "route" in message["metadata"]:
@@ -67,7 +67,7 @@ class Gossip:
             nodes = [Node(r[0], r[-1]) for r in message["metadata"]["route"]]
             self.topology.add(nodes)  # establish bidirectional connection
 
-            if "gossip_id" in message["metadata"]:
+            if "gossip" in message["metadata"]:
                 await self.gossip(message)
 
             yield message
