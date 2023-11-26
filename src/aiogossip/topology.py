@@ -60,7 +60,12 @@ class Node:
     def __eq__(self, other):
         if not other:
             return False
-        return self.identity == other.identity
+        if isinstance(other, str):
+            return self.identity == other
+        elif isinstance(other, Node):
+            return self.identity == other.identity
+        else:
+            raise TypeError("other must be Node or str")
 
     def __hash__(self):
         return hash(self.identity)
