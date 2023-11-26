@@ -23,7 +23,7 @@ class Peer:
         self.gossip = Gossip(self.transport, fanout=fanout, identity=self.identity)
         self.broker = Broker(self.gossip, loop=self._loop)
 
-        self.task = self._loop.create_task(self.broker.connect())
+        self.task = self._loop.create_task(self.broker.listen())
 
     @property
     def node(self):

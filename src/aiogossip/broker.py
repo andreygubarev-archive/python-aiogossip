@@ -34,7 +34,7 @@ class Broker:
         self.gossip = gossip
         self.callbacks = collections.defaultdict(list)
 
-    async def connect(self):
+    async def listen(self):
         """Connect to the gossip network and start receiving messages."""
         async for message in self.gossip.recv():
             # FIXME: make messages idempotent (prevent duplicate processing)
