@@ -13,7 +13,7 @@ class Callback:
 
         self.topic = topic
         self.func = func
-        self.chan = Channel()
+        self.chan = Channel(loop=self._loop)
 
         self.task = self._loop.create_task(self())
 
