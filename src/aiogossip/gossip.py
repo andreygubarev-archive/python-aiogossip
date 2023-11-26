@@ -35,8 +35,6 @@ class Gossip:
         if "route" not in message["metadata"]:
             message["metadata"]["route"] = []
         message["metadata"]["route"].append(self.topology.route)
-
-        message["metadata"]["sender_id"] = self.identity
         await self.transport.send(message, node.address.addr)
 
     async def gossip(self, message):
@@ -44,11 +42,10 @@ class Gossip:
             gossip_id = message["metadata"]["gossip_id"]
         else:
             gossip_id = message["metadata"]["gossip_id"] = uuid.uuid4().hex
-            message["metadata"]["gossip_sender_id"] = self.identity
 
         fanout_ignore = [self.identity]
-        if "sender_id" in message["metadata"]:
-            fanout_ignore.append(message["metadata"]["sender_id"])
+        if "route" in message["metadata"]:
+            fanout_ignore.extend([r[0] for r in message["metadata"]["route"]])
 
         @mutex(gossip_id, owner=self.gossip)
         async def multicast():
@@ -67,8 +64,8 @@ class Gossip:
             message, addr = await self.transport.recv()
             message["metadata"]["route"][-1].append(addr)
 
-            routes = [Node(r[0], r[-1]) for r in message["metadata"]["route"]]
-            self.topology.add(routes)  # establish bidirectional connection
+            nodes = [Node(r[0], r[-1]) for r in message["metadata"]["route"]]
+            self.topology.add(nodes)  # establish bidirectional connection
 
             if "gossip_id" in message["metadata"]:
                 await self.gossip(message)
