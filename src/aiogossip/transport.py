@@ -7,7 +7,7 @@ from . import codec
 class Transport:
     PAYLOAD_SIZE = 4096
 
-    def __init__(self, bind, loop=None):
+    def __init__(self, bind, loop):
         self.loop = loop or asyncio.get_running_loop()
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
