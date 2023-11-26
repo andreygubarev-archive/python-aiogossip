@@ -43,19 +43,19 @@ class Gossip:
             gossip_id = message["metadata"]["gossip_id"] = uuid.uuid4().hex
             gossip_sender_id = message["metadata"]["gossip_sender_id"] = self.identity
 
-        fanout_excludes = [self.identity, gossip_sender_id]
+        fanout_ignore = [self.identity, gossip_sender_id]
         if "sender_id" in message["metadata"]:
-            fanout_excludes.append(message["metadata"]["sender_id"])
+            fanout_ignore.append(message["metadata"]["sender_id"])
 
         @mutex(gossip_id, owner=self.gossip)
         async def multicast():
             cycle = 0
             while cycle < self.fanout_cycles:
-                fanout_nodes = self.topology.sample(self.fanout, ignore=fanout_excludes)
+                fanout_nodes = self.topology.sample(self.fanout, ignore=fanout_ignore)
                 for node in fanout_nodes:
                     await self.send(message, node)
                 cycle += 1
-                fanout_excludes.extend([n.identity for n in fanout_nodes])
+                fanout_ignore.extend([n.identity for n in fanout_nodes])
 
         await multicast()
 
