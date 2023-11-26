@@ -8,14 +8,14 @@ from .topology import Node, Topology
 class Gossip:
     FANOUT = 5
 
-    def __init__(self, transport, topology=None, fanout=FANOUT, identity=None):
+    def __init__(self, transport, topology=None, fanout=None, identity=None):
         self.identity = identity or uuid.uuid4().hex
         self.transport = transport
 
         self.topology = topology or Topology()
         self.topology.node = Node(self.identity, self.transport.addr)
 
-        self._fanout = fanout
+        self._fanout = fanout or self.FANOUT
 
     @property
     def fanout(self):
