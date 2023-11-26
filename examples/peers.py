@@ -4,7 +4,7 @@ from aiogossip.peer import Peer
 
 loop = asyncio.get_event_loop()
 
-peer1 = Peer(loop=loop)
+peer1 = Peer(loop=loop, identity="p1")
 
 
 @peer1.subscribe("test")
@@ -14,7 +14,7 @@ async def handler1(message):
     await peer1.publish("test", reply)
 
 
-peer2 = Peer(loop=loop)
+peer2 = Peer(loop=loop, identity="p2")
 peer2.connect([peer1.node])
 
 
@@ -23,7 +23,7 @@ async def handler2(message):
     print("handler2", message)
 
 
-peer3 = Peer(loop=loop)
+peer3 = Peer(loop=loop, identity="p3")
 peer3.connect([peer1.node])
 
 
