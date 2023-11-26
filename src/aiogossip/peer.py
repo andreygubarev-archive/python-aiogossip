@@ -9,13 +9,13 @@ from .transport import Transport
 class Peer:
     def __init__(self, host="0.0.0.0", port=0, identity=None, loop=None):
         # FIXME: loop shouldn't be optional
-        self.loop = loop or asyncio.get_running_loop()
+        self._loop = loop or asyncio.get_running_loop()
 
         self.identity = identity or uuid.uuid4().hex
         # FIXME: should be lazy
-        self.transport = Transport((host, port), loop=self.loop)
+        self.transport = Transport((host, port), loop=self._loop)
         self.gossip = Gossip(self.transport, identity=self.identity)
-        self.broker = Broker(self.gossip, loop=self.loop)
+        self.broker = Broker(self.gossip, loop=self._loop)
 
     @property
     def node(self):
@@ -26,7 +26,7 @@ class Peer:
 
     def connect(self, nodes):
         self.gossip.topology.add(nodes)
-        self.loop.create_task(self._connect())
+        self._loop.create_task(self._connect())
 
     async def disconnect(self):
         await self.broker.disconnect()
@@ -46,7 +46,7 @@ class Peer:
         return decorator
 
     def run_forever(self):
-        return self.loop.create_task(self.broker.connect())
+        return self._loop.create_task(self.broker.connect())
 
 
 # peer = Peer()
