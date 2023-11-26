@@ -51,10 +51,7 @@ class Gossip:
         async def multicast():
             cycle = 0
             while cycle < self.fanout_cycles:
-                fanout_nodes = self.topology.get(
-                    sample=self.fanout,
-                    exclude=fanout_excludes,
-                )
+                fanout_nodes = self.topology.sample(self.fanout, ignore=fanout_excludes)
                 for node in fanout_nodes:
                     await self.send(message, node)
                 cycle += 1

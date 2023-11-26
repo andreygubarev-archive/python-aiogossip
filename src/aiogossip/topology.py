@@ -90,16 +90,13 @@ class Topology:
             if node.identity in self.nodes:
                 self.nodes.pop(node.identity)
 
-    # FIXME: get is a bad name
-    # FIXME: sample is a bad name
-    # FIXME: exclude is list of strings, not list of nodes
-    def get(self, sample=None, exclude=None):
+    def sample(self, n, ignore=None):
         nodes = [n for n in self.nodes.keys()]
-        if exclude is not None:
-            nodes = [n for n in nodes if n not in exclude]
-        if sample is not None:
-            sample = min(sample, len(nodes))
-            nodes = random.sample(nodes, sample)
+        if ignore is not None:
+            ignore = [n.identity if isinstance(n, Node) else n for n in ignore]
+            nodes = [n for n in nodes if n not in ignore]
+        n = min(n, len(nodes))
+        nodes = random.sample(nodes, n)
         return [self.nodes[n] for n in nodes]
 
     def __len__(self):
