@@ -37,3 +37,6 @@ async def test_peer(peers):
     await listener
 
     assert callback_message == message["message"]
+
+    for peer in peers:
+        await peer.disconnect()

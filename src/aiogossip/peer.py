@@ -7,15 +7,18 @@ from .transport import Transport
 
 
 class Peer:
-    def __init__(self, host="0.0.0.0", port=0, identity=None, loop=None):
-        # FIXME: loop shouldn't be optional
-        self._loop = loop or asyncio.get_running_loop()
+    def __init__(
+        self, loop: asyncio.AbstractEventLoop, host="0.0.0.0", port=0, identity=None
+    ):
+        self._loop = loop
 
         self.identity = identity or uuid.uuid4().hex
         # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self._loop)
         self.gossip = Gossip(self.transport, identity=self.identity)
         self.broker = Broker(self.gossip, loop=self._loop)
+
+        self.task = self._loop.create_task(self.broker.connect())
 
     @property
     def node(self):
@@ -30,6 +33,9 @@ class Peer:
 
     async def disconnect(self):
         await self.broker.disconnect()
+        await self.gossip.close()
+        self.task.cancel()
+        asyncio.gather(self.task, return_exceptions=True)
 
     async def publish(self, topic, message, nodes=None):
         if nodes:
