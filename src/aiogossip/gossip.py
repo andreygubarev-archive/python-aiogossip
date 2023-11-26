@@ -38,15 +38,16 @@ class Gossip:
     async def gossip(self, message):
         if "gossip_id" in message["metadata"]:
             gossip_id = message["metadata"]["gossip_id"]
-            gossip_sender_id = message["metadata"]["gossip_sender_id"]
+            # gossip_sender_id = message["metadata"]["gossip_sender_id"]
             # gossip_sender_addr = message["metadata"]["gossip_sender_addr"]
         else:
             message["metadata"]["gossip_id"] = gossip_id = uuid.uuid4().hex
-            message["metadata"]["gossip_sender_id"] = gossip_sender_id = self.identity
+            message["metadata"]["gossip_sender_id"] = self.identity
+            # message["metadata"]["gossip_sender_id"] = gossip_sender_id = self.identity
             message["metadata"]["gossip_sender_addr"] = str(self.topology.node.address)
             # message["metadata"]["gossip_sender_addr"] = gossip_sender_addr = str(self.topology.node.address)
 
-        fanout_ignore = [self.identity, gossip_sender_id]
+        fanout_ignore = [self.identity]
         if "sender_id" in message["metadata"]:
             fanout_ignore.append(message["metadata"]["sender_id"])
 
