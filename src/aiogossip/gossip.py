@@ -52,8 +52,7 @@ class Gossip:
             "gossip", uuid.uuid4().hex
         )
         fanout_ignore = set([self.identity])
-        if "route" in message["metadata"]:
-            fanout_ignore.update([r[0] for r in message["metadata"]["route"]])
+        fanout_ignore.update([r[0] for r in message["metadata"].get("route", [])])
 
         @mutex(gossip_id, owner=self.gossip)
         async def multicast():
