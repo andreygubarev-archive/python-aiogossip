@@ -8,6 +8,7 @@ class Channel:
     def __init__(self, loop: asyncio.AbstractEventLoop):
         """Initialize the channel with empty queue and waiters."""
         self._loop = loop
+
         self._queue = collections.deque()
         self._waiters = collections.deque()
 
