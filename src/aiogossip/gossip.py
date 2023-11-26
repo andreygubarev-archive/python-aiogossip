@@ -1,3 +1,4 @@
+import copy
 import math
 import uuid
 
@@ -32,6 +33,7 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node):
+        message = copy.deepcopy(message)
         if "route" not in message["metadata"]:
             message["metadata"]["route"] = []
         message["metadata"]["route"].append(self.topology.route)
