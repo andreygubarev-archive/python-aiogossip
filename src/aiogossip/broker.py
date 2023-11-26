@@ -8,7 +8,7 @@ from .gossip import Gossip
 
 
 class Callback:
-    def __init__(self, topic, func, loop):
+    def __init__(self, topic, func, loop: asyncio.AbstractEventLoop):
         self._loop = loop
 
         self.topic = topic
