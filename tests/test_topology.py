@@ -122,6 +122,11 @@ def test_topology_initialization():
 
 def test_topology_add():
     topology = Topology()
+    with pytest.raises(TypeError):
+        topology.add(123)
+    with pytest.raises(TypeError):
+        topology.add([123])
+
     node1 = Node("node1", ("127.0.0.1", 8000))
     node2 = Node("node2", ("192.168.1.1", 8000))
     topology.add([node1, node2])
@@ -132,6 +137,11 @@ def test_topology_add():
 
 def test_topology_remove():
     topology = Topology()
+    with pytest.raises(TypeError):
+        topology.remove(123)
+    with pytest.raises(TypeError):
+        topology.remove([123])
+
     node1 = Node("node1", ("127.0.0.1", 8000))
     node2 = Node("node2", ("192.168.1.1", 8000))
     topology.add([node1, node2])

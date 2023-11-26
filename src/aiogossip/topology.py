@@ -75,7 +75,11 @@ class Topology:
         self.nodes = {}
 
     def add(self, nodes: Iterable[Node]):
-        assert isinstance(nodes, Iterable)
+        if not isinstance(nodes, Iterable):
+            raise TypeError("nodes must be Iterable[Node]")
+        if not all(isinstance(n, Node) for n in nodes):
+            raise TypeError("nodes must be Iterable[Node]")
+
         for node in nodes:
             if node == self.node:
                 self.node.merge_network_interface(node)
@@ -85,7 +89,11 @@ class Topology:
                 self.nodes[node.identity] = node
 
     def remove(self, nodes: Iterable[Node]):
-        assert isinstance(nodes, Iterable)
+        if not isinstance(nodes, Iterable):
+            raise TypeError("nodes must be Iterable[Node]")
+        if not all(isinstance(n, Node) for n in nodes):
+            raise TypeError("nodes must be Iterable[Node]")
+
         for node in nodes:
             if node.identity in self.nodes:
                 self.nodes.pop(node.identity)
