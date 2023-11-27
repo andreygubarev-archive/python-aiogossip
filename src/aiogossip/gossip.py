@@ -60,7 +60,7 @@ class Gossip:
             message, addr = await self.transport.recv()
             message["metadata"]["route"][-1].append(list(addr))
             self.topology.set_route(message)
-            self.topology.update(message["metadata"]["route"])
+            self.topology.update_routes(message["metadata"]["route"])
 
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
