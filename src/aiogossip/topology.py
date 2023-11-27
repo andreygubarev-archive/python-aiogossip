@@ -55,6 +55,9 @@ class Topology:
     def __iter__(self):
         return iter(self.graph.nodes)
 
+    def __contains__(self, node_id):
+        return node_id in self.graph
+
     # Route #
     @property
     def route(self):

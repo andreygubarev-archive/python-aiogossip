@@ -55,20 +55,10 @@ class Peer:
 
         return decorator
 
-    def run_forever(self):
+    def run_forever(self):  # pragma: no cover
         try:
             self._loop.run_forever()
         except KeyboardInterrupt:
             pass
         finally:
             self._loop.run_until_complete(self.disconnect())
-
-
-# peer = Peer()
-
-# @peer.subscribe("test")
-# async def test(message):
-#     print(message)
-
-# if __name__ == "__main__":
-#     peer.run_forever()
