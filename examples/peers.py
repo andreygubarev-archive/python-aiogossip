@@ -45,8 +45,12 @@ if __name__ == "__main__":
     loop.run_until_complete(peer2.disconnect())
     loop.run_until_complete(peer3.disconnect())
     loop.close()
+    import json
+
     import networkx as nx
 
     g = peer1.gossip.topology.graph
-    print("graph", nx.to_dict_of_dicts(g))
-    print(nx.shortest_path(g, "p2", "p3"))
+    print("graph", json.dumps(nx.to_dict_of_dicts(g)))
+
+    g = peer2.gossip.topology.graph
+    print("graph", json.dumps(nx.to_dict_of_dicts(g)))

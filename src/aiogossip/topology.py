@@ -141,12 +141,19 @@ class Topology:
         return [self.nodes[node] for node in nodes]
 
     def update(self, routes):
-        connections = [(routes[i], routes[i + 1]) for i in range(len(routes) - 1)]
-        for src, dst in connections:
-            latency = dst[1] - src[1]
+        def add_edge(src, dst):
+            latency = abs(src[1] - dst[1])
             self.graph.add_edge(
                 src[0], dst[0], src=src[-1], dst=dst[-1], latency=latency
             )
+
+        connections = [(routes[i], routes[i + 1]) for i in range(len(routes) - 1)]
+
+        dst, src = connections[-1]
+        add_edge(src, dst)
+
+        for src, dst in connections:
+            add_edge(src, dst)
 
     def __len__(self):
         return len(self.nodes)
