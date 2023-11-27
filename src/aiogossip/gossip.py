@@ -44,7 +44,7 @@ class Gossip:
         )
 
         fanout_ignore = set([self.identity])
-        fanout_ignore.update([r[0] for r in message["metadata"].get("route", [])])
+        fanout_ignore.update([r[1] for r in message["metadata"].get("route", [])])
 
         @mutex(gossip_id, owner=self.gossip)
         async def fanout():

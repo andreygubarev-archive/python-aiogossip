@@ -46,8 +46,8 @@ class Topology:
 
     def sample(self, k, ignore=None):
         nodes = list(self.graph.nodes)
-        if ignore is not None:
-            nodes = [n for n in nodes if n not in ignore]
+        if ignore:
+            nodes = list(set(nodes) - set(ignore))
         k = min(k, len(nodes))
         return random.sample(nodes, k)
 
