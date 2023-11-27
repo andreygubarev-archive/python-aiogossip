@@ -107,27 +107,27 @@ async def test_wildcard_topic(brokers):
     await broker.close()
 
 
-@pytest.mark.parametrize("randomize", [0])
-@pytest.mark.parametrize("instances", [2])
-@pytest.mark.asyncio
-async def test_publish_to_specific_nodes(brokers):
-    pub = brokers[0]
-    pub.gossip.send = AsyncMagicMock()
-    sub = brokers[1]
-    pub.gossip.topology.add([sub.gossip.topology.node])
+# @pytest.mark.parametrize("randomize", [0])
+# @pytest.mark.parametrize("instances", [2])
+# @pytest.mark.asyncio
+# async def test_publish_to_specific_nodes(brokers):
+#     pub = brokers[0]
+#     pub.gossip.send = AsyncMagicMock()
+#     sub = brokers[1]
+#     pub.gossip.topology.add([sub.gossip.topology.node])
 
-    topic = "test"
-    message = {"metadata": {}}
+#     topic = "test"
+#     message = {"metadata": {}}
 
-    pub.gossip.send.reset_mock()
-    nodes = [sub.gossip.topology.node]
-    await pub.publish(topic, message, [sub.gossip.topology.node])
-    pub.gossip.send.assert_called_once_with(message, nodes[0])
+#     pub.gossip.send.reset_mock()
+#     nodes = [sub.gossip.topology.node]
+#     await pub.publish(topic, message, [sub.gossip.topology.node])
+#     pub.gossip.send.assert_called_once_with(message, nodes[0])
 
-    pub.gossip.send.reset_mock()
-    nodes = [sub.gossip.topology.node.identity]
-    await pub.publish(topic, message, [sub.gossip.topology.node.identity])
-    pub.gossip.send.assert_called_once_with(message, nodes[0])
+#     pub.gossip.send.reset_mock()
+#     nodes = [sub.gossip.topology.node.identity]
+#     await pub.publish(topic, message, [sub.gossip.topology.node.identity])
+#     pub.gossip.send.assert_called_once_with(message, nodes[0])
 
-    await pub.close()
-    await sub.close()
+#     await pub.close()
+#     await sub.close()

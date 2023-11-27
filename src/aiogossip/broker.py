@@ -79,7 +79,7 @@ class Broker:
         message["metadata"]["topic"] = topic
         if nodes:
             for node in nodes:
-                node = self.gossip.topology[node]
+                node = self.gossip.topology[node[0]]
                 await self.gossip.send(message, node)
         else:
             await self.gossip.gossip(message)
