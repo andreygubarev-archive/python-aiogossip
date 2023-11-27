@@ -83,3 +83,9 @@ class Topology:
             route.append(self.route)
         message["metadata"]["route"] = route
         return message
+
+    # Addr #
+    def get_addr(self, node_id):
+        path = nx.shortest_path(self.graph, self.node_id, node_id)
+        dst = self.graph.nodes[path[1]]
+        return dst["node_addr"]
