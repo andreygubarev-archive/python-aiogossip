@@ -36,9 +36,12 @@ async def main():
     message = {"message": "foo", "metadata": {}}
     await asyncio.sleep(0.1)  # wait for connections to be established
     await peer2.publish("test", message)
-    await asyncio.sleep(1)
 
 
 if __name__ == "__main__":
     loop.create_task(main())
     peer1.run_forever()
+    loop.run_until_complete(peer1.disconnect())
+    loop.run_until_complete(peer2.disconnect())
+    loop.run_until_complete(peer3.disconnect())
+    loop.close()

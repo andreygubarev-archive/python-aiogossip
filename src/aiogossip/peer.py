@@ -61,7 +61,6 @@ class Peer:
             pass
         finally:
             self._loop.run_until_complete(self.disconnect())
-            self._loop.close()
 
 
 # peer = Peer()
