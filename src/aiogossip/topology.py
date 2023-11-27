@@ -87,5 +87,4 @@ class Topology:
     # Addr #
     def get_addr(self, node_id):
         path = nx.shortest_path(self.graph, self.node_id, node_id)
-        dst = self.graph.nodes[path[1]]
-        return dst["node_addr"]
+        return self.graph.edges[path[0], path[1]]["dst"]
