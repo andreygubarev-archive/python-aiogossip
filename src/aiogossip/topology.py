@@ -105,13 +105,13 @@ class Topology:
             raise TypeError("nodes must be Iterable[Node]")
 
         for node in nodes:
-            self.graph.add_node(node)
             if node == self.node:
                 self.node.merge_network_interface(node)
             elif node.identity in self.nodes:
                 self.nodes[node.identity].merge_network_interface(node)
             else:
                 self.nodes[node.identity] = node
+            self.graph.add_node(node)
 
     def remove(self, nodes: Iterable[Node]):
         if not isinstance(nodes, Iterable):
@@ -122,6 +122,7 @@ class Topology:
         for node in nodes:
             if node.identity in self.nodes:
                 self.nodes.pop(node.identity)
+            self.graph.remove_node(node)
 
     def sample(self, k, ignore=None):
         nodes = [n for n in self.nodes.keys()]
