@@ -15,7 +15,9 @@ authors = [{ "name" = "Andrey Gubarev", "email" = "andrey@andreygubarev.com" }]
 readme = "README.md"
 license = { text = "MIT" }
 
-dependencies = []
+dependencies = [
+  "networkx==2.8.8",
+]
 
 [project.urls]
 Homepage = "https://github.com/andreygubarev/python-aiogossip/"
