@@ -27,6 +27,18 @@ class Topology:
         for node in nodes:
             self.graph.add_node(node["node_id"], **node)
 
+            if node["node_id"] == self.node_id:
+                continue
+
+            src = self.graph.nodes[self.node_id]
+            dst = self.graph.nodes[node["node_id"]]
+            attrs = {
+                "src": tuple(src["node_addr"]),
+                "dst": tuple(dst["node_addr"]),
+                "latency": 0,
+            }
+            self.graph.add_edge(src["node_id"], dst["node_id"], **attrs)
+
     def update(self, routes):
         def add(src, dst):
             attrs = {
@@ -45,7 +57,7 @@ class Topology:
             add(src, dst)
 
     def sample(self, k, ignore=None):
-        nodes = list(self.graph.nodes)
+        nodes = [e[1] for e in self.graph.out_edges(self.node_id)]
         if ignore:
             nodes = list(set(nodes) - set(ignore))
         k = min(k, len(nodes))
