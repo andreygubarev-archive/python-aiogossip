@@ -1,4 +1,7 @@
 import asyncio
+import json
+
+import networkx as nx
 
 from aiogossip.peer import Peer
 
@@ -45,12 +48,7 @@ if __name__ == "__main__":
     loop.run_until_complete(peer2.disconnect())
     loop.run_until_complete(peer3.disconnect())
     loop.close()
-    import json
 
-    import networkx as nx
-
-    g = peer1.gossip.topology.graph
-    print("graph", json.dumps(nx.to_dict_of_dicts(g)))
-
-    g = peer2.gossip.topology.graph
-    print("graph", json.dumps(nx.to_dict_of_dicts(g)))
+    print(json.dumps(nx.to_dict_of_dicts(peer1.gossip.topology.graph)))
+    print(json.dumps(nx.to_dict_of_dicts(peer2.gossip.topology.graph)))
+    print(json.dumps(nx.to_dict_of_dicts(peer3.gossip.topology.graph)))
