@@ -72,7 +72,7 @@ class Broker:
         await callback.cancel()
         self.callbacks[callback.topic].remove(callback)
 
-    async def publish(self, topic, message, nodes=None):
+    async def publish(self, topic, message, nodes=None, ack=False):
         """Publish a message to a topic."""
         # FIXME: make messages idempotent (prevent duplicate processing)
         # FIXME: allow sending to specific nodes

@@ -45,8 +45,8 @@ class Peer:
         self.task.cancel()
         await asyncio.gather(self.task, return_exceptions=True)
 
-    async def publish(self, topic, message, nodes=None):
-        await self.broker.publish(topic, message, nodes=nodes)
+    async def publish(self, topic, message, nodes=None, ack=False):
+        await self.broker.publish(topic, message, nodes=nodes, ack=False)
 
     def subscribe(self, topic):
         def decorator(callback):
