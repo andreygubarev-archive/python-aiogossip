@@ -80,6 +80,6 @@ class Broker:
         if nodes:
             for node in nodes:
                 node = self.gossip.topology[node]
-                await self.gossip.send(message, node)
+                await self.gossip.send(message, node["node_id"])
         else:
             await self.gossip.gossip(message)
