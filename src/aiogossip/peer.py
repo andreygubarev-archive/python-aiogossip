@@ -2,7 +2,7 @@ import asyncio
 import uuid
 
 from .broker import Broker
-from .errors import handle_exception
+from .errors import print_exception
 from .gossip import Gossip
 from .transport import Transport
 
@@ -25,7 +25,7 @@ class Peer:
         self.broker = Broker(self.gossip, loop=self._loop)
 
         self.task = self._loop.create_task(self.broker.listen())
-        self.task.add_done_callback(handle_exception)
+        self.task.add_done_callback(print_exception)
 
     @property
     def node(self):
@@ -38,7 +38,7 @@ class Peer:
     def connect(self, nodes):
         self.gossip.topology.add(nodes)
         task = self._loop.create_task(self._connect())
-        task.add_done_callback(handle_exception)
+        task.add_done_callback(print_exception)
 
     async def disconnect(self):
         await self.broker.close()

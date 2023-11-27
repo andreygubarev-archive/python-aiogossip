@@ -1,7 +1,7 @@
 import asyncio
 
 
-def handle_exception(task):
+def print_exception(task):
     try:
         e = task.exception()
     except asyncio.CancelledError:
