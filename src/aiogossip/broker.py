@@ -63,7 +63,6 @@ class Broker:
 
     def subscribe(self, topic, callback):
         """Subscribe to a topic and register a callback."""
-        # FIXME: handle exceptions in callback
         callback = Callback(topic, callback, loop=self._loop)
         self.callbacks[topic].append(callback)
         return callback
