@@ -14,7 +14,7 @@ async def test_peer(peers):
     assert peer1.identity != peer2.identity
 
     peer1.connect([peer2.node])
-    assert peer2.node.identity in peer1.gossip.topology.nodes
+    assert peer2.identity in peer1.gossip.topology
 
     message = {"message": "Hello, world!", "metadata": {}}
     await peer1.publish("test", message)

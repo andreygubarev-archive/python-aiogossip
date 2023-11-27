@@ -121,13 +121,13 @@ async def test_publish_to_specific_nodes(brokers):
 
     pub.gossip.send.reset_mock()
     nodes = [sub.gossip.topology.node]
-    await pub.publish(topic, message, [sub.gossip.topology.node])
+    await pub.publish(topic, message, [sub.gossip.topology.node_id])
     pub.gossip.send.assert_called_once_with(message, nodes[0])
 
     pub.gossip.send.reset_mock()
-    nodes = [sub.gossip.topology.node.identity]
-    await pub.publish(topic, message, [sub.gossip.topology.node.identity])
-    pub.gossip.send.assert_called_once_with(message, nodes[0])
+    nodes = [sub.gossip.topology.node_id]
+    await pub.publish(topic, message, nodes=[sub.gossip.topology.node_id])
+    pub.gossip.send.assert_called_once_with(message, sub.gossip.topology.node)
 
     await pub.close()
     await sub.close()

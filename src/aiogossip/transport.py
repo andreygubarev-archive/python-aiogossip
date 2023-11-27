@@ -9,7 +9,7 @@ from . import codec
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 if os.environ.get("DEBUG"):
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG)  # pragma: no cover
 
 
 class Transport:

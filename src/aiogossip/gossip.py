@@ -1,20 +1,18 @@
-import copy
 import math
 import uuid
 
 from .mutex import mutex
-from .topology import Node, Topology
+from .topology import Topology
 
 
 class Gossip:
     FANOUT = 5
 
-    def __init__(self, transport, topology=None, fanout=None, identity=None):
+    def __init__(self, transport, fanout=None, identity=None):
         self.identity = identity or uuid.uuid4().hex
         self.transport = transport
 
-        self.topology = topology or Topology()
-        self.topology.node = Node(self.identity, self.transport.addr)
+        self.topology = Topology(self.identity, self.transport.addr)
 
         self._fanout = fanout or self.FANOUT
 
@@ -32,15 +30,10 @@ class Gossip:
 
         return math.ceil(math.log(len(self.topology), self.fanout))
 
-    async def send(self, message, node):
-        message = copy.deepcopy(message)
-
-        route = message["metadata"].get("route", [self.topology.route])
-        if route[-1][0] != self.identity:
-            route.append(self.topology.route)
-        message["metadata"]["route"] = route
-
-        await self.transport.send(message, node.address.addr)
+    async def send(self, message, node_id):
+        self.topology.set_route(message)
+        addr = self.topology.get_addr(node_id)
+        await self.transport.send(message, addr)
 
     async def gossip(self, message):
         gossip_id = message["metadata"]["gossip"] = message["metadata"].get(
@@ -48,7 +41,7 @@ class Gossip:
         )
 
         fanout_ignore = set([self.identity])
-        fanout_ignore.update([r[0] for r in message["metadata"].get("route", [])])
+        fanout_ignore.update([r[1] for r in message["metadata"].get("route", [])])
 
         @mutex(gossip_id, owner=self.gossip)
         async def fanout():
@@ -57,7 +50,7 @@ class Gossip:
                 fanout_nodes = self.topology.sample(self.fanout, ignore=fanout_ignore)
                 for fanout_node in fanout_nodes:
                     await self.send(message, fanout_node)
-                fanout_ignore.update([n.identity for n in fanout_nodes])
+                fanout_ignore.update(fanout_nodes)
                 cycle += 1
 
         await fanout()
@@ -66,9 +59,8 @@ class Gossip:
         while True:
             message, addr = await self.transport.recv()
             message["metadata"]["route"][-1].append(list(addr))
-
-            nodes = [Node(r[0], r[-1]) for r in message["metadata"]["route"]]
-            self.topology.add(nodes)  # establish bidirectional connection
+            self.topology.set_route(message)
+            self.topology.update_routes(message["metadata"]["route"])
 
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
