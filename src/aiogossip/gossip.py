@@ -1,4 +1,3 @@
-import copy
 import math
 import uuid
 
@@ -32,7 +31,6 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node_id):
-        message = copy.deepcopy(message)
         self.topology.set_route(message)
         addr = self.topology.get_addr(node_id)
         await self.transport.send(message, addr)
