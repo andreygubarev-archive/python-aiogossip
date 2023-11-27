@@ -23,7 +23,7 @@ endif
 
 .PHONY: run
 run: ## Run Python Package
-	bash tests/test_orchestrator.sh
+	python $(MAKEFILE_DIR)/examples/peers.py
 
 .PHONY: build
 build: ## Build Python Package
