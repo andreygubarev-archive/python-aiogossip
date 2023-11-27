@@ -34,12 +34,7 @@ class Gossip:
 
     async def send(self, message, node):
         message = copy.deepcopy(message)
-
-        route = message["metadata"].get("route", [self.topology.route])
-        if route[-1][0] != self.identity:
-            route.append(self.topology.route)
-        message["metadata"]["route"] = route
-
+        self.topology.update_route(message)
         await self.transport.send(message, node.address.addr)
 
     async def gossip(self, message):
@@ -66,6 +61,8 @@ class Gossip:
         while True:
             message, addr = await self.transport.recv()
             message["metadata"]["route"][-1].append(list(addr))
+            self.topology.update_route(message)
+            self.topology.update(message["metadata"]["route"])
 
             nodes = [Node(r[0], r[-1]) for r in message["metadata"]["route"]]
             self.topology.add(nodes)  # establish bidirectional connection

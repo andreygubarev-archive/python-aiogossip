@@ -90,6 +90,13 @@ class Topology:
     def route(self):
         return [self.node.identity, time.time_ns(), list(self.node.address.addr)]
 
+    def update_route(self, message):
+        route = message["metadata"].get("route", [self.route])
+        if route[-1][0] != self.node:
+            route.append(self.route)
+        message["metadata"]["route"] = route
+        return message
+
     def set(self, node: Node):
         """Set the node as the local node"""
         if not isinstance(node, Node):
@@ -132,6 +139,11 @@ class Topology:
         k = min(k, len(nodes))
         nodes = random.sample(nodes, k)
         return [self.nodes[node] for node in nodes]
+
+    def update(self, routes):
+        for route in routes:
+            identity, timestamp, *addr = route
+            print(identity, timestamp, addr)
 
     def __len__(self):
         return len(self.nodes)
