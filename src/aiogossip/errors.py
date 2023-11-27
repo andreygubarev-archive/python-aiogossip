@@ -1,5 +1,4 @@
 import asyncio
-import traceback
 
 
 def handle_exception(task):
@@ -11,4 +10,4 @@ def handle_exception(task):
     if not e:
         return
 
-    traceback.print_exception(type(e), e, e.__traceback__)
+    task.print_stack()
