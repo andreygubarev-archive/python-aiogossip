@@ -1,11 +1,14 @@
-import sys
+import asyncio
 import traceback
 
 
-def handle_exception(loop, context):
-    exception = context.get("exception")
-    if exception:
-        print("Caught exception: ", exception, file=sys.stderr)
-        traceback.print_tb(exception.__traceback__, file=sys.stderr)
-    else:
-        loop.default_exception_handler(context)
+def handle_exception(task):
+    try:
+        e = task.exception()
+    except asyncio.CancelledError:
+        return
+
+    if not e:
+        return
+
+    traceback.print_exception(type(e), e, e.__traceback__)

@@ -25,6 +25,7 @@ class Peer:
         self.broker = Broker(self.gossip, loop=self._loop)
 
         self.task = self._loop.create_task(self.broker.listen())
+        self.task.add_done_callback(handle_exception)
 
     @property
     def node(self):
@@ -36,7 +37,8 @@ class Peer:
 
     def connect(self, nodes):
         self.gossip.topology.add(nodes)
-        self._loop.create_task(self._connect())
+        task = self._loop.create_task(self._connect())
+        task.add_done_callback(handle_exception)
 
     async def disconnect(self):
         await self.broker.close()
@@ -54,7 +56,6 @@ class Peer:
         return decorator
 
     def run_forever(self):
-        self._loop.set_exception_handler(handle_exception)
         try:
             self._loop.run_forever()
         except KeyboardInterrupt:

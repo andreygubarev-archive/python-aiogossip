@@ -4,6 +4,7 @@ import fnmatch
 import itertools
 
 from .channel import Channel
+from .errors import handle_exception
 from .gossip import Gossip
 
 
@@ -16,6 +17,7 @@ class Callback:
         self.chan = Channel(loop=self._loop)
 
         self.task = self._loop.create_task(self())
+        self.task.add_done_callback(handle_exception)
 
     async def __call__(self):
         while True:
