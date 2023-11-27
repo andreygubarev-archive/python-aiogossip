@@ -14,7 +14,7 @@ class Gossip:
         self.transport = transport
 
         self.topology = topology or Topology()
-        self.topology.node = Node(self.identity, self.transport.addr)
+        self.topology.set(Node(self.identity, self.transport.addr))
 
         self._fanout = fanout or self.FANOUT
 

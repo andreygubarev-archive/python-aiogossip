@@ -3,6 +3,8 @@ import random
 import time
 from typing import Iterable
 
+import networkx as nx
+
 
 class Address:
     def __init__(self, ip, port):
@@ -82,10 +84,19 @@ class Topology:
     def __init__(self):
         self.node = None
         self.nodes = {}
+        self.graph = nx.DiGraph()
 
     @property
     def route(self):
         return [self.node.identity, time.time_ns(), list(self.node.address.addr)]
+
+    def set(self, node: Node):
+        """Set the node as the local node"""
+        if not isinstance(node, Node):
+            raise TypeError("node must be Node")
+
+        self.node = node
+        self.graph.add_node(node)
 
     def add(self, nodes: Iterable[Node]):
         if not isinstance(nodes, Iterable):
@@ -94,6 +105,7 @@ class Topology:
             raise TypeError("nodes must be Iterable[Node]")
 
         for node in nodes:
+            self.graph.add_node(node)
             if node == self.node:
                 self.node.merge_network_interface(node)
             elif node.identity in self.nodes:
