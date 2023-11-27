@@ -20,7 +20,7 @@ class Topology:
 
     @property
     def node(self):
-        return {"node_id": self.node_id, "node_addr": self.node_addr}
+        return {"node_id": self.node_id, "node_addr": tuple(self.node_addr)}
 
     # Topology #
     def add(self, nodes):
@@ -30,12 +30,12 @@ class Topology:
     def update(self, routes):
         def add(src, dst):
             attrs = {
-                "src": src[1],
-                "dst": dst[1],
+                "src": tuple(src[-1]),
+                "dst": tuple(dst[-1]),
                 "latency": abs(src[0] - dst[0]),
             }
-            self.graph.add_node(src[1], node_id=src[1], node_addr=src[-1])
-            self.graph.add_node(dst[1], node_id=dst[1], node_addr=dst[-1])
+            self.graph.add_node(src[1], node_id=src[1], node_addr=tuple(src[-1]))
+            self.graph.add_node(dst[1], node_id=dst[1], node_addr=tuple(dst[-1]))
             self.graph.add_edge(src[1], dst[1], **attrs)
 
         connections = [(routes[i], routes[i + 1]) for i in range(len(routes) - 1)]
