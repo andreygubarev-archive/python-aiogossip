@@ -12,7 +12,7 @@ class AsyncMagicMock(MagicMock):
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
-async def test_subscribe(event_loop, brokers):
+async def test_subscribe(brokers):
     pub = brokers[0]
     sub = brokers[1]
 
@@ -29,7 +29,7 @@ async def test_subscribe(event_loop, brokers):
     try:
         async with asyncio.timeout(0.1):
             await pub.publish(topic, message)
-            await sub.connect()
+            await sub.listen()
     except asyncio.TimeoutError:
         pass
 
@@ -38,14 +38,14 @@ async def test_subscribe(event_loop, brokers):
 
     await sub.unsubscribe(callback)
     assert callback not in sub.callbacks[topic]
-    await pub.disconnect()
-    await sub.disconnect()
+    await pub.close()
+    await sub.close()
 
 
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
-async def test_connect_ignores_messages_without_topic(event_loop, brokers):
+async def test_connect_ignores_messages_without_topic(brokers):
     broker = brokers[0]
 
     async def recv():
@@ -57,15 +57,15 @@ async def test_connect_ignores_messages_without_topic(event_loop, brokers):
     callback = broker.subscribe("test", callback)
     callback.chan.send = MagicMock()
 
-    await broker.connect()
+    await broker.listen()
     callback.chan.send.assert_not_called()
-    await broker.disconnect()
+    await broker.close()
 
 
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
-async def test_connect_cleans_up_empty_topics(event_loop, brokers):
+async def test_connect_cleans_up_empty_topics(brokers):
     broker = brokers[0]
     topic = "test"
 
@@ -80,15 +80,15 @@ async def test_connect_cleans_up_empty_topics(event_loop, brokers):
     assert topic in broker.callbacks
     assert len(broker.callbacks[topic]) == 0
 
-    await broker.connect()
+    await broker.listen()
     assert topic not in broker.callbacks
-    await broker.disconnect()
+    await broker.close()
 
 
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
-async def test_wildcard_topic(event_loop, brokers):
+async def test_wildcard_topic(brokers):
     broker = brokers[0]
     topic = "test.*"
 
@@ -102,6 +102,32 @@ async def test_wildcard_topic(event_loop, brokers):
     callback = broker.subscribe(topic, callback)
     callback.chan.send = AsyncMagicMock()
 
-    await broker.connect()
+    await broker.listen()
     assert callback.chan.send.call_count == 2
-    await broker.disconnect()
+    await broker.close()
+
+
+@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("instances", [2])
+@pytest.mark.asyncio
+async def test_publish_to_specific_nodes(brokers):
+    pub = brokers[0]
+    pub.gossip.send = AsyncMagicMock()
+    sub = brokers[1]
+    pub.gossip.topology.add([sub.gossip.topology.node])
+
+    topic = "test"
+    message = {"metadata": {}}
+
+    pub.gossip.send.reset_mock()
+    nodes = [sub.gossip.topology.node]
+    await pub.publish(topic, message, [sub.gossip.topology.node])
+    pub.gossip.send.assert_called_once_with(message, nodes[0])
+
+    pub.gossip.send.reset_mock()
+    nodes = [sub.gossip.topology.node.identity]
+    await pub.publish(topic, message, [sub.gossip.topology.node.identity])
+    pub.gossip.send.assert_called_once_with(message, nodes[0])
+
+    await pub.close()
+    await sub.close()

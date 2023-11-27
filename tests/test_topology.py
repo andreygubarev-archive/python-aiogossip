@@ -1,5 +1,7 @@
 import ipaddress
 
+import pytest
+
 from aiogossip.topology import Address, Node, Topology
 
 # Address ####################################################################
@@ -120,6 +122,11 @@ def test_topology_initialization():
 
 def test_topology_add():
     topology = Topology()
+    with pytest.raises(TypeError):
+        topology.add(123)
+    with pytest.raises(TypeError):
+        topology.add([123])
+
     node1 = Node("node1", ("127.0.0.1", 8000))
     node2 = Node("node2", ("192.168.1.1", 8000))
     topology.add([node1, node2])
@@ -130,6 +137,11 @@ def test_topology_add():
 
 def test_topology_remove():
     topology = Topology()
+    with pytest.raises(TypeError):
+        topology.remove(123)
+    with pytest.raises(TypeError):
+        topology.remove([123])
+
     node1 = Node("node1", ("127.0.0.1", 8000))
     node2 = Node("node2", ("192.168.1.1", 8000))
     topology.add([node1, node2])
@@ -137,17 +149,6 @@ def test_topology_remove():
     assert len(topology) == 1
     assert node1 not in topology
     assert node2 in topology
-
-
-def test_topology_get():
-    topology = Topology()
-    node1 = Node("node1", ("127.0.0.1", 8000))
-    node2 = Node("node2", ("192.168.1.1", 8000))
-    topology.add([node1, node2])
-    nodes = topology.get()
-    assert len(nodes) == 2
-    assert node1 in nodes
-    assert node2 in nodes
 
 
 def test_topology_len():
@@ -158,13 +159,29 @@ def test_topology_len():
     assert len(topology) == 2
 
 
-def test_topology_contains():
+def test_topology_contains_with_node():
     topology = Topology()
     node1 = Node("node1", ("127.0.0.1", 8000))
     node2 = Node("node2", ("192.168.1.1", 8000))
     topology.add([node1])
     assert node1 in topology
     assert node2 not in topology
+
+
+def test_topology_contains_with_string():
+    topology = Topology()
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    topology.add([node1])
+    assert "node1" in topology
+    assert "node2" not in topology
+
+
+def test_topology_contains_with_invalid_type():
+    topology = Topology()
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    topology.add([node1])
+    with pytest.raises(TypeError):
+        assert 123 in topology
 
 
 def test_topology_iter():
@@ -176,3 +193,29 @@ def test_topology_iter():
     assert len(nodes) == 2
     assert node1 in nodes
     assert node2 in nodes
+
+
+def test_topology_getitem_with_node():
+    topology = Topology()
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    topology.add([node1, node2])
+    assert topology[node1] == node1
+    assert topology[node2] == node2
+
+
+def test_topology_getitem_with_string():
+    topology = Topology()
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    node2 = Node("node2", ("192.168.1.1", 8000))
+    topology.add([node1, node2])
+    assert topology["node1"] == node1
+    assert topology["node2"] == node2
+
+
+def test_topology_getitem_with_invalid_type():
+    topology = Topology()
+    node1 = Node("node1", ("127.0.0.1", 8000))
+    topology.add([node1])
+    with pytest.raises(TypeError):
+        topology[123]

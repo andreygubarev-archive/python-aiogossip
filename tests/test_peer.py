@@ -26,14 +26,8 @@ async def test_peer(peers):
         nonlocal callback_message
         callback_message = message["message"]
 
-    async def listener(peer):
-        try:
-            async with asyncio.timeout(0.1):
-                await peer.run_forever()
-        except asyncio.TimeoutError:
-            await peer.disconnect()
-
-    listener = asyncio.create_task(listener(peer2))
-    await listener
-
+    await asyncio.sleep(0.1)
     assert callback_message == message["message"]
+
+    for peer in peers:
+        await peer.disconnect()

@@ -1,14 +1,22 @@
 import asyncio
+import logging
+import os
 import socket
+import sys
 
 from . import codec
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+if os.environ.get("DEBUG"):
+    logger.setLevel(logging.DEBUG)
 
 
 class Transport:
     PAYLOAD_SIZE = 4096
 
-    def __init__(self, bind, loop=None):
-        self.loop = loop or asyncio.get_running_loop()
+    def __init__(self, bind, loop: asyncio.AbstractEventLoop):
+        self._loop = loop
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(bind)
@@ -29,12 +37,16 @@ class Transport:
             raise ValueError(
                 f"Message size exceeds payload size of {self.PAYLOAD_SIZE} bytes"
             )
-        await self.loop.sock_sendto(self.sock, message, addr)
+        await self._loop.sock_sendto(self.sock, message, addr)
+        logger.debug(f"DEBUG: {self.addr[1]} > {addr[1]} send: {message}\n")
+
         self.tx_packets += 1
         self.tx_bytes += len(message)
 
     async def recv(self):
-        message, addr = await self.loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
+        message, addr = await self._loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
+        logger.debug(f"DEBUG: {self.addr[1]} < {addr[1]} recv: {message}\n")
+
         self.rx_packets += 1
         self.rx_bytes += len(message)
         message = codec.decode(message)

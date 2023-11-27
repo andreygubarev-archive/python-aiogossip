@@ -5,8 +5,10 @@ import collections
 class Channel:
     """A simple asynchronous channel for sending and receiving messages."""
 
-    def __init__(self):
+    def __init__(self, loop: asyncio.AbstractEventLoop):
         """Initialize the channel with empty queue and waiters."""
+        self._loop = loop
+
         self._queue = collections.deque()
         self._waiters = collections.deque()
 
@@ -21,7 +23,7 @@ class Channel:
     async def recv(self):
         """Receive a message from the channel. If the channel is empty, wait until a message is sent."""
         while not self._queue:
-            waiter = asyncio.get_running_loop().create_future()
+            waiter = self._loop.create_future()
             self._waiters.append(waiter)
             try:
                 await waiter

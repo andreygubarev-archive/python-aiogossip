@@ -1,3 +1,4 @@
+import copy
 import math
 import uuid
 
@@ -8,14 +9,14 @@ from .topology import Node, Topology
 class Gossip:
     FANOUT = 5
 
-    def __init__(self, transport, topology=None, fanout=FANOUT, identity=None):
+    def __init__(self, transport, topology=None, fanout=None, identity=None):
         self.identity = identity or uuid.uuid4().hex
         self.transport = transport
 
         self.topology = topology or Topology()
         self.topology.node = Node(self.identity, self.transport.addr)
 
-        self._fanout = fanout
+        self._fanout = fanout or self.FANOUT
 
     @property
     def fanout(self):
@@ -32,44 +33,44 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node):
-        message["metadata"]["sender_id"] = self.identity
+        message = copy.deepcopy(message)
+
+        route = message["metadata"].get("route", [self.topology.route])
+        if route[-1][0] != self.identity:
+            route.append(self.topology.route)
+        message["metadata"]["route"] = route
+
         await self.transport.send(message, node.address.addr)
 
     async def gossip(self, message):
-        if "gossip_id" in message["metadata"]:
-            gossip_id = message["metadata"]["gossip_id"]
-            gossip_sender_id = message["metadata"]["gossip_sender_id"]
-        else:
-            gossip_id = message["metadata"]["gossip_id"] = uuid.uuid4().hex
-            gossip_sender_id = message["metadata"]["gossip_sender_id"] = self.identity
+        gossip_id = message["metadata"]["gossip"] = message["metadata"].get(
+            "gossip", uuid.uuid4().hex
+        )
 
-        fanout_excludes = [self.identity, gossip_sender_id]
-        if "sender_id" in message["metadata"]:
-            fanout_excludes.append(message["metadata"]["sender_id"])
+        fanout_ignore = set([self.identity])
+        fanout_ignore.update([r[0] for r in message["metadata"].get("route", [])])
 
         @mutex(gossip_id, owner=self.gossip)
-        async def multicast():
+        async def fanout():
             cycle = 0
             while cycle < self.fanout_cycles:
-                fanout_nodes = self.topology.get(
-                    sample=self.fanout,
-                    exclude=fanout_excludes,
-                )
-                for node in fanout_nodes:
-                    await self.send(message, node)
+                fanout_nodes = self.topology.sample(self.fanout, ignore=fanout_ignore)
+                for fanout_node in fanout_nodes:
+                    await self.send(message, fanout_node)
+                fanout_ignore.update([n.identity for n in fanout_nodes])
                 cycle += 1
-                fanout_excludes.extend([n.identity for n in fanout_nodes])
 
-        await multicast()
+        await fanout()
 
     async def recv(self):
         while True:
             message, addr = await self.transport.recv()
-            message["metadata"]["sender_addr"] = addr
-            sender_node = Node(message["metadata"]["sender_id"], addr)
-            self.topology.add([sender_node])  # establish bidirectional connection
+            message["metadata"]["route"][-1].append(list(addr))
 
-            if "gossip_id" in message["metadata"]:
+            nodes = [Node(r[0], r[-1]) for r in message["metadata"]["route"]]
+            self.topology.add(nodes)  # establish bidirectional connection
+
+            if "gossip" in message["metadata"]:
                 await self.gossip(message)
 
             yield message

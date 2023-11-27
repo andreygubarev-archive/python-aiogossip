@@ -1,5 +1,6 @@
 import ipaddress
 import random
+import time
 from typing import Iterable
 
 
@@ -34,6 +35,9 @@ class Node:
         self.set_address(addr)
 
     def set_address(self, addr):
+        if isinstance(addr, str):
+            addr = addr.split(":")
+
         self.address = Address(*addr)
 
         if self.address.ip.is_loopback:
@@ -60,7 +64,12 @@ class Node:
     def __eq__(self, other):
         if not other:
             return False
-        return self.identity == other.identity
+        if isinstance(other, str):
+            return self.identity == other
+        elif isinstance(other, Node):
+            return self.identity == other.identity
+        else:
+            raise TypeError("other must be Node or str")
 
     def __hash__(self):
         return hash(self.identity)
@@ -74,8 +83,16 @@ class Topology:
         self.node = None
         self.nodes = {}
 
+    @property
+    def route(self):
+        return [self.node.identity, time.time_ns(), list(self.node.address.addr)]
+
     def add(self, nodes: Iterable[Node]):
-        assert isinstance(nodes, Iterable)
+        if not isinstance(nodes, Iterable):
+            raise TypeError("nodes must be Iterable[Node]")
+        if not all(isinstance(n, Node) for n in nodes):
+            raise TypeError("nodes must be Iterable[Node]")
+
         for node in nodes:
             if node == self.node:
                 self.node.merge_network_interface(node)
@@ -85,28 +102,42 @@ class Topology:
                 self.nodes[node.identity] = node
 
     def remove(self, nodes: Iterable[Node]):
-        assert isinstance(nodes, Iterable)
+        if not isinstance(nodes, Iterable):
+            raise TypeError("nodes must be Iterable[Node]")
+        if not all(isinstance(n, Node) for n in nodes):
+            raise TypeError("nodes must be Iterable[Node]")
+
         for node in nodes:
             if node.identity in self.nodes:
                 self.nodes.pop(node.identity)
 
-    # FIXME: get is a bad name
-    # FIXME: sample is a bad name
-    # FIXME: exclude is list of strings, not list of nodes
-    def get(self, sample=None, exclude=None):
+    def sample(self, k, ignore=None):
         nodes = [n for n in self.nodes.keys()]
-        if exclude is not None:
-            nodes = [n for n in nodes if n not in exclude]
-        if sample is not None:
-            sample = min(sample, len(nodes))
-            nodes = random.sample(nodes, sample)
-        return [self.nodes[n] for n in nodes]
+        if ignore is not None:
+            ignore = [n.identity if isinstance(n, Node) else n for n in ignore]
+            nodes = [n for n in nodes if n not in ignore]
+        k = min(k, len(nodes))
+        nodes = random.sample(nodes, k)
+        return [self.nodes[node] for node in nodes]
 
     def __len__(self):
         return len(self.nodes)
 
     def __contains__(self, node):
-        return node.identity in self.nodes
+        if isinstance(node, Node):
+            return node.identity in self.nodes
+        elif isinstance(node, str):
+            return node in self.nodes
+        else:
+            raise TypeError("node must be Node or str")
+
+    def __getitem__(self, node):
+        if isinstance(node, Node):
+            return self.nodes[node.identity]
+        elif isinstance(node, str):
+            return self.nodes[node]
+        else:
+            raise TypeError("node must be Node or str")
 
     def __iter__(self):
         return iter(self.nodes.values())

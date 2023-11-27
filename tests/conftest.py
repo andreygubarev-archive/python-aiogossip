@@ -20,6 +20,11 @@ def instances(request):
 
 
 @pytest.fixture
+def transport(event_loop):
+    return Transport(("localhost", 0), loop=event_loop)
+
+
+@pytest.fixture
 def gossips(randomize, event_loop, instances):
     def get_gossip():
         transport = Transport(("localhost", 0), loop=event_loop)

@@ -2,41 +2,51 @@ import asyncio
 import uuid
 
 from .broker import Broker
+from .errors import print_exception
 from .gossip import Gossip
 from .transport import Transport
 
 
 class Peer:
-    def __init__(self, host="0.0.0.0", port=0, identity=None, loop=None):
-        # FIXME: loop shouldn't be optional
-        self.loop = loop or asyncio.get_running_loop()
+    def __init__(
+        self,
+        loop: asyncio.AbstractEventLoop,
+        host="0.0.0.0",
+        port=0,
+        fanout=None,
+        identity=None,
+    ):
+        self._loop = loop
 
         self.identity = identity or uuid.uuid4().hex
         # FIXME: should be lazy
-        self.transport = Transport((host, port), loop=self.loop)
-        self.gossip = Gossip(self.transport, identity=self.identity)
-        self.broker = Broker(self.gossip, loop=self.loop)
+        self.transport = Transport((host, port), loop=self._loop)
+        self.gossip = Gossip(self.transport, fanout=fanout, identity=self.identity)
+        self.broker = Broker(self.gossip, loop=self._loop)
+
+        self.task = self._loop.create_task(self.broker.listen())
+        self.task.add_done_callback(print_exception)
 
     @property
     def node(self):
         return self.gossip.topology.node
 
     async def _connect(self):
-        await self.publish("connect", {"metadata": {}})
+        message = {"metadata": {"type": "CONNECT"}}
+        await self.publish("connect", message)
 
     def connect(self, nodes):
         self.gossip.topology.add(nodes)
-        self.loop.create_task(self._connect())
+        task = self._loop.create_task(self._connect())
+        task.add_done_callback(print_exception)
 
     async def disconnect(self):
-        await self.broker.disconnect()
+        await self.broker.close()
+        self.task.cancel()
+        await asyncio.gather(self.task, return_exceptions=True)
 
     async def publish(self, topic, message, nodes=None):
-        if nodes:
-            nodes = [self.gossip.topology.nodes[n] for n in nodes or []]
-            await self.broker.publish(topic, message, nodes=nodes)
-        else:
-            await self.broker.publish(topic, message)
+        await self.broker.publish(topic, message, nodes=nodes)
 
     def subscribe(self, topic):
         def decorator(callback):
@@ -46,7 +56,12 @@ class Peer:
         return decorator
 
     def run_forever(self):
-        return self.loop.create_task(self.broker.connect())
+        try:
+            self._loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self._loop.run_until_complete(self.disconnect())
 
 
 # peer = Peer()

@@ -1,12 +1,8 @@
 import pytest
 
-from aiogossip.transport import Transport
-
 
 @pytest.mark.asyncio
-async def test_send_recv():
-    transport = Transport(("localhost", 0))
-
+async def test_send_recv(transport):
     message = {"key": "value"}
     addr = transport.sock.getsockname()
     await transport.send(message, addr)
@@ -17,9 +13,7 @@ async def test_send_recv():
 
 
 @pytest.mark.asyncio
-async def test_send_large_payload():
-    transport = Transport(("localhost", 0))
-
+async def test_send_large_payload(transport):
     message = "a" * (transport.PAYLOAD_SIZE + 1)
     addr = transport.sock.getsockname()
 
@@ -31,8 +25,7 @@ async def test_send_large_payload():
 
 
 @pytest.mark.asyncio
-async def test_addr_property():
-    transport = Transport(("localhost", 0))
+async def test_addr_property(transport):
     assert transport.addr == transport.sock.getsockname()
     assert transport.addr[0] == "127.0.0.1"
     assert isinstance(transport.addr[1], int)

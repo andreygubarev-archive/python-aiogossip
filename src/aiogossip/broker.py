@@ -4,18 +4,20 @@ import fnmatch
 import itertools
 
 from .channel import Channel
+from .errors import print_exception
 from .gossip import Gossip
 
 
 class Callback:
-    def __init__(self, topic, func, loop=None):
-        self.loop = loop or asyncio.get_running_loop()
+    def __init__(self, topic, func, loop: asyncio.AbstractEventLoop):
+        self._loop = loop
 
         self.topic = topic
         self.func = func
-        self.chan = Channel()
+        self.chan = Channel(loop=self._loop)
 
-        self.task = self.loop.create_task(self())
+        self.task = self._loop.create_task(self())
+        self.task.add_done_callback(print_exception)
 
     async def __call__(self):
         while True:
@@ -28,13 +30,13 @@ class Callback:
 
 
 class Broker:
-    def __init__(self, gossip: Gossip, loop=None):
-        self.loop = loop or asyncio.get_running_loop()
+    def __init__(self, gossip: Gossip, loop: asyncio.AbstractEventLoop):
+        self._loop = loop
 
         self.gossip = gossip
         self.callbacks = collections.defaultdict(list)
 
-    async def connect(self):
+    async def listen(self):
         """Connect to the gossip network and start receiving messages."""
         async for message in self.gossip.recv():
             # FIXME: make messages idempotent (prevent duplicate processing)
@@ -53,7 +55,7 @@ class Broker:
                 if len(self.callbacks[topic]) == 0:
                     del self.callbacks[topic]
 
-    async def disconnect(self):
+    async def close(self):
         """Disconnect from the gossip network and stop receiving messages."""
         callbacks = [cb for cb in itertools.chain(*self.callbacks.values())]
         await asyncio.gather(*[cb.cancel() for cb in callbacks], return_exceptions=True)
@@ -61,8 +63,7 @@ class Broker:
 
     def subscribe(self, topic, callback):
         """Subscribe to a topic and register a callback."""
-        # FIXME: handle exceptions in callback
-        callback = Callback(topic, callback, loop=self.loop)
+        callback = Callback(topic, callback, loop=self._loop)
         self.callbacks[topic].append(callback)
         return callback
 
@@ -78,6 +79,7 @@ class Broker:
         message["metadata"]["topic"] = topic
         if nodes:
             for node in nodes:
+                node = self.gossip.topology[node]
                 await self.gossip.send(message, node)
         else:
             await self.gossip.gossip(message)

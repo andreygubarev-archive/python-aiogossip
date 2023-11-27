@@ -6,15 +6,15 @@ from aiogossip.channel import Channel
 
 
 @pytest.mark.asyncio
-async def test_send_recv():
-    channel = Channel()
+async def test_send_recv(event_loop):
+    channel = Channel(loop=event_loop)
     await channel.send("message")
     assert await channel.recv() == "message"
 
 
 @pytest.mark.asyncio
-async def test_send_recv_order():
-    channel = Channel()
+async def test_send_recv_order(event_loop):
+    channel = Channel(loop=event_loop)
     await channel.send("first")
     await channel.send("second")
     assert await channel.recv() == "first"
@@ -22,8 +22,8 @@ async def test_send_recv_order():
 
 
 @pytest.mark.asyncio
-async def test_recv_wait():
-    channel = Channel()
+async def test_recv_wait(event_loop):
+    channel = Channel(loop=event_loop)
 
     async def send_later():
         await asyncio.sleep(0.1)
@@ -34,8 +34,8 @@ async def test_recv_wait():
 
 
 @pytest.mark.asyncio
-async def test_close():
-    channel = Channel()
+async def test_close(event_loop):
+    channel = Channel(loop=event_loop)
 
     async def recv_later():
         with pytest.raises(asyncio.CancelledError):
@@ -47,8 +47,8 @@ async def test_close():
 
 
 @pytest.mark.asyncio
-async def test_cancelled_recv():
-    channel = Channel()
+async def test_cancelled_recv(event_loop):
+    channel = Channel(loop=event_loop)
 
     async def cancel_recv():
         await asyncio.sleep(0.1)
@@ -61,8 +61,8 @@ async def test_cancelled_recv():
 
 
 @pytest.mark.asyncio
-async def test_concurrent_recv():
-    channel = Channel()
+async def test_concurrent_recv(event_loop):
+    channel = Channel(loop=event_loop)
     await channel.send("first")
     await channel.send("second")
 

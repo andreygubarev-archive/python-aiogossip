@@ -35,8 +35,11 @@ async def test_gossip(gossips):
 
 
 @pytest.mark.asyncio
-async def test_send_and_receive():
-    gossips = [Gossip(Transport(("localhost", 0)), []) for _ in range(2)]
+async def test_send_and_receive(event_loop):
+    def get_transport():
+        return Transport(("localhost", 0), loop=event_loop)
+
+    gossips = [Gossip(get_transport(), []) for _ in range(2)]
     message = {"message": "Hello, world!", "metadata": {}}
 
     await gossips[0].send(message, gossips[1].topology.node)
