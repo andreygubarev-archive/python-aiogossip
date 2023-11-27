@@ -34,9 +34,7 @@ class Gossip:
     async def send(self, message, node_id):
         message = copy.deepcopy(message)
         self.topology.set_route(message)
-        node = self.topology[node_id]
-        addr = node["node_addr"]
-        await self.transport.send(message, addr)
+        await self.transport.send(message, self.topology[node_id]["node_addr"])
 
     async def gossip(self, message):
         gossip_id = message["metadata"]["gossip"] = message["metadata"].get(
