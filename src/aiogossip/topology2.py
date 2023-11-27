@@ -7,6 +7,7 @@ import networkx as nx
 class Topology:
     def __init__(self, node_id, node_addr):
         self.graph = nx.DiGraph(node_id=node_id, node_addr=node_addr)
+        self.add([self.node])
 
     # Node #
     @property
@@ -33,6 +34,8 @@ class Topology:
                 "dst": dst[1],
                 "latency": abs(src[0] - dst[0]),
             }
+            self.graph.add_node(src[1], node_id=src[1], node_addr=src[-1])
+            self.graph.add_node(dst[1], node_id=dst[1], node_addr=dst[-1])
             self.graph.add_edge(src[1], dst[1], **attrs)
 
         connections = [(routes[i], routes[i + 1]) for i in range(len(routes) - 1)]
