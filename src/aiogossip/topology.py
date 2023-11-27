@@ -92,7 +92,7 @@ class Topology:
 
     def update_route(self, message):
         route = message["metadata"].get("route", [self.route])
-        if route[-1][0] != self.node:
+        if route[-1][0] != self.node.identity:
             route.append(self.route)
         message["metadata"]["route"] = route
         return message
@@ -103,7 +103,7 @@ class Topology:
             raise TypeError("node must be Node")
 
         self.node = node
-        self.graph.add_node(node)
+        self.graph.add_node(node.identity)
 
     def add(self, nodes: Iterable[Node]):
         if not isinstance(nodes, Iterable):
@@ -118,7 +118,7 @@ class Topology:
                 self.nodes[node.identity].merge_network_interface(node)
             else:
                 self.nodes[node.identity] = node
-            self.graph.add_node(node)
+            self.graph.add_node(node.identity)
 
     def remove(self, nodes: Iterable[Node]):
         if not isinstance(nodes, Iterable):
@@ -141,9 +141,12 @@ class Topology:
         return [self.nodes[node] for node in nodes]
 
     def update(self, routes):
-        for route in routes:
-            identity, timestamp, *addr = route
-            print(identity, timestamp, addr)
+        connections = [(routes[i], routes[i + 1]) for i in range(len(routes) - 1)]
+        for src, dst in connections:
+            latency = dst[1] - src[1]
+            self.graph.add_edge(
+                src[0], dst[0], src=src[-1], dst=dst[-1], latency=latency
+            )
 
     def __len__(self):
         return len(self.nodes)
