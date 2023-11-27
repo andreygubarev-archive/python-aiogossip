@@ -1,178 +1,73 @@
-import ipaddress
 import random
 import time
-from typing import Iterable
 
 import networkx as nx
 
 
-class Address:
-    def __init__(self, ip, port):
-        self.ip = ipaddress.ip_address(ip)
-        self.port = int(port)
+class Topology:
+    def __init__(self, node_id, node_addr):
+        self.graph = nx.DiGraph(node_id=node_id, node_addr=node_addr)
+        self.add([self.node])
+
+    # Node #
+    @property
+    def node_id(self):
+        return self.graph.graph["node_id"]
 
     @property
-    def addr(self):
-        return (str(self.ip), self.port)
+    def node_addr(self):
+        return self.graph.graph["node_addr"]
 
-    def __str__(self):
-        return f"{self.ip}:{self.port}"
+    @property
+    def node(self):
+        return {"node_id": self.node_id, "node_addr": tuple(self.node_addr)}
 
-    def __eq__(self, other):
-        return self.addr == other.addr
+    # Topology #
+    def add(self, nodes):
+        for node in nodes:
+            self.graph.add_node(node["node_id"], **node)
 
-    def __hash__(self):
-        return hash(self.addr)
+    def update(self, routes):
+        def add(src, dst):
+            attrs = {
+                "src": tuple(src[-1]),
+                "dst": tuple(dst[-1]),
+                "latency": abs(src[0] - dst[0]),
+            }
+            self.graph.add_node(src[1], node_id=src[1], node_addr=tuple(src[-1]))
+            self.graph.add_node(dst[1], node_id=dst[1], node_addr=tuple(dst[-1]))
+            self.graph.add_edge(src[1], dst[1], **attrs)
 
-    def __repr__(self):
-        return f"<Address: {self}>"
+        connections = [(routes[i], routes[i + 1]) for i in range(len(routes) - 1)]
+        dst, src = connections[-1]
+        add(src, dst)
+        for src, dst in connections:
+            add(src, dst)
 
+    def sample(self, k, ignore=None):
+        nodes = list(self.graph.nodes)
+        if ignore:
+            nodes = list(set(nodes) - set(ignore))
+        k = min(k, len(nodes))
+        return random.sample(nodes, k)
 
-class Node:
-    def __init__(self, identity, addr):
-        self.identity = identity
+    def __getitem__(self, node_id):
+        return self.graph.nodes[node_id]
 
-        self.address = None
-        self.network_interface = {"local": None, "lan": None, "wan": None}
-        self.set_address(addr)
+    def __len__(self):
+        return len(self.graph)
 
-    def set_address(self, addr):
-        if isinstance(addr, str):
-            addr = addr.split(":")
+    def __iter__(self):
+        return iter(self.graph.nodes)
 
-        self.address = Address(*addr)
-
-        if self.address.ip.is_loopback:
-            self.network_interface["local"] = self.address
-        elif self.address.ip.is_private:
-            self.network_interface["lan"] = self.address
-
-        if self.address.ip.is_global:
-            self.network_interface["wan"] = self.address
-
-    def merge_network_interface(self, other):
-        if other.network_interface["local"] is not None:
-            self.network_interface["local"] = other.network_interface["local"]
-
-        if other.network_interface["lan"] is not None:
-            self.network_interface["lan"] = other.network_interface["lan"]
-
-        if other.network_interface["wan"] is not None:
-            self.network_interface["wan"] = other.network_interface["wan"]
-
-        if other.address is not None:
-            self.address = other.address
-
-    def __eq__(self, other):
-        if not other:
-            return False
-        if isinstance(other, str):
-            return self.identity == other
-        elif isinstance(other, Node):
-            return self.identity == other.identity
-        else:
-            raise TypeError("other must be Node or str")
-
-    def __hash__(self):
-        return hash(self.identity)
-
-    def __repr__(self):
-        return f"<Node: {self.identity}>"
-
-
-class Topology:
-    def __init__(self):
-        self.node = None
-        self.nodes = {}
-        self.graph = nx.DiGraph()
-
+    # Route #
     @property
     def route(self):
-        return [self.node.identity, time.time_ns(), list(self.node.address.addr)]
+        return [time.time_ns(), self.node_id, self.node_addr]
 
-    def update_route(self, message):
+    def set_route(self, message):
         route = message["metadata"].get("route", [self.route])
-        if route[-1][0] != self.node.identity:
+        if route[-1][1] != self.graph.graph["node_id"]:
             route.append(self.route)
         message["metadata"]["route"] = route
         return message
-
-    def set(self, node: Node):
-        """Set the node as the local node"""
-        if not isinstance(node, Node):
-            raise TypeError("node must be Node")
-
-        self.node = node
-        self.graph.add_node(node.identity)
-
-    def add(self, nodes: Iterable[Node]):
-        if not isinstance(nodes, Iterable):
-            raise TypeError("nodes must be Iterable[Node]")
-        if not all(isinstance(n, Node) for n in nodes):
-            raise TypeError("nodes must be Iterable[Node]")
-
-        for node in nodes:
-            if node == self.node:
-                self.node.merge_network_interface(node)
-            elif node.identity in self.nodes:
-                self.nodes[node.identity].merge_network_interface(node)
-            else:
-                self.nodes[node.identity] = node
-            self.graph.add_node(node.identity)
-
-    def remove(self, nodes: Iterable[Node]):
-        if not isinstance(nodes, Iterable):
-            raise TypeError("nodes must be Iterable[Node]")
-        if not all(isinstance(n, Node) for n in nodes):
-            raise TypeError("nodes must be Iterable[Node]")
-
-        for node in nodes:
-            if node.identity in self.nodes:
-                self.nodes.pop(node.identity)
-            self.graph.remove_node(node)
-
-    def sample(self, k, ignore=None):
-        nodes = [n for n in self.nodes.keys()]
-        if ignore is not None:
-            ignore = [n.identity if isinstance(n, Node) else n for n in ignore]
-            nodes = [n for n in nodes if n not in ignore]
-        k = min(k, len(nodes))
-        nodes = random.sample(nodes, k)
-        return [self.nodes[node] for node in nodes]
-
-    def update(self, routes):
-        def add_edge(src, dst):
-            latency = abs(src[1] - dst[1])
-            self.graph.add_edge(
-                src[0], dst[0], src=src[-1], dst=dst[-1], latency=latency
-            )
-
-        connections = [(routes[i], routes[i + 1]) for i in range(len(routes) - 1)]
-
-        dst, src = connections[-1]
-        add_edge(src, dst)
-
-        for src, dst in connections:
-            add_edge(src, dst)
-
-    def __len__(self):
-        return len(self.nodes)
-
-    def __contains__(self, node):
-        if isinstance(node, Node):
-            return node.identity in self.nodes
-        elif isinstance(node, str):
-            return node in self.nodes
-        else:
-            raise TypeError("node must be Node or str")
-
-    def __getitem__(self, node):
-        if isinstance(node, Node):
-            return self.nodes[node.identity]
-        elif isinstance(node, str):
-            return self.nodes[node]
-        else:
-            raise TypeError("node must be Node or str")
-
-    def __iter__(self):
-        return iter(self.nodes.values())

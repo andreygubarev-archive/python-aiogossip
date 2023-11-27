@@ -3,7 +3,7 @@ import math
 import uuid
 
 from .mutex import mutex
-from .topology2 import Topology
+from .topology import Topology
 
 
 class Gossip:
