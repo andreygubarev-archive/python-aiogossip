@@ -66,7 +66,7 @@ class Gossip:
             node_dst = message["metadata"].get("dst", self.node_id)
             node_ack = message["metadata"].get("ack")
 
-            if self.node_id == node_dst:
+            if node_dst == self.node_id:
                 if node_ack and node_ack != self.node_id:
                     await self.send(message, node_ack)
             else:
