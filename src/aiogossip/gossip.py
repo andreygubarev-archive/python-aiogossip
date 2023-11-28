@@ -32,6 +32,7 @@ class Gossip:
 
     async def send(self, message, node_id):
         if node_id == self.node_id:
+            # FIXME: raise error
             return
 
         message["metadata"]["dst"] = node_id
