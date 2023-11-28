@@ -7,27 +7,32 @@ from aiogossip.peer import Peer
 
 loop = asyncio.get_event_loop()
 
-peer1 = Peer(loop=loop, identity="p1")
-peer2 = Peer(loop=loop, identity="p2")
+peer0 = Peer(loop=loop, node_id="p0")
+peer1 = Peer(loop=loop, node_id="p1")
+peer1.connect([peer0.node])
+peer2 = Peer(loop=loop, node_id="p2")
 peer2.connect([peer1.node])
-peer3 = Peer(loop=loop, identity="p3")
+peer3 = Peer(loop=loop, node_id="p3")
 peer3.connect([peer2.node])
 
 
 @peer3.subscribe("*")
 async def recv(message):
-    print("recv", message, "\n")
+    print("RECV", message, "\n")
+    if message.get("message") == "RELAY":
+        print("RELAY", message["metadata"]["route"], "\n")
 
 
 async def main():
-    message = {"metadata": {}}
+    message = {"metadata": {}, "message": "RELAY"}
     await asyncio.sleep(0.1)  # wait for connections to be established
-    await peer1.publish("test", message, nodes=[peer3.identity])
+    await peer0.publish("test", message, nodes=[peer3.node_id])
 
 
 if __name__ == "__main__":
     loop.create_task(main())
-    peer1.run_forever()
+    peer0.run_forever()
+    loop.run_until_complete(peer0.disconnect())
     loop.run_until_complete(peer1.disconnect())
     loop.run_until_complete(peer2.disconnect())
     loop.run_until_complete(peer3.disconnect())

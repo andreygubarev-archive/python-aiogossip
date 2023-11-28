@@ -14,14 +14,14 @@ class Peer:
         host="0.0.0.0",
         port=0,
         fanout=None,
-        identity=None,
+        node_id=None,
     ):
         self._loop = loop
 
-        self.identity = identity or uuid.uuid4().hex
+        self.node_id = node_id or uuid.uuid4().hex
         # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self._loop)
-        self.gossip = Gossip(self.transport, fanout=fanout, identity=self.identity)
+        self.gossip = Gossip(self.transport, fanout=fanout, node_id=self.node_id)
         self.broker = Broker(self.gossip, loop=self._loop)
 
         self.task = self._loop.create_task(self.broker.listen())
@@ -33,7 +33,7 @@ class Peer:
 
     async def _connect(self):
         message = {"metadata": {}}
-        await self.publish("connect", message)
+        await self.publish("connect", message, ack=True)
 
     def connect(self, nodes):
         self.gossip.topology.add(nodes)
@@ -45,7 +45,9 @@ class Peer:
         self.task.cancel()
         await asyncio.gather(self.task, return_exceptions=True)
 
-    async def publish(self, topic, message, nodes=None):
+    async def publish(self, topic, message, nodes=None, ack=False):
+        if ack:
+            message["metadata"]["ack"] = self.node_id
         await self.broker.publish(topic, message, nodes=nodes)
 
     def subscribe(self, topic):

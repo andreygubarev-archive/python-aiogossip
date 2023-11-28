@@ -8,11 +8,11 @@ from .topology import Topology
 class Gossip:
     FANOUT = 5
 
-    def __init__(self, transport, fanout=None, identity=None):
-        self.identity = identity or uuid.uuid4().hex
+    def __init__(self, transport, fanout=None, node_id=None):
+        self.node_id = node_id or uuid.uuid4().hex
         self.transport = transport
 
-        self.topology = Topology(self.identity, self.transport.addr)
+        self.topology = Topology(self.node_id, self.transport.addr)
 
         self._fanout = fanout or self.FANOUT
 
@@ -31,7 +31,7 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node_id):
-        message["metadata"]["recipient"] = node_id
+        message["metadata"]["dst"] = node_id
         self.topology.set_route(message)
         addr = self.topology.get_addr(node_id)
         await self.transport.send(message, addr)
@@ -41,7 +41,7 @@ class Gossip:
             "gossip", uuid.uuid4().hex
         )
 
-        fanout_ignore = set([self.identity])
+        fanout_ignore = set([self.node_id])
         fanout_ignore.update([r[1] for r in message["metadata"].get("route", [])])
 
         @mutex(gossip_id, owner=self.gossip)
@@ -63,9 +63,14 @@ class Gossip:
             self.topology.set_route(message)
             self.topology.update_routes(message["metadata"]["route"])
 
-            recipient = message["metadata"].get("recipient", self.identity)
-            if recipient != self.identity:
-                await self.send(message, recipient)
+            node_dst = message["metadata"].get("dst", self.node_id)
+            node_ack = message["metadata"].get("ack")
+
+            if node_dst == self.node_id:
+                if node_ack and node_ack != self.node_id:
+                    await self.send(message, node_ack)
+            else:
+                await self.send(message, node_dst)
 
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
