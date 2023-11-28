@@ -21,7 +21,7 @@ class Gossip:
         return min(self._fanout, len(self.topology))
 
     @property
-    def fanout_cycles(self):
+    def cycles(self):
         if self.fanout == 0:
             return 0
 
@@ -45,17 +45,17 @@ class Gossip:
             "gossip", uuid.uuid4().hex
         )
 
-        fanout_ignore = set([self.node_id])
-        fanout_ignore.update([r[1] for r in message["metadata"].get("route", [])])
+        gossip_ignore = set([self.node_id])
+        gossip_ignore.update([r[1] for r in message["metadata"].get("route", [])])
 
         @mutex(gossip_id, owner=self.gossip)
         async def fanout():
             cycle = 0
-            while cycle < self.fanout_cycles:
-                fanout_nodes = self.topology.sample(self.fanout, ignore=fanout_ignore)
-                for fanout_node in fanout_nodes:
-                    await self.send(message, fanout_node)
-                fanout_ignore.update(fanout_nodes)
+            while cycle < self.cycles:
+                node_ids = self.topology.sample(self.fanout, ignore=gossip_ignore)
+                for node_id in node_ids:
+                    await self.send(message, node_id)
+                gossip_ignore.update(node_ids)
                 cycle += 1
 
         await fanout()

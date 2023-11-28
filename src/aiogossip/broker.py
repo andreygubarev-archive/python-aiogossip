@@ -72,16 +72,16 @@ class Broker:
         await callback.cancel()
         self.callbacks[callback.topic].remove(callback)
 
-    async def publish(self, topic, message, nodes=None):
+    async def publish(self, topic, message, node_ids=None):
         """Publish a message to a topic."""
         # FIXME: make messages idempotent (prevent duplicate processing)
         # FIXME: allow sending to specific nodes
         message["metadata"]["topic"] = topic
-        if nodes:
-            for node in nodes:
-                if node in self.gossip.topology:
-                    await self.gossip.send(message, node)
+        if node_ids:
+            for node_id in node_ids:
+                if node_id in self.gossip.topology:
+                    await self.gossip.send(message, node_id)
                 else:
-                    raise ValueError(f"Unknown node: {node}")
+                    raise ValueError(f"Unknown node: {node_id}")
         else:
             await self.gossip.gossip(message)
