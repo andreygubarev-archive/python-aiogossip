@@ -67,18 +67,18 @@ class Gossip:
             self.topology.set_route(message)
             self.topology.update_routes(message["metadata"]["route"])
 
-            if message["metadata"]["dst"] == self.node_id:
-                if "gossip" in message["metadata"]:
-                    await self.gossip(message)
-
-                if "syn" in message["metadata"]:
-                    message["metadata"]["ack"] = self.node_id
-                    await self.send(message, message["metadata"]["syn"])
-
-                yield message
-            else:
-                # forward message to destination node
+            if message["metadata"]["dst"] != self.node_id:
                 await self.send(message, message["metadata"]["dst"])
+                continue
+
+            if "syn" in message["metadata"]:
+                message["metadata"]["ack"] = self.node_id
+                await self.send(message, message["metadata"]["syn"])
+
+            if "gossip" in message["metadata"]:
+                await self.gossip(message)
+
+            yield message
 
     async def close(self):
         self.transport.close()
