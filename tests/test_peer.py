@@ -14,7 +14,7 @@ async def test_peer(peers):
     assert peer1.identity != peer2.identity
 
     peer1.connect([peer2.node])
-    assert peer2.node.identity in peer1.gossip.topology.nodes
+    assert peer2.identity in peer1.gossip.topology
 
     message = {"message": "Hello, world!", "metadata": {}}
     await peer1.publish("test", message)
@@ -25,6 +25,33 @@ async def test_peer(peers):
     async def handler(message):
         nonlocal callback_message
         callback_message = message["message"]
+
+    await asyncio.sleep(0.1)
+    assert callback_message == message["message"]
+
+    for peer in peers:
+        await peer.disconnect()
+
+
+@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("instances", [3])
+@pytest.mark.asyncio
+async def test_peer_relay(peers):
+    peers[0].connect([peers[1].node])
+    peers[1].connect([peers[2].node])
+
+    callback_message = None
+    subscribe = peers[0].subscribe("test")
+
+    @subscribe
+    async def handler(message):
+        nonlocal callback_message
+        callback_message = message["message"]
+
+    await asyncio.sleep(0.1)
+
+    message = {"message": "Hello, world!", "metadata": {}}
+    await peers[2].publish("test", message, nodes=[peers[0].identity])
 
     await asyncio.sleep(0.1)
     assert callback_message == message["message"]
