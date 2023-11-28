@@ -8,11 +8,11 @@ from .topology import Topology
 class Gossip:
     FANOUT = 5
 
-    def __init__(self, transport, fanout=None, identity=None):
-        self.identity = identity or uuid.uuid4().hex
+    def __init__(self, transport, fanout=None, node_id=None):
+        self.node_id = node_id or uuid.uuid4().hex
         self.transport = transport
 
-        self.topology = Topology(self.identity, self.transport.addr)
+        self.topology = Topology(self.node_id, self.transport.addr)
 
         self._fanout = fanout or self.FANOUT
 
@@ -41,7 +41,7 @@ class Gossip:
             "gossip", uuid.uuid4().hex
         )
 
-        fanout_ignore = set([self.identity])
+        fanout_ignore = set([self.node_id])
         fanout_ignore.update([r[1] for r in message["metadata"].get("route", [])])
 
         @mutex(gossip_id, owner=self.gossip)
@@ -64,11 +64,11 @@ class Gossip:
             self.topology.update_routes(message["metadata"]["route"])
 
             node_src = message["metadata"]["route"][0][1]
-            node_dst = message["metadata"].get("dst", self.identity)
+            node_dst = message["metadata"].get("dst", self.node_id)
 
-            if self.identity == node_dst:
+            if self.node_id == node_dst:
                 if "ack" in message["metadata"]:
-                    if self.identity == node_src:
+                    if self.node_id == node_src:
                         pass
                     else:
                         message["metadata"]["ack"] = False

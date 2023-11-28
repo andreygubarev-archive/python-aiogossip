@@ -7,10 +7,10 @@ from aiogossip.peer import Peer
 
 loop = asyncio.get_event_loop()
 
-peer1 = Peer(loop=loop, identity="p1")
-peer2 = Peer(loop=loop, identity="p2")
+peer1 = Peer(loop=loop, node_id="p1")
+peer2 = Peer(loop=loop, node_id="p2")
 peer2.connect([peer1.node])
-peer3 = Peer(loop=loop, identity="p3")
+peer3 = Peer(loop=loop, node_id="p3")
 peer3.connect([peer2.node])
 
 
@@ -22,7 +22,7 @@ async def recv(message):
 async def main():
     message = {"metadata": {}}
     await asyncio.sleep(0.1)  # wait for connections to be established
-    await peer1.publish("test", message, nodes=[peer3.identity])
+    await peer1.publish("test", message, nodes=[peer3.node_id])
 
 
 if __name__ == "__main__":

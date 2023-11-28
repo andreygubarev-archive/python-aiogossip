@@ -14,14 +14,14 @@ class Peer:
         host="0.0.0.0",
         port=0,
         fanout=None,
-        identity=None,
+        node_id=None,
     ):
         self._loop = loop
 
-        self.identity = identity or uuid.uuid4().hex
+        self.node_id = node_id or uuid.uuid4().hex
         # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self._loop)
-        self.gossip = Gossip(self.transport, fanout=fanout, identity=self.identity)
+        self.gossip = Gossip(self.transport, fanout=fanout, node_id=self.node_id)
         self.broker = Broker(self.gossip, loop=self._loop)
 
         self.task = self._loop.create_task(self.broker.listen())
