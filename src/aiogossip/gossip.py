@@ -31,6 +31,9 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node_id):
+        if node_id == self.node_id:
+            return
+
         message["metadata"]["dst"] = node_id
         self.topology.set_route(message)
         addr = self.topology.get_addr(node_id)
@@ -60,23 +63,22 @@ class Gossip:
         while True:
             message, addr = await self.transport.recv()
             message["metadata"]["route"][-1].append(list(addr))
+
             self.topology.set_route(message)
             self.topology.update_routes(message["metadata"]["route"])
 
-            node_dst = message["metadata"].get("dst", self.node_id)
-            node_syn = message["metadata"].get("syn")
+            if message["metadata"]["dst"] == self.node_id:
+                if "gossip" in message["metadata"]:
+                    await self.gossip(message)
 
-            if node_dst == self.node_id:
-                if node_syn and node_syn != self.node_id:
+                if "syn" in message["metadata"]:
                     message["metadata"]["ack"] = self.node_id
-                    await self.send(message, node_syn)
+                    await self.send(message, message["metadata"]["syn"])
+
+                yield message
             else:
-                await self.send(message, node_dst)
-
-            if "gossip" in message["metadata"]:
-                await self.gossip(message)
-
-            yield message
+                # forward message to destination node
+                await self.send(message, message["metadata"]["dst"])
 
     async def close(self):
         self.transport.close()
