@@ -74,8 +74,11 @@ class Gossip:
                 continue
 
             if "syn" in message["metadata"]:
-                message["metadata"]["ack"] = self.node_id
-                await self.send(message, message["metadata"]["syn"])
+                if "ack" in message["metadata"]:
+                    pass
+                else:
+                    message["metadata"]["ack"] = self.node_id
+                    await self.send(message, message["metadata"]["syn"])
 
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
