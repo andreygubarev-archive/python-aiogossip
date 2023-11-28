@@ -47,7 +47,7 @@ class Peer:
 
     async def publish(self, topic, message, nodes=None, ack=False):
         if ack:
-            message["metadata"]["ack"] = True
+            message["metadata"]["ack"] = self.node_id
         await self.broker.publish(topic, message, nodes=nodes, ack=ack)
 
     def subscribe(self, topic):
