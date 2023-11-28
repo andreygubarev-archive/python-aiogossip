@@ -50,7 +50,7 @@ class Gossip:
         gossip_ignore.update([r[1] for r in message["metadata"].get("route", [])])
 
         @mutex(gossip_id, owner=self.gossip)
-        async def fanout():
+        async def multicast():
             cycle = 0
             while cycle < self.cycles:
                 node_ids = self.topology.sample(self.fanout, ignore=gossip_ignore)
@@ -59,7 +59,7 @@ class Gossip:
                 gossip_ignore.update(node_ids)
                 cycle += 1
 
-        await fanout()
+        await multicast()
 
     async def recv(self):
         while True:
