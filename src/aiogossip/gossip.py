@@ -67,7 +67,7 @@ class Gossip:
             node_dst = message["metadata"].get("dst", self.node_id)
 
             if self.node_id == node_dst:
-                if "ack" in message["metadata"]:
+                if message["metadata"].get("ack", False):
                     if self.node_id == node_src:
                         pass
                     else:
