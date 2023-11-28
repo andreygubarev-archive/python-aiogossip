@@ -64,11 +64,12 @@ class Gossip:
             self.topology.update_routes(message["metadata"]["route"])
 
             node_dst = message["metadata"].get("dst", self.node_id)
-            node_ack = message["metadata"].get("ack")
+            node_syn = message["metadata"].get("syn")
 
             if node_dst == self.node_id:
-                if node_ack and node_ack != self.node_id:
-                    await self.send(message, node_ack)
+                if node_syn and node_syn != self.node_id:
+                    message["metadata"]["ack"] = self.node_id
+                    await self.send(message, node_syn)
             else:
                 await self.send(message, node_dst)
 
