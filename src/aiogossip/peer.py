@@ -33,7 +33,7 @@ class Peer:
 
     async def _connect(self):
         message = {"metadata": {}}
-        await self.publish("connect", message)
+        await self.publish("connect", message, ack=True)
 
     def connect(self, nodes):
         self.gossip.topology.add(nodes)
@@ -46,6 +46,8 @@ class Peer:
         await asyncio.gather(self.task, return_exceptions=True)
 
     async def publish(self, topic, message, nodes=None, ack=False):
+        if ack:
+            message["metadata"]["ack"] = True
         await self.broker.publish(topic, message, nodes=nodes, ack=ack)
 
     def subscribe(self, topic):
