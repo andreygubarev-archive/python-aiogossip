@@ -48,7 +48,7 @@ class Peer:
     async def publish(self, topic, message, nodes=None, ack=False):
         if ack:
             message["metadata"]["ack"] = self.node_id
-        await self.broker.publish(topic, message, nodes=nodes, ack=ack)
+        await self.broker.publish(topic, message, nodes=nodes)
 
     def subscribe(self, topic):
         def decorator(callback):
