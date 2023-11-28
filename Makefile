@@ -23,7 +23,7 @@ endif
 
 .PHONY: run
 run: ## Run Python Package
-	python $(MAKEFILE_DIR)/examples/peers.py
+	python $(MAKEFILE_DIR)/examples/gossip.py
 
 .PHONY: build
 build: ## Build Python Package

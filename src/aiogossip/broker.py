@@ -89,7 +89,7 @@ class Broker:
             await self.gossip.gossip(message)
 
         if "syn" in message["metadata"]:
-            return self.response(topic, node_ids)
+            return self.response(topic, node_ids=node_ids)
 
     async def response(self, topic, node_ids=None):
         chan = Channel(loop=self._loop)
