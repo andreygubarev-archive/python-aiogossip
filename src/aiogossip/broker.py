@@ -30,6 +30,8 @@ class Callback:
 
 
 class Broker:
+    TIMEOUT = 10
+
     def __init__(self, gossip: Gossip, loop: asyncio.AbstractEventLoop):
         self._loop = loop
 
@@ -85,3 +87,26 @@ class Broker:
                     raise ValueError(f"Unknown node: {node_id}")
         else:
             await self.gossip.gossip(message)
+
+        if "syn" in message["metadata"]:
+            return self.response(topic, node_ids)
+
+    async def response(self, topic, node_ids=None):
+        chan = Channel(loop=self._loop)
+        callback = self.subscribe(topic, chan.send)
+
+        if node_ids:
+            acks = len(node_ids)
+        else:
+            acks = len(self.gossip.topology) - 1
+
+        try:
+            async with asyncio.timeout(self.TIMEOUT):
+                while acks > 0:
+                    yield await chan.recv()
+                    acks -= 1
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            await self.unsubscribe(callback)
+            await chan.close()
