@@ -13,7 +13,7 @@ peer1.connect([peer0.node])
 peer2 = Peer(loop=loop, node_id="p2")
 peer2.connect([peer1.node])
 peer3 = Peer(loop=loop, node_id="p3")
-peer3.connect([peer2.node])
+peer3.connect([peer2.node, peer1.node])
 
 
 @peer3.subscribe("*")
