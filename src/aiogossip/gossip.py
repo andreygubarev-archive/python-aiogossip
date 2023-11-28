@@ -36,6 +36,7 @@ class Gossip:
 
         message["metadata"]["dst"] = node_id
         self.topology.set_route(message)
+
         addr = self.topology.get_addr(node_id)
         await self.transport.send(message, addr)
 
