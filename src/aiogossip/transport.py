@@ -37,6 +37,7 @@ class Transport:
             raise ValueError(
                 f"Message size exceeds payload size of {self.PAYLOAD_SIZE} bytes"
             )
+        addr = tuple(addr)
         await self._loop.sock_sendto(self.sock, message, addr)
         logger.debug(f"DEBUG: {self.addr[1]} > {addr[1]} send: {message}\n")
 
