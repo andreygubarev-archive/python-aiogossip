@@ -79,12 +79,12 @@ class Topology:
             self.graph.add_node(r[1], node_id=r[1], node_addr=r[-1])
             nodes.add(r[1])
 
-        hop = ((route[r], route[r + 1]) for r in range(len(route) - 1))
+        hops = ((route[r], route[r + 1]) for r in range(len(route) - 1))
 
         def edge(src, dst):
             return {"src": src[-1], "dst": dst[-1], "latency": abs(src[0] - dst[0])}
 
-        for src, dst in hop:
+        for src, dst in hops:
             self.graph.add_edge(src[1], dst[1], **edge(src, dst))
         self.graph.add_edge(dst[1], src[1], **edge(dst, src))
 

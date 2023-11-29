@@ -67,7 +67,9 @@ class Gossip:
             message["metadata"]["route"][-1].append(list(addr))
 
             self.topology.set_route(message)
-            self.topology.update_routes(message["metadata"]["route"])
+            node_ids = self.topology.update_routes(message["metadata"]["route"])
+            for node_id in node_ids:
+                await self.send({"metadata": {}}, node_id)
 
             if message["metadata"]["dst"] != self.node_id:
                 await self.send(message, message["metadata"]["dst"])
