@@ -68,13 +68,17 @@ class Gossip:
 
             self.topology.set_route(message)
             node_ids = self.topology.update_routes(message["metadata"]["route"])
+
+            # connect to new nodes
             for node_id in node_ids:
                 await self.send({"metadata": {}}, node_id)
 
+            # forward message to destination
             if message["metadata"]["dst"] != self.node_id:
                 await self.send(message, message["metadata"]["dst"])
                 continue
 
+            # acknowledge message
             if "syn" in message["metadata"]:
                 if "ack" in message["metadata"]:
                     pass
@@ -82,6 +86,7 @@ class Gossip:
                     message["metadata"]["ack"] = self.node_id
                     await self.send(message, message["metadata"]["syn"])
 
+            # gossip message
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
 
