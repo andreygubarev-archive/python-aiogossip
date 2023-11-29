@@ -70,25 +70,24 @@ class Topology:
         message["metadata"]["route"] = route
         return message
 
-    def update_routes(self, routes):
-        def add(src, dst):
-            attrs = {
-                "src": tuple(src[-1]),
-                "dst": tuple(dst[-1]),
-                "latency": abs(src[0] - dst[0]),
-            }
-            self.graph.add_node(src[1], node_id=src[1], node_addr=tuple(src[-1]))
-            self.graph.add_node(dst[1], node_id=dst[1], node_addr=tuple(dst[-1]))
-            self.graph.add_edge(src[1], dst[1], **attrs)
+    def update_routes(self, route):
+        if len(route) < 2:
+            raise ValueError("Empty route")
 
-        connections = [(routes[i], routes[i + 1]) for i in range(len(routes) - 1)]
-        if not connections:
-            raise ValueError("route must contain at least two nodes")
+        nodes = set()
+        for r in (r for r in route if r[1] not in self.graph):
+            self.graph.add_node(r[1], node_id=r[1], node_addr=r[-1])
+            nodes.add(r[1])
 
-        dst, src = connections[-1]
-        add(src, dst)
-        for src, dst in connections:
-            add(src, dst)
+        def edge(src, dst):
+            return {"src": src[-1], "dst": dst[-1], "latency": abs(src[0] - dst[0])}
+
+        hops = ((route[r], route[r + 1]) for r in range(len(route) - 1))
+        for src, dst in hops:
+            self.graph.add_edge(src[1], dst[1], **edge(src, dst))
+        self.graph.add_edge(dst[1], src[1], **edge(dst, src))
+
+        return nodes
 
     # Addr #
     def get_addr(self, node_id):

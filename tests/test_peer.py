@@ -82,27 +82,27 @@ async def test_peer_relay(peers):
         await peer.disconnect()
 
 
-# @pytest.mark.parametrize("randomize", [0])
-# @pytest.mark.parametrize("instances", [3])
-# @pytest.mark.asyncio
-# async def test_peer_relay_reverse(peers):
-#     peers[0].connect([peers[1].node])
-#     peers[1].connect([peers[2].node])
-#     await asyncio.sleep(0.1)
+@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("instances", [3])
+@pytest.mark.asyncio
+async def test_peer_relay_reverse(peers):
+    peers[0].connect([peers[1].node])
+    peers[1].connect([peers[2].node])
+    await asyncio.sleep(0.1)
 
-#     callback_message = None
-#     subscribe = peers[2].subscribe("test")
+    callback_message = None
+    subscribe = peers[2].subscribe("test")
 
-#     @subscribe
-#     async def handler(message):
-#         nonlocal callback_message
-#         callback_message = message["message"]
+    @subscribe
+    async def handler(message):
+        nonlocal callback_message
+        callback_message = message["message"]
 
-#     message = {"message": "Hello, world!", "metadata": {}}
-#     await peers[0].publish("test", message, nodes=[peers[2].node_id])
+    message = {"message": "Hello, world!", "metadata": {}}
+    await peers[0].publish("test", message, nodes=[peers[2].node_id])
 
-#     await asyncio.sleep(0.1)
-#     assert callback_message == message["message"]
+    await asyncio.sleep(0.1)
+    assert callback_message == message["message"]
 
-#     for peer in peers:
-#         await peer.disconnect()
+    for peer in peers:
+        await peer.disconnect()
