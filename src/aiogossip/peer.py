@@ -32,8 +32,12 @@ class Peer:
         return self.gossip.topology.node
 
     async def _connect(self):
+        topic = "connect:{}".format(uuid.uuid4().hex)
         message = {"metadata": {}}
-        await self.publish("connect", message, ack=True)
+
+        response = await self.publish(topic, message, ack=True)
+        async for r in response:
+            pass
 
     def connect(self, nodes):
         self.gossip.topology.add(nodes)
@@ -47,8 +51,8 @@ class Peer:
 
     async def publish(self, topic, message, nodes=None, ack=False):
         if ack:
-            message["metadata"]["ack"] = self.node_id
-        await self.broker.publish(topic, message, nodes=nodes)
+            message["metadata"]["syn"] = self.node_id
+        return await self.broker.publish(topic, message, node_ids=nodes)
 
     def subscribe(self, topic):
         def decorator(callback):

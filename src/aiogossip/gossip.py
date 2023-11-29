@@ -21,7 +21,7 @@ class Gossip:
         return min(self._fanout, len(self.topology))
 
     @property
-    def fanout_cycles(self):
+    def cycles(self):
         if self.fanout == 0:
             return 0
 
@@ -31,8 +31,13 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     async def send(self, message, node_id):
+        if node_id == self.node_id:
+            # FIXME: raise error
+            return
+
         message["metadata"]["dst"] = node_id
         self.topology.set_route(message)
+
         addr = self.topology.get_addr(node_id)
         await self.transport.send(message, addr)
 
@@ -41,36 +46,39 @@ class Gossip:
             "gossip", uuid.uuid4().hex
         )
 
-        fanout_ignore = set([self.node_id])
-        fanout_ignore.update([r[1] for r in message["metadata"].get("route", [])])
+        gossip_ignore = set([self.node_id])
+        gossip_ignore.update([r[1] for r in message["metadata"].get("route", [])])
 
         @mutex(gossip_id, owner=self.gossip)
-        async def fanout():
+        async def multicast():
             cycle = 0
-            while cycle < self.fanout_cycles:
-                fanout_nodes = self.topology.sample(self.fanout, ignore=fanout_ignore)
-                for fanout_node in fanout_nodes:
-                    await self.send(message, fanout_node)
-                fanout_ignore.update(fanout_nodes)
+            while cycle < self.cycles:
+                node_ids = self.topology.sample(self.fanout, ignore=gossip_ignore)
+                for node_id in node_ids:
+                    await self.send(message, node_id)
+                gossip_ignore.update(node_ids)
                 cycle += 1
 
-        await fanout()
+        await multicast()
 
     async def recv(self):
         while True:
             message, addr = await self.transport.recv()
             message["metadata"]["route"][-1].append(list(addr))
+
             self.topology.set_route(message)
             self.topology.update_routes(message["metadata"]["route"])
 
-            node_dst = message["metadata"].get("dst", self.node_id)
-            node_ack = message["metadata"].get("ack")
+            if message["metadata"]["dst"] != self.node_id:
+                await self.send(message, message["metadata"]["dst"])
+                continue
 
-            if node_dst == self.node_id:
-                if node_ack and node_ack != self.node_id:
-                    await self.send(message, node_ack)
-            else:
-                await self.send(message, node_dst)
+            if "syn" in message["metadata"]:
+                if "ack" in message["metadata"]:
+                    pass
+                else:
+                    message["metadata"]["ack"] = self.node_id
+                    await self.send(message, message["metadata"]["syn"])
 
             if "gossip" in message["metadata"]:
                 await self.gossip(message)

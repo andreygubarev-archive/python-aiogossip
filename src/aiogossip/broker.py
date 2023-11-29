@@ -30,6 +30,8 @@ class Callback:
 
 
 class Broker:
+    TIMEOUT = 10
+
     def __init__(self, gossip: Gossip, loop: asyncio.AbstractEventLoop):
         self._loop = loop
 
@@ -72,14 +74,39 @@ class Broker:
         await callback.cancel()
         self.callbacks[callback.topic].remove(callback)
 
-    async def publish(self, topic, message, nodes=None):
+    async def publish(self, topic, message, node_ids=None):
         """Publish a message to a topic."""
         # FIXME: make messages idempotent (prevent duplicate processing)
         # FIXME: allow sending to specific nodes
         message["metadata"]["topic"] = topic
-        if nodes:
-            for node in nodes:
-                node = self.gossip.topology[node]
-                await self.gossip.send(message, node["node_id"])
+        if node_ids:
+            for node_id in node_ids:
+                if node_id in self.gossip.topology:
+                    await self.gossip.send(message, node_id)
+                else:
+                    raise ValueError(f"Unknown node: {node_id}")
         else:
             await self.gossip.gossip(message)
+
+        if "syn" in message["metadata"]:
+            return self._recv(topic, node_ids=node_ids)
+
+    async def _recv(self, topic, node_ids=None):
+        chan = Channel(loop=self._loop)
+        callback = self.subscribe(topic, chan.send)
+
+        if node_ids:
+            acks = len(node_ids)
+        else:
+            acks = len(self.gossip.topology) - 1
+
+        try:
+            async with asyncio.timeout(self.TIMEOUT):
+                while acks > 0:
+                    yield await chan.recv()
+                    acks -= 1
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            await self.unsubscribe(callback)
+            await chan.close()
