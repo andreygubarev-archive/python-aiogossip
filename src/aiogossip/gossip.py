@@ -43,11 +43,15 @@ class Gossip:
         await self.transport.send(message, addr)
 
     async def send_ack(self, message):
+        if "ack" in message["metadata"]:
+            return False
+
         message["metadata"].pop("event", None)
         message["metadata"].pop("src", None)
 
         message["metadata"]["ack"] = self.node_id
         await self.send(message, message["metadata"]["syn"])
+        return True
 
     async def send_forward(self, message):
         if message["metadata"]["dst"] == self.node_id:
@@ -92,16 +96,14 @@ class Gossip:
             if await self.send_forward(message):
                 continue
 
-            # acknowledge message
-            if "syn" in message["metadata"]:
-                if "ack" in message["metadata"]:
-                    pass
-                else:
-                    await self.send_ack(message)
-
             # gossip message
             if "gossip" in message["metadata"]:
                 await self.gossip(message)
+
+            # acknowledge message
+            if "syn" in message["metadata"]:
+                if await self.send_ack(message):
+                    continue
 
             yield message
 
