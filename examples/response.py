@@ -14,14 +14,7 @@ async def query(message):
     return {"metadata": {}, "payload": "response"}
 
 
-async def main():
-    response = await peer.request("query", {"metadata": {}, "payload": "request"})
-    async for resp in response:
-        print(resp)
-
-
 if __name__ == "__main__":
     print(peer.dsn)
     seeds = os.getenv("GOSSIP_SEEDS")
-    peer.connect(seeds)
-    peer.run_forever(main=main)
+    peer.run_forever()
