@@ -8,14 +8,20 @@ peer = aiogossip.Peer()
 
 async def main():
     while True:
-        asyncio.sleep(5)
-        print("Members:")
+        await asyncio.sleep(5)
+        print("---")
+        print("members:")
         for node in peer.nodes:
-            print(node)
+            print("-", node)
+        print()
 
 
 if __name__ == "__main__":
-    print("Peer: ", peer.node)
+    print("---")
+    print("peer: ")
+    print("  id:", peer.node["node_id"])
+    print("  addr:", ":".join(str(a) for a in peer.node["node_addr"]))
+    print()
 
     seeds = os.getenv("GOSSIP_SEEDS")
     peer.connect(seeds)

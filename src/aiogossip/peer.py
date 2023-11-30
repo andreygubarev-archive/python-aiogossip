@@ -31,6 +31,10 @@ class Peer:
     def node(self):
         return self.gossip.topology.node
 
+    @property
+    def nodes(self):
+        return list(self.gossip.topology)
+
     async def _connect(self):
         topic = "connect:{}".format(uuid.uuid4().hex)
         message = {"metadata": {}}
