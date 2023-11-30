@@ -51,7 +51,11 @@ class Peer:
 
         if isinstance(seeds, str):
             seeds = seeds.split(",")
-            nodes = [s.split(":") for s in seeds]
+            for seed in seeds:
+                node_id, addr = seed.split("@")
+                host, port = addr.split(":")
+                nodes.append({"node_id": node_id, "node_addr": (host, int(port))})
+
         elif isinstance(seeds, list):
             nodes = seeds
 
