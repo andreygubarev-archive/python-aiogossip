@@ -32,8 +32,10 @@ class Gossip:
 
     async def send(self, message, node_id):
         if node_id == self.node_id:
-            # FIXME: raise error
-            return
+            raise ValueError("cannot send message to self")
+
+        if "event" not in message["metadata"]:
+            message["metadata"]["event"] = uuid.uuid4().hex
 
         message["metadata"]["dst"] = node_id
         self.topology.set_route(message)
