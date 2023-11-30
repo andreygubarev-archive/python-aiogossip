@@ -74,7 +74,10 @@ class Peer:
 
         return decorator
 
-    def run_forever(self):  # pragma: no cover
+    def run_forever(self, main=None):  # pragma: no cover
+        if main:
+            self._loop.run_until_complete(main())
+
         try:
             self._loop.run_forever()
         except KeyboardInterrupt:
