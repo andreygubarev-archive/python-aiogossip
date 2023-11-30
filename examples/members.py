@@ -20,7 +20,13 @@ if __name__ == "__main__":
     print("---")
     print("peer: ")
     print("  id:", peer.node["node_id"])
-    print("  addr:", ":".join(str(a) for a in peer.node["node_addr"]))
+
+    addr = list(peer.node["node_addr"])
+    if addr[0] == "0.0.0.0":
+        addr[0] = "127.0.0.1"
+    addr = ":".join(str(a) for a in addr)
+
+    print("  addr:", addr)
     print()
 
     seeds = os.getenv("GOSSIP_SEEDS")
