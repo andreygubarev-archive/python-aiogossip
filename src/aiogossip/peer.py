@@ -50,6 +50,8 @@ class Peer:
         await asyncio.gather(self.task, return_exceptions=True)
 
     async def publish(self, topic, message, peers=None, syn=False):
+        topic = topic.replace("{uuid}", uuid.uuid4().hex)
+
         if syn:
             message["metadata"]["syn"] = self.node_id
         return await self.broker.publish(topic, message, node_ids=peers)
