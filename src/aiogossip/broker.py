@@ -95,20 +95,26 @@ class Broker:
         chan = Channel(loop=self._loop)
         callback = self.subscribe(topic, chan.send)
 
+        acks = set()
         if node_ids:
-            responses = acks = len(node_ids)
-        else:
-            responses = acks = len(self.gossip.topology) - 1
+            acks.update(node_ids)
 
         try:
             async with asyncio.timeout(self.TIMEOUT):
-                while (responses > 0 or acks > 0) and (responses >= acks):
+                while True:
                     message = await chan.recv()
+
                     if "ack" in message["metadata"]:
-                        acks -= 1
-                    else:
-                        responses -= 1
+                        acks.add(message["metadata"]["ack"])
                         yield message
+
+                    elif message["metadata"]["src"] in acks:
+                        acks.remove(message["metadata"]["src"])
+                        yield message
+
+                    else:
+                        raise ValueError(f"Unknown message: {message}")
+
         except asyncio.TimeoutError:
             pass
         finally:

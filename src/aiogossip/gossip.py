@@ -35,7 +35,7 @@ class Gossip:
             raise ValueError("cannot send message to self")
 
         message["metadata"].setdefault("event", uuid.uuid4().hex)
-
+        message["metadata"].setdefault("src", self.node_id)
         message["metadata"]["dst"] = node_id
         self.topology.set_route(message)
 
@@ -83,11 +83,13 @@ class Gossip:
                 else:
                     message["metadata"]["ack"] = self.node_id
                     del message["metadata"]["event"]
+                    del message["metadata"]["src"]
                     await self.send(message, message["metadata"]["syn"])
 
             # gossip message
             if "gossip" in message["metadata"]:
                 del message["metadata"]["event"]
+                del message["metadata"]["src"]
                 await self.gossip(message)
 
             yield message
