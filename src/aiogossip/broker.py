@@ -96,15 +96,19 @@ class Broker:
         callback = self.subscribe(topic, chan.send)
 
         if node_ids:
-            acks = len(node_ids)
+            acks = responses = len(node_ids)
         else:
-            acks = len(self.gossip.topology) - 1
+            acks = responses = len(self.gossip.topology) - 1
 
         try:
             async with asyncio.timeout(self.TIMEOUT):
-                while acks > 0:
-                    yield await chan.recv()
-                    acks -= 1
+                while acks > 0 or responses > 0:
+                    message = await chan.recv()
+                    if "ack" in message["metadata"]:
+                        acks -= 1
+                    else:
+                        yield message
+                        responses -= 1
         except asyncio.TimeoutError:
             pass
         finally:

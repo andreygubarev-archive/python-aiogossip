@@ -34,8 +34,7 @@ class Gossip:
         if node_id == self.node_id:
             raise ValueError("cannot send message to self")
 
-        if "event" not in message["metadata"]:
-            message["metadata"]["event"] = uuid.uuid4().hex
+        message["metadata"].setdefault("event", uuid.uuid4().hex)
 
         message["metadata"]["dst"] = node_id
         self.topology.set_route(message)
@@ -44,10 +43,7 @@ class Gossip:
         await self.transport.send(message, addr)
 
     async def gossip(self, message):
-        gossip_id = message["metadata"]["gossip"] = message["metadata"].get(
-            "gossip", uuid.uuid4().hex
-        )
-
+        gossip_id = message["metadata"].setdefault("gossip", uuid.uuid4().hex)
         gossip_ignore = set([self.node_id])
         gossip_ignore.update([r[1] for r in message["metadata"].get("route", [])])
 
@@ -86,10 +82,12 @@ class Gossip:
                     pass
                 else:
                     message["metadata"]["ack"] = self.node_id
+                    del message["metadata"]["event"]
                     await self.send(message, message["metadata"]["syn"])
 
             # gossip message
             if "gossip" in message["metadata"]:
+                del message["metadata"]["event"]
                 await self.gossip(message)
 
             yield message
