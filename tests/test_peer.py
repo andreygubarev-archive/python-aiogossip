@@ -41,7 +41,7 @@ async def test_peer_publish_ack(peers):
     await asyncio.sleep(0.1)
 
     message = {"metadata": {}}
-    response = await peers[0].publish("topic", message, ack=True)
+    response = await peers[0].publish("topic", message, syn=True)
 
     messages = []
     async for message in response:

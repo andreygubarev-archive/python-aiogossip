@@ -35,7 +35,7 @@ class Peer:
         topic = "connect:{}".format(uuid.uuid4().hex)
         message = {"metadata": {}}
 
-        response = await self.publish(topic, message, ack=True)
+        response = await self.publish(topic, message, syn=True)
         async for r in response:
             pass
 
@@ -49,8 +49,8 @@ class Peer:
         self.task.cancel()
         await asyncio.gather(self.task, return_exceptions=True)
 
-    async def publish(self, topic, message, nodes=None, ack=False):
-        if ack:
+    async def publish(self, topic, message, nodes=None, syn=False):
+        if syn:
             message["metadata"]["syn"] = self.node_id
         return await self.broker.publish(topic, message, node_ids=nodes)
 
