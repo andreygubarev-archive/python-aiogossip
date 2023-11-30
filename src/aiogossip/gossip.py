@@ -42,7 +42,24 @@ class Gossip:
         addr = self.topology.get_addr(node_id)
         await self.transport.send(message, addr)
 
+    async def send_ack(self, message):
+        message["metadata"].pop("event", None)
+        message["metadata"].pop("src", None)
+
+        message["metadata"]["ack"] = self.node_id
+        await self.send(message, message["metadata"]["syn"])
+
+    async def send_forward(self, message):
+        if message["metadata"]["dst"] == self.node_id:
+            return False
+        else:
+            await self.send(message, message["metadata"]["dst"])
+            return True
+
     async def gossip(self, message):
+        message["metadata"].pop("event", None)
+        message["metadata"].pop("src", None)
+
         gossip_id = message["metadata"].setdefault("gossip", uuid.uuid4().hex)
         gossip_ignore = set([self.node_id])
         gossip_ignore.update([r[1] for r in message["metadata"].get("route", [])])
@@ -72,8 +89,7 @@ class Gossip:
                 await self.send({"metadata": {}}, node_id)
 
             # forward message to destination
-            if message["metadata"]["dst"] != self.node_id:
-                await self.send(message, message["metadata"]["dst"])
+            if await self.send_forward(message):
                 continue
 
             # acknowledge message
@@ -81,15 +97,10 @@ class Gossip:
                 if "ack" in message["metadata"]:
                     pass
                 else:
-                    message["metadata"]["ack"] = self.node_id
-                    del message["metadata"]["event"]
-                    del message["metadata"]["src"]
-                    await self.send(message, message["metadata"]["syn"])
+                    await self.send_ack(message)
 
             # gossip message
             if "gossip" in message["metadata"]:
-                del message["metadata"]["event"]
-                del message["metadata"]["src"]
                 await self.gossip(message)
 
             yield message
