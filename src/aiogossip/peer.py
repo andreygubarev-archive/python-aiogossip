@@ -10,13 +10,13 @@ from .transport import Transport
 class Peer:
     def __init__(
         self,
-        loop: asyncio.AbstractEventLoop,
+        loop: asyncio.AbstractEventLoop = None,
         host="0.0.0.0",
         port=0,
         fanout=None,
         node_id=None,
     ):
-        self._loop = loop
+        self._loop = loop or asyncio.get_event_loop()
 
         self.node_id = node_id or uuid.uuid4().hex
         # FIXME: should be lazy
@@ -39,7 +39,18 @@ class Peer:
         async for r in response:
             pass
 
-    def connect(self, nodes):
+    def connect(self, seeds):
+        if not seeds:
+            return
+
+        nodes = []
+
+        if isinstance(seeds, str):
+            seeds = seeds.split(",")
+            nodes = [s.split(":") for s in seeds]
+        elif isinstance(seeds, list):
+            nodes = seeds
+
         self.gossip.topology.add(nodes)
         task = self._loop.create_task(self._connect())
         task.add_done_callback(print_exception)
