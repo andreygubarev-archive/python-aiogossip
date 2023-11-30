@@ -32,7 +32,7 @@ async def main():
     await asyncio.sleep(0.1)  # wait for connections to be established
     topic = "req:" + uuid.uuid4().hex
     print("REQUEST", request, "\n")
-    response = await peer0.publish(topic, request, ack=True, nodes=[peer3.node_id])
+    response = await peer0.publish(topic, request, syn=True, nodes=[peer3.node_id])
     async for r in response:
         print("RESPONSE", r, "\n")
 
