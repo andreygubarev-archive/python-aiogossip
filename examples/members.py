@@ -12,7 +12,7 @@ peer = aiogossip.Peer()
 
 async def main():
     while True:
-        await asyncio.sleep(5)
+        await asyncio.sleep(10)
         print("---")
         print("members:")
         for node in peer.nodes:
