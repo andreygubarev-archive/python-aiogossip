@@ -86,6 +86,11 @@ class Peer:
 
         return decorator
 
+    async def request(self, topic, message, peers=None, timeout=5):
+        topic = "request:{}:{}".format(topic, uuid.uuid4().hex)
+        response = await self.publish(topic, message, peers=peers, syn=True)
+        return response
+
     def run_forever(self, main=None):  # pragma: no cover
         if main:
             self._loop.run_until_complete(main())
