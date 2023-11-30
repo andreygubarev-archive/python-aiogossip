@@ -91,6 +91,21 @@ class Peer:
         response = await self.publish(topic, message, peers=peers, syn=True)
         return response
 
+    def response(self, topic):
+        topic = "request:{}:*".format(topic)
+
+        async def responder(message, r):
+            await self.publish(
+                message["metadata"]["topic"], r, peers=[message["metadata"]["syn"]]
+            )
+
+        def decorator(callback):
+            callback = self.broker.subscribe(topic, callback)
+            callback._handler = responder
+            return callback
+
+        return decorator
+
     def run_forever(self, main=None):  # pragma: no cover
         if main:
             self._loop.run_until_complete(main())

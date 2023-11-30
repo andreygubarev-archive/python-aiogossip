@@ -1,3 +1,4 @@
+import copy
 import math
 import uuid
 
@@ -43,6 +44,7 @@ class Gossip:
         await self.transport.send(message, addr)
 
     async def send_ack(self, message):
+        message = copy.deepcopy(message)
         if "ack" in message["metadata"]:
             return False
 
@@ -102,8 +104,7 @@ class Gossip:
 
             # acknowledge message
             if "syn" in message["metadata"]:
-                if await self.send_ack(message):
-                    continue
+                await self.send_ack(message)
 
             yield message
 
