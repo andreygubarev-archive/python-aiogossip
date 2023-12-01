@@ -22,13 +22,13 @@ class Peer:
         self._loop = loop or asyncio.get_event_loop()
 
         if node_id:
-            self.node_id = node_id.encode()
+            self.peer_id = node_id.encode()
         else:
-            self.node_id = uuid.uuid1().bytes
+            self.peer_id = uuid.uuid1().bytes
 
         # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self._loop)
-        self.gossip = Gossip(self.transport, fanout=fanout, node_id=self.node_id)
+        self.gossip = Gossip(self.transport, fanout=fanout, peer_id=self.peer_id)
         self.broker = Broker(self.gossip, loop=self._loop)
 
         self.task = self._loop.create_task(self.broker.listen())
@@ -91,7 +91,7 @@ class Peer:
         topic = topic.replace("{uuid}", uuid.uuid4().hex)
 
         if syn:
-            message.metadata.syn = self.node_id
+            message.metadata.syn = self.peer_id
         return await self.broker.publish(topic, message, node_ids=peers)
 
     def subscribe(self, topic):
