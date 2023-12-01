@@ -3,6 +3,7 @@ import uuid
 
 from . import config
 from .broker import Broker
+from .debug import debug
 from .errors import print_exception
 from .gossip import Gossip
 from .message_pb2 import Message
@@ -105,6 +106,7 @@ class Peer:
 
         return decorator
 
+    @debug
     def run_forever(self, main=None):  # pragma: no cover
         if main:
             self._loop.run_until_complete(main())
