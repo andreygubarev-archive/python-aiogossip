@@ -20,9 +20,18 @@ def instances(request):
     return request.param
 
 
+def get_transport(event_loop):
+    return Transport(("localhost", 0), loop=event_loop)
+
+
 @pytest.fixture
 def transport(event_loop):
-    return Transport(("localhost", 0), loop=event_loop)
+    return get_transport(event_loop)
+
+
+@pytest.fixture
+def transports(event_loop, instances):
+    return [get_transport(event_loop) for _ in range(instances)]
 
 
 @pytest.fixture
