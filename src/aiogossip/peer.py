@@ -81,9 +81,8 @@ class Peer:
         return await self.broker.publish(topic, message, node_ids=peers)
 
     def subscribe(self, topic):
-        def decorator(callback):
-            callback = self.broker.subscribe(topic, callback)
-            return callback
+        def decorator(func):
+            return self.broker.subscribe(topic, func)
 
         return decorator
 
@@ -100,10 +99,10 @@ class Peer:
                 message["metadata"]["topic"], r, peers=[message["metadata"]["syn"]]
             )
 
-        def decorator(callback):
-            callback = self.broker.subscribe(topic, callback)
-            callback.hook(responder)
-            return callback
+        def decorator(func):
+            handler = self.broker.subscribe(topic, func)
+            handler.hook(responder)
+            return handler
 
         return decorator
 

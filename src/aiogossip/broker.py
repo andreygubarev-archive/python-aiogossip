@@ -8,7 +8,7 @@ from .errors import print_exception
 from .gossip import Gossip
 
 
-class Callback:
+class Handler:
     def __init__(self, topic, func, loop: asyncio.AbstractEventLoop):
         self._loop = loop
 
@@ -50,7 +50,7 @@ class Broker:
         self._loop = loop
 
         self.gossip = gossip
-        self.callbacks = collections.defaultdict(list)
+        self._handlers = collections.defaultdict(list)
 
     async def listen(self):
         """Connect to the gossip network and start receiving messages."""
@@ -60,33 +60,33 @@ class Broker:
             if "topic" not in message["metadata"]:
                 continue
 
-            topics = list(self.callbacks.keys())
+            topics = list(self._handlers.keys())
 
             for topic in topics:
                 if fnmatch.fnmatch(message["metadata"]["topic"], topic):
-                    for callback in self.callbacks[topic]:
-                        await callback.chan.send(message)
+                    for handler in self._handlers[topic]:
+                        await handler.chan.send(message)
 
             for topic in topics:
-                if len(self.callbacks[topic]) == 0:
-                    del self.callbacks[topic]
+                if len(self._handlers[topic]) == 0:
+                    del self._handlers[topic]
 
     async def close(self):
         """Disconnect from the gossip network and stop receiving messages."""
-        callbacks = [cb for cb in itertools.chain(*self.callbacks.values())]
-        await asyncio.gather(*[cb.cancel() for cb in callbacks], return_exceptions=True)
+        handlers = [h for h in itertools.chain(*self._handlers.values())]
+        await asyncio.gather(*[h.cancel() for h in handlers], return_exceptions=True)
         await self.gossip.close()
 
-    def subscribe(self, topic, callback):
-        """Subscribe to a topic and register a callback."""
-        callback = Callback(topic, callback, loop=self._loop)
-        self.callbacks[topic].append(callback)
-        return callback
+    def subscribe(self, topic, func):
+        """Subscribe to a topic and register a handler."""
+        handler = Handler(topic, func, loop=self._loop)
+        self._handlers[topic].append(handler)
+        return handler
 
-    async def unsubscribe(self, callback):
-        """Unsubscribe from a topic and unregister a callback."""
-        await callback.cancel()
-        self.callbacks[callback.topic].remove(callback)
+    async def unsubscribe(self, handler):
+        """Unsubscribe from a topic and unregister a handler."""
+        await handler.cancel()
+        self._handlers[handler.topic].remove(handler)
 
     async def publish(self, topic, message, node_ids=None):
         """Publish a message to a topic."""
@@ -107,7 +107,7 @@ class Broker:
 
     async def _recv(self, topic, node_ids=None):
         chan = Channel(loop=self._loop)
-        callback = self.subscribe(topic, chan.send)
+        handler = self.subscribe(topic, chan.send)
 
         acks = set()
         if node_ids:
@@ -131,5 +131,5 @@ class Broker:
         except asyncio.TimeoutError:
             pass
         finally:
-            await self.unsubscribe(callback)
+            await self.unsubscribe(handler)
             await chan.close()
