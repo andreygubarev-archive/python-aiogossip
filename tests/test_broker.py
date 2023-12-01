@@ -37,7 +37,7 @@ async def test_subscribe(brokers):
     assert callback_message["message"] == message["message"]
 
     await sub.unsubscribe(callback)
-    assert callback not in sub.callbacks[topic]
+    assert callback not in sub._handlers[topic]
     await pub.close()
     await sub.close()
 
@@ -75,13 +75,13 @@ async def test_connect_cleans_up_empty_topics(brokers):
     broker.gossip.recv = recv
 
     callback = broker.subscribe(topic, MagicMock())
-    assert topic in broker.callbacks
+    assert topic in broker._handlers
     await broker.unsubscribe(callback)
-    assert topic in broker.callbacks
-    assert len(broker.callbacks[topic]) == 0
+    assert topic in broker._handlers
+    assert len(broker._handlers[topic]) == 0
 
     await broker.listen()
-    assert topic not in broker.callbacks
+    assert topic not in broker._handlers
     await broker.close()
 
 
