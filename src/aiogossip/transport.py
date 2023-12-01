@@ -35,7 +35,11 @@ class Transport:
         message = codec.encode(message)
         if len(message) > self.PAYLOAD_SIZE:
             raise ValueError(f"Message size exceeds payload size of {self.PAYLOAD_SIZE} bytes")
-        addr = tuple(addr)
+
+        if isinstance(addr, str):
+            addr = addr.split(":")
+            addr = (addr[0], int(addr[1]))
+
         await self._loop.sock_sendto(self.sock, message, addr)
         logger.debug(f"DEBUG: {self.addr[1]} > {addr[1]} send: {message}\n")
 

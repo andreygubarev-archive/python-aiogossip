@@ -3,8 +3,8 @@ syntax = "proto3";
 message Route {
     bytes route_id = 1;
     int64 timestamp = 2;
-    bytes src = 3;
-    optional bytes dst = 4;
+    string saddr = 3;
+    string daddr = 4;
 }
 
 message Message {
