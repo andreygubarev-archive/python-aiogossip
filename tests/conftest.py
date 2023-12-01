@@ -65,13 +65,32 @@ def gossips(transports, random_seed):
 # Broker ######################################################################
 
 
-@pytest.fixture
-def brokers(random_seed, event_loop, instances, gossips):
-    brokers = [Broker(gossip, loop=event_loop) for gossip in gossips]
-    return brokers
+def get_broker(gossip):
+    return Broker(gossip)
 
 
 @pytest.fixture
-def peers(random_seed, event_loop, instances):
-    peers = [Peer(loop=event_loop) for _ in range(instances)]
-    return peers
+def broker(gossip):
+    return get_broker(gossip)
+
+
+@pytest.fixture
+def brokers(gossips):
+    return [get_broker(gossip) for gossip in gossips]
+
+
+# Peer ########################################################################
+
+
+def get_peer(event_loop):
+    return Peer(loop=event_loop)
+
+
+@pytest.fixture
+def peer(event_loop):
+    return get_peer(event_loop)
+
+
+@pytest.fixture
+def peers(event_loop, instances, random_seed):
+    return [Peer(loop=event_loop) for _ in range(instances)]
