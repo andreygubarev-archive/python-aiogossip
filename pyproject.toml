@@ -17,6 +17,7 @@ license = { text = "MIT" }
 
 dependencies = [
   "networkx==2.8.8",
+  "protobuf==4.21.12",
 ]
 
 [project.urls]
