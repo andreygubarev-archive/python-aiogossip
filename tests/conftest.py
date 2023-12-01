@@ -8,10 +8,13 @@ from aiogossip.gossip import Gossip
 from aiogossip.peer import Peer
 from aiogossip.transport import Transport
 
+# Generic #####################################################################
 
-@pytest.fixture(params=range(5), ids=lambda x: f"randomize={x}")
-def randomize(request):
+
+@pytest.fixture(params=[0, 1, 2, 3, 4], ids=lambda x: f"random_seed={x}")
+def random_seed(request):
     random.seed(request.param)
+    return request.param
 
 
 @pytest.fixture(params=[1, 2, 3, 5, 10, 50], ids=lambda x: f"instances={x}")
@@ -19,37 +22,75 @@ def instances(request):
     return request.param
 
 
-@pytest.fixture
-def transport(event_loop):
+# Transport ###################################################################
+
+
+def get_transport(event_loop):
     return Transport(("localhost", 0), loop=event_loop)
 
 
 @pytest.fixture
-def gossips(randomize, event_loop, instances):
-    def get_gossip():
-        transport = Transport(("localhost", 0), loop=event_loop)
-        return Gossip(transport=transport)
+def transport(event_loop):
+    return get_transport(event_loop)
 
-    connections = math.ceil(math.sqrt(instances))
-    gossips = [get_gossip() for _ in range(instances)]
-    seed = gossips[0]
+
+@pytest.fixture
+def transports(event_loop, instances):
+    return [get_transport(event_loop) for _ in range(instances)]
+
+
+# Gossip ######################################################################
+
+
+def get_gossip(transport):
+    return Gossip(transport=transport)
+
+
+@pytest.fixture
+def gossip(transport):
+    return get_gossip(transport)
+
+
+@pytest.fixture
+def gossips(transports, random_seed):
+    gossips = [get_gossip(transport) for transport in transports]
+    gossips_connections = math.ceil(math.sqrt(len(gossips)))
     for gossip in gossips:
-        seed.topology.add([gossip.topology.node])
-
-        gossip.topology.add([seed.topology.node])
-        for g in random.sample(gossips, connections):
+        gossips[0].topology.add([gossip.topology.node])
+        for g in random.sample(gossips, gossips_connections):
             gossip.topology.add([g.topology.node])
-
     return gossips
 
 
-@pytest.fixture
-def brokers(randomize, event_loop, instances, gossips):
-    brokers = [Broker(gossip, loop=event_loop) for gossip in gossips]
-    return brokers
+# Broker ######################################################################
+
+
+def get_broker(gossip):
+    return Broker(gossip)
 
 
 @pytest.fixture
-def peers(randomize, event_loop, instances):
-    peers = [Peer(loop=event_loop) for _ in range(instances)]
-    return peers
+def broker(gossip):
+    return get_broker(gossip)
+
+
+@pytest.fixture
+def brokers(gossips):
+    return [get_broker(gossip) for gossip in gossips]
+
+
+# Peer ########################################################################
+
+
+def get_peer(event_loop):
+    return Peer(loop=event_loop)
+
+
+@pytest.fixture
+def peer(event_loop):
+    return get_peer(event_loop)
+
+
+@pytest.fixture
+def peers(event_loop, instances, random_seed):
+    return [Peer(loop=event_loop) for _ in range(instances)]

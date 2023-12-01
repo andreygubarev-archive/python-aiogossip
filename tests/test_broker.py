@@ -9,7 +9,7 @@ class AsyncMagicMock(MagicMock):
         return super(AsyncMagicMock, self).__call__(*args, **kwargs)
 
 
-@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
 async def test_subscribe(brokers):
@@ -42,7 +42,7 @@ async def test_subscribe(brokers):
     await sub.close()
 
 
-@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
 async def test_connect_ignores_messages_without_topic(brokers):
@@ -62,7 +62,7 @@ async def test_connect_ignores_messages_without_topic(brokers):
     await broker.close()
 
 
-@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
 async def test_connect_cleans_up_empty_topics(brokers):
@@ -85,7 +85,7 @@ async def test_connect_cleans_up_empty_topics(brokers):
     await broker.close()
 
 
-@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
 async def test_wildcard_topic(brokers):
@@ -107,7 +107,7 @@ async def test_wildcard_topic(brokers):
     await broker.close()
 
 
-@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
 async def test_publish_to_specific_nodes(brokers):

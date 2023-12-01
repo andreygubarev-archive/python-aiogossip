@@ -31,7 +31,7 @@ async def test_gossip(gossips):
         gossip.transport.close()
 
 
-@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
 async def test_send_and_receive(gossips):

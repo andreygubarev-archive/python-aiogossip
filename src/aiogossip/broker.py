@@ -46,8 +46,8 @@ class Handler:
 class Broker:
     TIMEOUT = 10
 
-    def __init__(self, gossip: Gossip, loop: asyncio.AbstractEventLoop):
-        self._loop = loop
+    def __init__(self, gossip: Gossip, loop: asyncio.AbstractEventLoop = None):
+        self._loop = loop or gossip.transport._loop
 
         self.gossip = gossip
         self._handlers = collections.defaultdict(list)
