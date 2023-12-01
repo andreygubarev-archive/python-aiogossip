@@ -1,10 +1,10 @@
 """
 Usage:
-    GOSSIP_SEEDS=4aed4f3c6900462baa1413fb7ef4f814@127.0.0.1:58295 python examples/members.py
+    python examples/req-resp/response.py
 """
 import aiogossip
 
-peer = aiogossip.Peer()
+peer = aiogossip.Peer(port=8000, node_id="response")
 
 
 @peer.response("query")
