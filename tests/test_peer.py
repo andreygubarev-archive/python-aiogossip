@@ -3,7 +3,7 @@ import asyncio
 import pytest
 
 
-@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
 async def test_peer(peers):
@@ -33,7 +33,7 @@ async def test_peer(peers):
         await peer.disconnect()
 
 
-@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
 async def test_peer_publish_ack(peers):
@@ -55,7 +55,7 @@ async def test_peer_publish_ack(peers):
         await peer.disconnect()
 
 
-@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [3])
 @pytest.mark.asyncio
 async def test_peer_forwarding(peers):
@@ -82,7 +82,7 @@ async def test_peer_forwarding(peers):
         await peer.disconnect()
 
 
-@pytest.mark.parametrize("randomize", [0])
+@pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [3])
 @pytest.mark.asyncio
 async def test_peer_reverse_forwarding(peers):

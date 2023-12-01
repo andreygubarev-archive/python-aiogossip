@@ -9,9 +9,10 @@ from aiogossip.peer import Peer
 from aiogossip.transport import Transport
 
 
-@pytest.fixture(params=range(5), ids=lambda x: f"randomize={x}")
-def randomize(request):
+@pytest.fixture(params=[0, 1, 2, 3, 4], ids=lambda x: f"random_seed={x}")
+def random_seed(request):
     random.seed(request.param)
+    return request.param
 
 
 @pytest.fixture(params=[1, 2, 3, 5, 10, 50], ids=lambda x: f"instances={x}")
@@ -25,7 +26,7 @@ def transport(event_loop):
 
 
 @pytest.fixture
-def gossips(randomize, event_loop, instances):
+def gossips(random_seed, event_loop, instances):
     def get_gossip():
         transport = Transport(("localhost", 0), loop=event_loop)
         return Gossip(transport=transport)
@@ -44,12 +45,12 @@ def gossips(randomize, event_loop, instances):
 
 
 @pytest.fixture
-def brokers(randomize, event_loop, instances, gossips):
+def brokers(random_seed, event_loop, instances, gossips):
     brokers = [Broker(gossip, loop=event_loop) for gossip in gossips]
     return brokers
 
 
 @pytest.fixture
-def peers(randomize, event_loop, instances):
+def peers(random_seed, event_loop, instances):
     peers = [Peer(loop=event_loop) for _ in range(instances)]
     return peers
