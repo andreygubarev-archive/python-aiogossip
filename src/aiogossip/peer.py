@@ -17,12 +17,12 @@ class Peer:
         host="0.0.0.0",
         port=0,
         fanout=None,
-        node_id=None,
+        peer_id=None,
     ):
         self._loop = loop or asyncio.get_event_loop()
 
-        if node_id:
-            self.peer_id = node_id.encode()
+        if peer_id:
+            self.peer_id = peer_id.encode()
         else:
             self.peer_id = uuid.uuid1().bytes
 
@@ -46,7 +46,7 @@ class Peer:
 
     @property
     def DSN(self):
-        return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
+        return "{}@{}:{}".format(self.node["peer_id"].decode(), *self.node["node_addr"])
 
     async def _connect(self):
         topic = "connect:{}".format(uuid.uuid4().hex)
@@ -65,9 +65,9 @@ class Peer:
         if isinstance(seeds, str):
             seeds = seeds.split(",")
             for seed in seeds:
-                node_id, addr = seed.split("@")
+                peer_id, addr = seed.split("@")
                 host, port = addr.split(":")
-                nodes.append({"node_id": node_id.encode(), "node_addr": (host, int(port))})
+                nodes.append({"peer_id": peer_id.encode(), "node_addr": (host, int(port))})
 
         elif isinstance(seeds, list):
             nodes = seeds
@@ -92,7 +92,7 @@ class Peer:
 
         if syn:
             message.metadata.syn = self.peer_id
-        return await self.broker.publish(topic, message, node_ids=peers)
+        return await self.broker.publish(topic, message, peer_ids=peers)
 
     def subscribe(self, topic):
         def decorator(func):
