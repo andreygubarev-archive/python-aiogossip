@@ -12,7 +12,6 @@ class Gossip:
     def __init__(self, transport, fanout=None, node_id=None):
         self.node_id = node_id or uuid.uuid4().bytes
         self.transport = transport
-
         self.topology = Topology(self.node_id, self.transport.addr)
 
         self._fanout = fanout or self.FANOUT
@@ -102,7 +101,7 @@ class Gossip:
             message.metadata.route[-1].daddr = f"{addr[0]}:{addr[1]}"
 
             self.topology.set_route(message)
-            node_ids = self.topology.update_routes(message.metadata.route)
+            node_ids = self.topology.update_routes(message)
 
             # connect to new nodes
             for node_id in node_ids:

@@ -78,12 +78,12 @@ class Topology:
 
         return message
 
-    def update_routes(self, route):
-        if len(route) < 2:
+    def update_routes(self, message):
+        if len(message.metadata.route) < 2:
             raise ValueError("Empty route")
 
         nodes = set()
-        for r in (r for r in route if r.route_id not in self.graph):
+        for r in (r for r in message.metadata.route if r.route_id not in self.graph):
             self.graph.add_node(r.route_id, node_id=r.route_id, node_addr=r.daddr or r.saddr)
             nodes.add(r.route_id)
 
@@ -94,7 +94,9 @@ class Topology:
                 "latency": abs(src.timestamp - dst.timestamp),
             }
 
-        hops = ((route[r], route[r + 1]) for r in range(len(route) - 1))
+        hops = (
+            (message.metadata.route[r], message.metadata.route[r + 1]) for r in range(len(message.metadata.route) - 1)
+        )
         for src, dst in hops:
             self.graph.add_edge(src.route_id, dst.route_id, **edge(src, dst))
         self.graph.add_edge(dst.route_id, src.route_id, **edge(dst, src))
