@@ -1,4 +1,3 @@
-import copy
 import math
 import uuid
 
@@ -32,7 +31,10 @@ class Gossip:
 
         return math.ceil(math.log(len(self.topology), self.fanout))
 
-    async def send(self, message, node_id):
+    async def send(self, _message, node_id):
+        message = Message()
+        message.CopyFrom(_message)
+
         if node_id == self.node_id:
             raise ValueError("cannot send message to self")
 
@@ -46,8 +48,10 @@ class Gossip:
         addr = self.topology.get_addr(node_id)
         await self.transport.send(message, addr)
 
-    async def send_ack(self, message):
-        message = copy.deepcopy(message)
+    async def send_ack(self, _message):
+        message = Message()
+        message.CopyFrom(_message)
+
         if "ack" in message["metadata"]:
             return False
 
@@ -58,7 +62,10 @@ class Gossip:
         await self.send(message, message["metadata"]["syn"])
         return True
 
-    async def send_forward(self, message):
+    async def send_forward(self, _message):
+        message = Message()
+        message.CopyFrom(_message)
+
         if message.metadata.dst == self.node_id:
             return False
         else:

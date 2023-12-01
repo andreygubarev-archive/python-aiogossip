@@ -33,9 +33,8 @@ async def test_gossip(gossips, message):
 @pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
-async def test_send_and_receive(gossips):
-    message = {"message": "Hello, world!", "metadata": {}}
-
+async def test_send_and_receive(gossips, message):
+    message.payload = b"test_send_and_receive"
     await gossips[0].send(message, gossips[1].topology.node_id)
     received_message = await anext(gossips[1].recv())
-    assert received_message["message"] == message["message"]
+    assert received_message.payload == message.payload

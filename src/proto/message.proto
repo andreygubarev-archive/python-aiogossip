@@ -20,4 +20,5 @@ message Message {
 
     bytes message_id = 1;
     Metadata metadata = 2;
+    bytes payload = 3;
 }
