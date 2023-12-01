@@ -39,7 +39,9 @@ pythonpath = ["src"]
 [tool.isort]
 profile = "black"
 src_paths = ["src", "test"]
+extend_skip_glob = ["**/*_pb2.py"]
 honor_noqa = true
 
 [tool.black]
+extend-exclude = "_pb2\\.py"
 line-length = 120
