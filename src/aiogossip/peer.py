@@ -95,9 +95,7 @@ class Peer:
         topic = "request:{}:*".format(topic)
 
         async def responder(message, r):
-            await self.publish(
-                message["metadata"]["topic"], r, peers=[message["metadata"]["syn"]]
-            )
+            await self.publish(message["metadata"]["topic"], r, peers=[message["metadata"]["syn"]])
 
         def decorator(func):
             handler = self.broker.subscribe(topic, func)
