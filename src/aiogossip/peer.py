@@ -21,7 +21,11 @@ class Peer:
     ):
         self._loop = loop or asyncio.get_event_loop()
 
-        self.node_id = node_id.encode() or uuid.uuid1().bytes
+        if node_id:
+            self.node_id = node_id.encode()
+        else:
+            self.node_id = uuid.uuid1().bytes
+
         # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self._loop)
         self.gossip = Gossip(self.transport, fanout=fanout, node_id=self.node_id)
@@ -29,6 +33,8 @@ class Peer:
 
         self.task = self._loop.create_task(self.broker.listen())
         self.task.add_done_callback(print_exception)
+
+        self.tasks = []
 
     @property
     def node(self):
@@ -69,9 +75,15 @@ class Peer:
         self.gossip.topology.add(nodes)
         task = self._loop.create_task(self._connect())
         task.add_done_callback(print_exception)
+        self.tasks.append(task)
 
     async def disconnect(self):
         await self.broker.close()
+
+        for task in self.tasks:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
         self.task.cancel()
         await asyncio.gather(self.task, return_exceptions=True)
 
