@@ -19,15 +19,15 @@ async def test_peer(peers):
     message = {"message": "Hello, world!", "metadata": {}}
     await peer1.publish("test", message)
 
-    callback_message = None
+    handler_message = None
 
     @peer2.subscribe("test")
     async def handler(message):
-        nonlocal callback_message
-        callback_message = message["message"]
+        nonlocal handler_message
+        handler_message = message["message"]
 
     await asyncio.sleep(0.1)
-    assert callback_message == message["message"]
+    assert handler_message == message["message"]
 
     for peer in peers:
         await peer.disconnect()
@@ -62,13 +62,13 @@ async def test_peer_forwarding(peers):
     peers[0].connect([peers[1].node])
     peers[1].connect([peers[2].node])
 
-    callback_message = None
+    handler_message = None
     subscribe = peers[0].subscribe("test")
 
     @subscribe
     async def handler(message):
-        nonlocal callback_message
-        callback_message = message["message"]
+        nonlocal handler_message
+        handler_message = message["message"]
 
     await asyncio.sleep(0.1)
 
@@ -76,7 +76,7 @@ async def test_peer_forwarding(peers):
     await peers[2].publish("test", message, peers=[peers[0].node_id])
 
     await asyncio.sleep(0.1)
-    assert callback_message == message["message"]
+    assert handler_message == message["message"]
 
     for peer in peers:
         await peer.disconnect()
@@ -90,19 +90,19 @@ async def test_peer_reverse_forwarding(peers):
     peers[1].connect([peers[2].node])
     await asyncio.sleep(0.1)
 
-    callback_message = None
+    handler_message = None
     subscribe = peers[2].subscribe("test")
 
     @subscribe
     async def handler(message):
-        nonlocal callback_message
-        callback_message = message["message"]
+        nonlocal handler_message
+        handler_message = message["message"]
 
     message = {"message": "Hello, world!", "metadata": {}}
     await peers[0].publish("test", message, peers=[peers[2].node_id])
 
     await asyncio.sleep(0.1)
-    assert callback_message == message["message"]
+    assert handler_message == message["message"]
 
     for peer in peers:
         await peer.disconnect()

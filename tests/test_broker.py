@@ -16,16 +16,16 @@ async def test_subscribe(brokers):
     pub = brokers[0]
     sub = brokers[1]
 
-    callback_message = None
+    handler_message = None
 
-    async def callback(message):
-        nonlocal callback_message
-        callback_message = message
+    async def handler(message):
+        nonlocal handler_message
+        handler_message = message
 
     topic = "test"
     message = {"message": "foo", "metadata": {}}
 
-    callback = sub.subscribe(topic, callback)
+    handler = sub.subscribe(topic, handler)
     try:
         async with asyncio.timeout(0.1):
             await pub.publish(topic, message)
@@ -33,11 +33,11 @@ async def test_subscribe(brokers):
     except asyncio.TimeoutError:
         pass
 
-    assert callback_message["metadata"]["topic"] == topic
-    assert callback_message["message"] == message["message"]
+    assert handler_message["metadata"]["topic"] == topic
+    assert handler_message["message"] == message["message"]
 
-    await sub.unsubscribe(callback)
-    assert callback not in sub._handlers[topic]
+    await sub.unsubscribe(handler)
+    assert handler not in sub._handlers[topic]
     await pub.close()
     await sub.close()
 
@@ -53,12 +53,12 @@ async def test_connect_ignores_messages_without_topic(brokers):
 
     broker.gossip.recv = recv
 
-    callback = MagicMock()
-    callback = broker.subscribe("test", callback)
-    callback.chan.send = MagicMock()
+    handler = MagicMock()
+    handler = broker.subscribe("test", handler)
+    handler.chan.send = MagicMock()
 
     await broker.listen()
-    callback.chan.send.assert_not_called()
+    handler.chan.send.assert_not_called()
     await broker.close()
 
 
@@ -74,9 +74,9 @@ async def test_connect_cleans_up_empty_topics(brokers):
 
     broker.gossip.recv = recv
 
-    callback = broker.subscribe(topic, MagicMock())
+    handler = broker.subscribe(topic, MagicMock())
     assert topic in broker._handlers
-    await broker.unsubscribe(callback)
+    await broker.unsubscribe(handler)
     assert topic in broker._handlers
     assert len(broker._handlers[topic]) == 0
 
@@ -98,12 +98,12 @@ async def test_wildcard_topic(brokers):
 
     broker.gossip.recv = recv
 
-    callback = MagicMock()
-    callback = broker.subscribe(topic, callback)
-    callback.chan.send = AsyncMagicMock()
+    handler = MagicMock()
+    handler = broker.subscribe(topic, handler)
+    handler.chan.send = AsyncMagicMock()
 
     await broker.listen()
-    assert callback.chan.send.call_count == 2
+    assert handler.chan.send.call_count == 2
     await broker.close()
 
 
