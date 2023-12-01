@@ -32,7 +32,7 @@ class Peer:
         return self.gossip.topology.node
 
     @property
-    def dsn(self):
+    def DSN(self):
         return "{}@{}:{}".format(self.node["node_id"], *self.node["node_addr"])
 
     @property
