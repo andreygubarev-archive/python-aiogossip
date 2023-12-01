@@ -9,7 +9,6 @@ message Route {
 
 message Message {
     message Metadata {
-
         repeated Route route = 1;
         bytes src = 2;
         bytes dst = 3;

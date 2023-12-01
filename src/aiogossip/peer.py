@@ -41,12 +41,12 @@ class Peer:
         return self.gossip.topology.node
 
     @property
-    def DSN(self):
-        return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
-
-    @property
     def nodes(self):
         return list(self.gossip.topology)
+
+    @property
+    def DSN(self):
+        return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
 
     async def _connect(self):
         topic = "connect:{}".format(uuid.uuid4().hex)
