@@ -1,11 +1,11 @@
 # Sender ######################################################################
-from aiogossip import Peer  # noqa
+from aiogossip import Peer, Message  # noqa
 
 sender = Peer()
 
 
 async def main():
-    message = {"metadata": {}}
+    message = Message()
     response = await sender.request("query", message, peers=[sender.peers[0]])
     async for resp in response:
         print(resp)
@@ -24,7 +24,7 @@ receiver.connect([sender])
 @receiver.response("query")
 async def resp(message):
     print(message)
-    return {"metadata": {}}
+    return Message(payload=b"response")
 
 
 if __name__ == "__main__":
@@ -37,7 +37,7 @@ publisher = Peer()
 
 
 async def main():
-    message = {"metadata": {}}
+    message = Message()
     await publisher.publish("event", message)
 
 

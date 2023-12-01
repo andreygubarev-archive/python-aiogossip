@@ -8,7 +8,8 @@ peer = aiogossip.Peer()
 
 
 async def main():
-    await peer.publish("topic", {"metadata": {}, "payload": "payload"})
+    message = aiogossip.Message(payload=b"payload")
+    await peer.publish("topic", message)
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ class Peer:
     ):
         self._loop = loop or asyncio.get_event_loop()
 
-        self.node_id = node_id or uuid.uuid1().bytes
+        self.node_id = node_id.encode() or uuid.uuid1().bytes
         # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self._loop)
         self.gossip = Gossip(self.transport, fanout=fanout, node_id=self.node_id)
@@ -35,7 +35,7 @@ class Peer:
 
     @property
     def DSN(self):
-        return "{}@{}:{}".format(self.node["node_id"], *self.node["node_addr"])
+        return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
 
     @property
     def nodes(self):
@@ -60,7 +60,7 @@ class Peer:
             for seed in seeds:
                 node_id, addr = seed.split("@")
                 host, port = addr.split(":")
-                nodes.append({"node_id": node_id, "node_addr": (host, int(port))})
+                nodes.append({"node_id": node_id.encode(), "node_addr": (host, int(port))})
 
         elif isinstance(seeds, list):
             nodes = seeds
@@ -95,8 +95,8 @@ class Peer:
     def response(self, topic):
         topic = "request:{}:*".format(topic)
 
-        async def responder(message, r):
-            await self.publish(message["metadata"]["topic"], r, peers=[message["metadata"]["syn"]])
+        async def responder(message, result):
+            await self.publish(message.metadata.topic, result, peers=[message.metadata.syn])
 
         def decorator(func):
             handler = self.broker.subscribe(topic, func)
