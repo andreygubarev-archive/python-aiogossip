@@ -12,7 +12,7 @@ class AsyncMagicMock(MagicMock):
 @pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
-async def test_subscribe(brokers):
+async def test_subscribe(brokers, message):
     pub = brokers[0]
     sub = brokers[1]
 
@@ -23,7 +23,7 @@ async def test_subscribe(brokers):
         handler_message = message
 
     topic = "test"
-    message = {"message": "foo", "metadata": {}}
+    message.payload = b"test_subscribe"
 
     handler = sub.subscribe(topic, handler)
     try:
@@ -33,8 +33,8 @@ async def test_subscribe(brokers):
     except asyncio.TimeoutError:
         pass
 
-    assert handler_message["metadata"]["topic"] == topic
-    assert handler_message["message"] == message["message"]
+    assert handler_message.metadata.topic == topic
+    assert handler_message.payload == message.payload
 
     await sub.unsubscribe(handler)
     assert handler not in sub._handlers[topic]
@@ -45,11 +45,11 @@ async def test_subscribe(brokers):
 @pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
-async def test_connect_ignores_messages_without_topic(brokers):
+async def test_connect_ignores_messages_without_topic(brokers, message):
     broker = brokers[0]
 
     async def recv():
-        yield {"metadata": {}, "message": "foo"}
+        yield message
 
     broker.gossip.recv = recv
 
@@ -65,12 +65,13 @@ async def test_connect_ignores_messages_without_topic(brokers):
 @pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
-async def test_connect_cleans_up_empty_topics(brokers):
+async def test_connect_cleans_up_empty_topics(brokers, message):
     broker = brokers[0]
     topic = "test"
 
     async def recv():
-        yield {"metadata": {"topic": topic}}
+        message.metadata.topic = topic
+        yield message
 
     broker.gossip.recv = recv
 
@@ -88,13 +89,15 @@ async def test_connect_cleans_up_empty_topics(brokers):
 @pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [1])
 @pytest.mark.asyncio
-async def test_wildcard_topic(brokers):
+async def test_wildcard_topic(brokers, message):
     broker = brokers[0]
     topic = "test.*"
 
     async def recv():
-        yield {"metadata": {"topic": "test.1"}}
-        yield {"metadata": {"topic": "test.2"}}
+        message.metadata.topic = "test.1"
+        yield message
+        message.metadata.topic = "test.2"
+        yield message
 
     broker.gossip.recv = recv
 
@@ -110,14 +113,13 @@ async def test_wildcard_topic(brokers):
 @pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
-async def test_publish_to_specific_nodes(brokers):
+async def test_publish_to_specific_nodes(brokers, message):
     pub = brokers[0]
     pub.gossip.send = AsyncMagicMock()
     sub = brokers[1]
     pub.gossip.topology.add([sub.gossip.topology.node])
 
     topic = "test"
-    message = {"metadata": {}}
 
     pub.gossip.send.reset_mock()
     await pub.publish(topic, message, [sub.gossip.topology.node_id])

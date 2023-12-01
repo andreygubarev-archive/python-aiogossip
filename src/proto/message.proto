@@ -16,6 +16,7 @@ message Message {
         optional bytes gossip = 4;
         optional bytes syn = 5;
         optional bytes ack = 6;
+        optional string topic = 7;
     }
 
     bytes message_id = 1;
