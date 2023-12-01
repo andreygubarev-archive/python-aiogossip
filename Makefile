@@ -13,6 +13,13 @@ format: ## Format Python Package
 lint: ## Lint Python Package
 	python -m flake8
 
+.PHONY: compile
+compile: ## Compile Python Package and Protobuf
+	protoc \
+		--proto_path=$(MAKEFILE_DIR)/src/proto/ \
+		--python_out=$(MAKEFILE_DIR)/src/aiogossip/ \
+		message.proto
+
 .PHONY: test
 test: ## Test Python Package
 ifeq ($(MODULE),)
