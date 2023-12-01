@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+message Route {
+    bytes route_id = 1;
+    int64 timestamp = 2;
+    string saddr = 3;
+    string daddr = 4;
+}
+
+message Message {
+    message Metadata {
+
+        repeated Route route = 1;
+        bytes src = 2;
+        bytes dst = 3;
+        optional bytes gossip = 4;
+        optional bytes syn = 5;
+        optional bytes ack = 6;
+        optional string topic = 7;
+    }
+
+    bytes message_id = 1;
+    Metadata metadata = 2;
+    bytes payload = 3;
+}

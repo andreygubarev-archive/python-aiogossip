@@ -3,8 +3,10 @@ import uuid
 
 from . import config
 from .broker import Broker
+from .debug import debug
 from .errors import print_exception
 from .gossip import Gossip
+from .message_pb2 import Message
 from .transport import Transport
 
 
@@ -19,7 +21,11 @@ class Peer:
     ):
         self._loop = loop or asyncio.get_event_loop()
 
-        self.node_id = node_id or uuid.uuid4().hex
+        if node_id:
+            self.node_id = node_id.encode()
+        else:
+            self.node_id = uuid.uuid1().bytes
+
         # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self._loop)
         self.gossip = Gossip(self.transport, fanout=fanout, node_id=self.node_id)
@@ -28,13 +34,15 @@ class Peer:
         self.task = self._loop.create_task(self.broker.listen())
         self.task.add_done_callback(print_exception)
 
+        self.tasks = []
+
     @property
     def node(self):
         return self.gossip.topology.node
 
     @property
     def DSN(self):
-        return "{}@{}:{}".format(self.node["node_id"], *self.node["node_addr"])
+        return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
 
     @property
     def nodes(self):
@@ -42,7 +50,7 @@ class Peer:
 
     async def _connect(self):
         topic = "connect:{}".format(uuid.uuid4().hex)
-        message = {"metadata": {}}
+        message = Message()
 
         response = await self.publish(topic, message, syn=True)
         async for r in response:
@@ -59,7 +67,7 @@ class Peer:
             for seed in seeds:
                 node_id, addr = seed.split("@")
                 host, port = addr.split(":")
-                nodes.append({"node_id": node_id, "node_addr": (host, int(port))})
+                nodes.append({"node_id": node_id.encode(), "node_addr": (host, int(port))})
 
         elif isinstance(seeds, list):
             nodes = seeds
@@ -67,9 +75,15 @@ class Peer:
         self.gossip.topology.add(nodes)
         task = self._loop.create_task(self._connect())
         task.add_done_callback(print_exception)
+        self.tasks.append(task)
 
     async def disconnect(self):
         await self.broker.close()
+
+        for task in self.tasks:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
         self.task.cancel()
         await asyncio.gather(self.task, return_exceptions=True)
 
@@ -77,7 +91,7 @@ class Peer:
         topic = topic.replace("{uuid}", uuid.uuid4().hex)
 
         if syn:
-            message["metadata"]["syn"] = self.node_id
+            message.metadata.syn = self.node_id
         return await self.broker.publish(topic, message, node_ids=peers)
 
     def subscribe(self, topic):
@@ -94,10 +108,8 @@ class Peer:
     def response(self, topic):
         topic = "request:{}:*".format(topic)
 
-        async def responder(message, r):
-            await self.publish(
-                message["metadata"]["topic"], r, peers=[message["metadata"]["syn"]]
-            )
+        async def responder(message, result):
+            await self.publish(message.metadata.topic, result, peers=[message.metadata.syn])
 
         def decorator(func):
             handler = self.broker.subscribe(topic, func)
@@ -106,6 +118,7 @@ class Peer:
 
         return decorator
 
+    @debug
     def run_forever(self, main=None):  # pragma: no cover
         if main:
             self._loop.run_until_complete(main())

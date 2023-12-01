@@ -8,7 +8,8 @@ peer = aiogossip.Peer(node_id="request")
 
 
 async def main():
-    response = await peer.request("query", {"metadata": {}})
+    message = aiogossip.Message()
+    response = await peer.request("query", message)
     async for resp in response:
         print(resp)
 

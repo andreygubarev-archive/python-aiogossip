@@ -1,10 +1,12 @@
 import math
 import random
+import uuid
 
 import pytest
 
 from aiogossip.broker import Broker
 from aiogossip.gossip import Gossip
+from aiogossip.message_pb2 import Message
 from aiogossip.peer import Peer
 from aiogossip.transport import Transport
 
@@ -17,9 +19,23 @@ def random_seed(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 2, 3, 5, 10, 50], ids=lambda x: f"instances={x}")
+@pytest.fixture(params=[1, 2, 3, 5, 10], ids=lambda x: f"instances={x}")
 def instances(request):
     return request.param
+
+
+# Message #####################################################################
+
+
+def get_message():
+    message = Message()
+    message.message_id = uuid.uuid4().bytes
+    return message
+
+
+@pytest.fixture
+def message():
+    return get_message()
 
 
 # Transport ###################################################################

@@ -57,13 +57,13 @@ class Broker:
         async for message in self.gossip.recv():
             # FIXME: make messages idempotent (prevent duplicate processing)
 
-            if "topic" not in message["metadata"]:
+            if not message.metadata.topic:
                 continue
 
             topics = list(self._handlers.keys())
 
             for topic in topics:
-                if fnmatch.fnmatch(message["metadata"]["topic"], topic):
+                if fnmatch.fnmatch(message.metadata.topic, topic):
                     for handler in self._handlers[topic]:
                         await handler.chan.send(message)
 
@@ -92,7 +92,7 @@ class Broker:
         """Publish a message to a topic."""
         # FIXME: make messages idempotent (prevent duplicate processing)
         # FIXME: allow sending to specific nodes
-        message["metadata"]["topic"] = topic
+        message.metadata.topic = topic
         if node_ids:
             for node_id in node_ids:
                 if node_id in self.gossip.topology:
@@ -100,9 +100,9 @@ class Broker:
                 else:
                     raise ValueError(f"Unknown node: {node_id}")
         else:
-            await self.gossip.gossip(message)
+            await self.gossip.send_gossip(message)
 
-        if "syn" in message["metadata"]:
+        if message.metadata.syn:
             return self._recv(topic, node_ids=node_ids)
 
     async def _recv(self, topic, node_ids=None):
@@ -117,12 +117,12 @@ class Broker:
             async with asyncio.timeout(self.TIMEOUT):
                 while True:
                     message = await chan.recv()
-                    if "ack" in message["metadata"]:
-                        acks.add(message["metadata"]["ack"])
+                    if message.metadata.ack:
+                        acks.add(message.metadata.ack)
                         yield message
 
-                    elif message["metadata"]["src"] in acks:
-                        acks.remove(message["metadata"]["src"])
+                    elif message.metadata.src in acks:
+                        acks.remove(message.metadata.src)
                         yield message
 
                     else:

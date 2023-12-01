@@ -1,9 +1,9 @@
-import json
+from .message_pb2 import Message
 
 
 def decode(data):
-    return json.loads(data.decode())
+    return Message.FromString(data)
 
 
 def encode(data):
-    return json.dumps(data).encode()
+    return data.SerializeToString()

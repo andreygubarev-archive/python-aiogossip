@@ -2,8 +2,7 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_send_recv(transport):
-    message = {"key": "value"}
+async def test_send_recv(transport, message):
     addr = transport.sock.getsockname()
     await transport.send(message, addr)
 
@@ -13,8 +12,8 @@ async def test_send_recv(transport):
 
 
 @pytest.mark.asyncio
-async def test_send_large_payload(transport):
-    message = "a" * (transport.PAYLOAD_SIZE + 1)
+async def test_send_large_payload(transport, message):
+    message.message_id = b"a" * (transport.PAYLOAD_SIZE + 1)
     addr = transport.sock.getsockname()
 
     with pytest.raises(ValueError) as excinfo:

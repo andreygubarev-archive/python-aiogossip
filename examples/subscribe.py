@@ -9,7 +9,7 @@ peer = aiogossip.Peer()
 
 @peer.subscribe("*")
 async def on_message(message):
-    return {"metadata": {}, "payload": "response"}
+    print(message)
 
 
 if __name__ == "__main__":
