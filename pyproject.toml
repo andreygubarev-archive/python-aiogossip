@@ -40,3 +40,6 @@ pythonpath = ["src"]
 profile = "black"
 src_paths = ["src", "test"]
 honor_noqa = true
+
+[tool.black]
+line-length = 120
