@@ -102,7 +102,7 @@ class Peer:
 
         def decorator(callback):
             callback = self.broker.subscribe(topic, callback)
-            callback._handler = responder
+            callback.hook(responder)
             return callback
 
         return decorator
