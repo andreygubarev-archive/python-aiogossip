@@ -62,7 +62,7 @@ class Gossip:
             await self.send(message, message["metadata"]["dst"])
             return True
 
-    async def gossip(self, message):
+    async def send_gossip(self, message):
         message["metadata"].pop("event", None)
         message["metadata"].pop("src", None)
 
@@ -70,7 +70,7 @@ class Gossip:
         gossip_ignore = set([self.node_id])
         gossip_ignore.update([r[1] for r in message["metadata"].get("route", [])])
 
-        @mutex(gossip_id, owner=self.gossip)
+        @mutex(gossip_id, owner=self.send_gossip)
         async def multicast():
             cycle = 0
             while cycle < self.cycles:
@@ -100,7 +100,7 @@ class Gossip:
 
             # gossip message
             if "gossip" in message["metadata"]:
-                await self.gossip(message)
+                await self.send_gossip(message)
 
             # acknowledge message
             if "syn" in message["metadata"]:

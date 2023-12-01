@@ -100,7 +100,7 @@ class Broker:
                 else:
                     raise ValueError(f"Unknown node: {node_id}")
         else:
-            await self.gossip.gossip(message)
+            await self.gossip.send_gossip(message)
 
         if "syn" in message["metadata"]:
             return self._recv(topic, node_ids=node_ids)
