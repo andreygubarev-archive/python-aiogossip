@@ -41,7 +41,7 @@ async def test_peer_publish_ack(peers):
     await asyncio.sleep(0.1)
 
     message = {"metadata": {}}
-    response = await peers[0].publish("topic", message, ack=True)
+    response = await peers[0].publish("topic", message, syn=True)
 
     messages = []
     async for message in response:
@@ -58,7 +58,7 @@ async def test_peer_publish_ack(peers):
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [3])
 @pytest.mark.asyncio
-async def test_peer_relay(peers):
+async def test_peer_forwarding(peers):
     peers[0].connect([peers[1].node])
     peers[1].connect([peers[2].node])
 
@@ -73,7 +73,7 @@ async def test_peer_relay(peers):
     await asyncio.sleep(0.1)
 
     message = {"message": "Hello, world!", "metadata": {}}
-    await peers[2].publish("test", message, nodes=[peers[0].node_id])
+    await peers[2].publish("test", message, peers=[peers[0].node_id])
 
     await asyncio.sleep(0.1)
     assert callback_message == message["message"]
@@ -85,7 +85,7 @@ async def test_peer_relay(peers):
 @pytest.mark.parametrize("randomize", [0])
 @pytest.mark.parametrize("instances", [3])
 @pytest.mark.asyncio
-async def test_peer_relay_reverse(peers):
+async def test_peer_reverse_forwarding(peers):
     peers[0].connect([peers[1].node])
     peers[1].connect([peers[2].node])
     await asyncio.sleep(0.1)
@@ -99,7 +99,7 @@ async def test_peer_relay_reverse(peers):
         callback_message = message["message"]
 
     message = {"message": "Hello, world!", "metadata": {}}
-    await peers[0].publish("test", message, nodes=[peers[2].node_id])
+    await peers[0].publish("test", message, peers=[peers[2].node_id])
 
     await asyncio.sleep(0.1)
     assert callback_message == message["message"]

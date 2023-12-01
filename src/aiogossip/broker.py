@@ -18,11 +18,18 @@ class Callback:
 
         self.task = self._loop.create_task(self())
         self.task.add_done_callback(print_exception)
+        self._handler = None  # FIXME: refactor this to hooks
 
     async def __call__(self):
         while True:
             message = await self.chan.recv()
-            await self.func(message)
+            result = await self.func(message)
+            print(result)
+            if result is None:
+                continue
+
+            if self._handler:
+                await self._handler(message, result)
 
     async def cancel(self):
         await self.chan.close()
@@ -103,7 +110,6 @@ class Broker:
             async with asyncio.timeout(self.TIMEOUT):
                 while True:
                     message = await chan.recv()
-
                     if "ack" in message["metadata"]:
                         acks.add(message["metadata"]["ack"])
                         yield message
