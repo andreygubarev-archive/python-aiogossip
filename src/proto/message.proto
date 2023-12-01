@@ -1,1 +1,6 @@
 syntax = "proto3";
+
+message Message {
+    message Metadata {}
+    required Metadata metadata = 1;
+}

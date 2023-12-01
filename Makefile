@@ -15,10 +15,9 @@ lint: ## Lint Python Package
 
 .PHONY: compile
 compile: ## Compile Python Package and Protobuf
-	protoc \
-		--proto_path=$(MAKEFILE_DIR)/src/proto/ \
+	protoc -I=$(MAKEFILE_DIR)/src/proto/ \
 		--python_out=$(MAKEFILE_DIR)/src/aiogossip/ \
-		message.proto
+		$(MAKEFILE_DIR)/src/proto/message.proto
 
 .PHONY: test
 test: ## Test Python Package
