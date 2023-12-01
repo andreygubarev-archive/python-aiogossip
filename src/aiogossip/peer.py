@@ -13,22 +13,22 @@ from .transport import Transport
 class Peer:
     def __init__(
         self,
-        loop: asyncio.AbstractEventLoop = None,
         host="0.0.0.0",
         port=0,
         fanout=None,
-        node_id=None,
+        peer_id=None,
+        loop: asyncio.AbstractEventLoop = None,
     ):
         self._loop = loop or asyncio.get_event_loop()
 
-        if node_id:
-            self.node_id = node_id.encode()
+        if peer_id:
+            self.peer_id = peer_id.encode()
         else:
-            self.node_id = uuid.uuid1().bytes
+            self.peer_id = uuid.uuid1().bytes
 
         # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self._loop)
-        self.gossip = Gossip(self.transport, fanout=fanout, node_id=self.node_id)
+        self.gossip = Gossip(self.transport, fanout=fanout, peer_id=self.peer_id)
         self.broker = Broker(self.gossip, loop=self._loop)
 
         self.task = self._loop.create_task(self.broker.listen())
@@ -41,12 +41,12 @@ class Peer:
         return self.gossip.topology.node
 
     @property
-    def DSN(self):
-        return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
-
-    @property
     def nodes(self):
         return list(self.gossip.topology)
+
+    @property
+    def DSN(self):
+        return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
 
     async def _connect(self):
         topic = "connect:{}".format(uuid.uuid4().hex)
@@ -65,9 +65,9 @@ class Peer:
         if isinstance(seeds, str):
             seeds = seeds.split(",")
             for seed in seeds:
-                node_id, addr = seed.split("@")
+                peer_id, addr = seed.split("@")
                 host, port = addr.split(":")
-                nodes.append({"node_id": node_id.encode(), "node_addr": (host, int(port))})
+                nodes.append({"node_id": peer_id.encode(), "node_addr": (host, int(port))})
 
         elif isinstance(seeds, list):
             nodes = seeds
@@ -91,8 +91,8 @@ class Peer:
         topic = topic.replace("{uuid}", uuid.uuid4().hex)
 
         if syn:
-            message.metadata.syn = self.node_id
-        return await self.broker.publish(topic, message, node_ids=peers)
+            message.metadata.syn = self.peer_id
+        return await self.broker.publish(topic, message, peer_ids=peers)
 
     def subscribe(self, topic):
         def decorator(func):
