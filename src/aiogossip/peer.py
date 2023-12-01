@@ -1,6 +1,7 @@
 import asyncio
 import uuid
 
+from . import config
 from .broker import Broker
 from .errors import print_exception
 from .gossip import Gossip
@@ -47,7 +48,7 @@ class Peer:
         async for r in response:
             pass
 
-    def connect(self, seeds):
+    def connect(self, seeds=config.GOSSIP_SEEDS):
         if not seeds:
             return
 
