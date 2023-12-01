@@ -18,7 +18,7 @@ class Callback:
 
         self.task = self._loop.create_task(self())
         self.task.add_done_callback(print_exception)
-        self._handler = None  # FIXME: refactor this to hooks
+        self._hooks = []
 
     async def __call__(self):
         while True:
@@ -28,10 +28,17 @@ class Callback:
             if result is None:
                 continue
 
-            if self._handler:
-                await self._handler(message, result)
+            if self._hooks:
+                for hook in self._hooks:
+                    await hook(message, result)
+
+    def hook(self, func):
+        self._hooks.append(func)
 
     async def cancel(self):
+        for hook in self._hooks:
+            hook.cancel()
+        await asyncio.gather(*self._hooks, return_exceptions=True)
         await self.chan.close()
         self.task.cancel()
 
