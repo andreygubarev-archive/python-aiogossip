@@ -5,6 +5,7 @@ from . import config
 from .broker import Broker
 from .errors import print_exception
 from .gossip import Gossip
+from .message_pb2 import Message
 from .transport import Transport
 
 
@@ -19,7 +20,7 @@ class Peer:
     ):
         self._loop = loop or asyncio.get_event_loop()
 
-        self.node_id = node_id or uuid.uuid4().hex
+        self.node_id = node_id or uuid.uuid1().bytes
         # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self._loop)
         self.gossip = Gossip(self.transport, fanout=fanout, node_id=self.node_id)
@@ -42,7 +43,7 @@ class Peer:
 
     async def _connect(self):
         topic = "connect:{}".format(uuid.uuid4().hex)
-        message = {"metadata": {}}
+        message = Message()
 
         response = await self.publish(topic, message, syn=True)
         async for r in response:
@@ -77,7 +78,7 @@ class Peer:
         topic = topic.replace("{uuid}", uuid.uuid4().hex)
 
         if syn:
-            message["metadata"]["syn"] = self.node_id
+            message.metadata.syn = self.node_id
         return await self.broker.publish(topic, message, node_ids=peers)
 
     def subscribe(self, topic):

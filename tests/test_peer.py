@@ -6,7 +6,7 @@ import pytest
 @pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
-async def test_peer(peers):
+async def test_peer(peers, message):
     peer1 = peers[0]
     assert peer1.node_id is not None
     peer2 = peers[1]
@@ -16,7 +16,7 @@ async def test_peer(peers):
     peer1.connect([peer2.node])
     assert peer2.node_id in peer1.gossip.topology
 
-    message = {"message": "Hello, world!", "metadata": {}}
+    message.payload = b"Hello, world!"
     await peer1.publish("test", message)
 
     handler_message = None
@@ -24,10 +24,10 @@ async def test_peer(peers):
     @peer2.subscribe("test")
     async def handler(message):
         nonlocal handler_message
-        handler_message = message["message"]
+        handler_message = message.payload
 
     await asyncio.sleep(0.1)
-    assert handler_message == message["message"]
+    assert handler_message == message.payload
 
     for peer in peers:
         await peer.disconnect()
@@ -36,11 +36,10 @@ async def test_peer(peers):
 @pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
-async def test_peer_publish_ack(peers):
+async def test_peer_publish_ack(peers, message):
     peers[0].connect([peers[1].node])
     await asyncio.sleep(0.1)
 
-    message = {"metadata": {}}
     response = await peers[0].publish("topic", message, syn=True)
 
     messages = []
@@ -48,8 +47,8 @@ async def test_peer_publish_ack(peers):
         messages.append(message)
 
     assert len(messages) == 1
-    assert messages[0]["metadata"]["syn"] == peers[0].node_id
-    assert messages[0]["metadata"]["ack"] == peers[1].node_id
+    assert messages[0].metadata.syn == peers[0].node_id
+    assert messages[0].metadata.ack == peers[1].node_id
 
     for peer in peers:
         await peer.disconnect()
@@ -58,7 +57,7 @@ async def test_peer_publish_ack(peers):
 @pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [3])
 @pytest.mark.asyncio
-async def test_peer_forwarding(peers):
+async def test_peer_forwarding(peers, message):
     peers[0].connect([peers[1].node])
     peers[1].connect([peers[2].node])
 
@@ -68,15 +67,15 @@ async def test_peer_forwarding(peers):
     @subscribe
     async def handler(message):
         nonlocal handler_message
-        handler_message = message["message"]
+        handler_message = message.payload
 
     await asyncio.sleep(0.1)
 
-    message = {"message": "Hello, world!", "metadata": {}}
+    message.payload = b"test_peer_forwarding"
     await peers[2].publish("test", message, peers=[peers[0].node_id])
 
     await asyncio.sleep(0.1)
-    assert handler_message == message["message"]
+    assert handler_message == message.payload
 
     for peer in peers:
         await peer.disconnect()
@@ -85,7 +84,7 @@ async def test_peer_forwarding(peers):
 @pytest.mark.parametrize("random_seed", [0])
 @pytest.mark.parametrize("instances", [3])
 @pytest.mark.asyncio
-async def test_peer_reverse_forwarding(peers):
+async def test_peer_reverse_forwarding(peers, message):
     peers[0].connect([peers[1].node])
     peers[1].connect([peers[2].node])
     await asyncio.sleep(0.1)
@@ -96,13 +95,13 @@ async def test_peer_reverse_forwarding(peers):
     @subscribe
     async def handler(message):
         nonlocal handler_message
-        handler_message = message["message"]
+        handler_message = message.payload
 
-    message = {"message": "Hello, world!", "metadata": {}}
+    message.payload = b"test_peer_reverse_forwarding"
     await peers[0].publish("test", message, peers=[peers[2].node_id])
 
     await asyncio.sleep(0.1)
-    assert handler_message == message["message"]
+    assert handler_message == message.payload
 
     for peer in peers:
         await peer.disconnect()

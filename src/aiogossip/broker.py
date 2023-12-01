@@ -117,12 +117,12 @@ class Broker:
             async with asyncio.timeout(self.TIMEOUT):
                 while True:
                     message = await chan.recv()
-                    if "ack" in message["metadata"]:
-                        acks.add(message["metadata"]["ack"])
+                    if message.metadata.ack:
+                        acks.add(message.metadata.ack)
                         yield message
 
-                    elif message["metadata"]["src"] in acks:
-                        acks.remove(message["metadata"]["src"])
+                    elif message.metadata.src in acks:
+                        acks.remove(message.metadata.src)
                         yield message
 
                     else:

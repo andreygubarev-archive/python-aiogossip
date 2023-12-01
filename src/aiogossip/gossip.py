@@ -51,14 +51,14 @@ class Gossip:
         message = Message()
         message.CopyFrom(_message)
 
-        if "ack" in message["metadata"]:
+        if message.metadata.ack:
             return False
 
-        message["metadata"].pop("event", None)
-        message["metadata"].pop("src", None)
+        message.ClearField("message_id")
+        message.metadata.ClearField("src")
 
-        message["metadata"]["ack"] = self.node_id
-        await self.send(message, message["metadata"]["syn"])
+        message.metadata.ack = self.node_id
+        await self.send(message, message.metadata.syn)
         return True
 
     async def send_forward(self, _message):
