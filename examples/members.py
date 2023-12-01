@@ -4,7 +4,6 @@ Usage:
 """
 import asyncio
 import json
-import os
 
 import aiogossip
 
@@ -28,7 +27,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    print("dsn:", peer.dsn)
-    seeds = os.getenv("GOSSIP_SEEDS")
-    peer.connect(seeds)
+    peer.connect()
     peer.run_forever(main=main)
