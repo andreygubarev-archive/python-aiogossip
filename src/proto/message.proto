@@ -1,6 +1,8 @@
 syntax = "proto3";
 
 message Message {
-    message Metadata {}
-    required Metadata metadata = 1;
+    message Metadata {
+        bytes id = 1;
+    }
+    Metadata metadata = 1;
 }

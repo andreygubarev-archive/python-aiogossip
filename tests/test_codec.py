@@ -1,20 +1,13 @@
+import uuid
+
 from aiogossip.codec import decode, encode
-
-
-def test_decode():
-    data = b'{"key": "value"}'
-    expected = {"key": "value"}
-    assert decode(data) == expected
-
-
-def test_encode():
-    data = {"key": "value"}
-    expected = b'{"key": "value"}'
-    assert encode(data) == expected
+from aiogossip.message_pb2 import Message
 
 
 def test_encode_decode():
-    data = {"key": "value"}
-    encoded = encode(data)
-    decoded = decode(encoded)
-    assert decoded == data
+    message = Message()
+    message.metadata.id = uuid.uuid4().bytes
+
+    encoded_message = encode(message)
+    decoded_message = decode(encoded_message)
+    assert decoded_message == message

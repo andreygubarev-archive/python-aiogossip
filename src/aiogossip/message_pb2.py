@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmessage.proto\":\n\x07Message\x12#\n\x08metadata\x18\x01 \x01(\x0b\x32\x11.Message.Metadata\x1a\n\n\x08Metadatab\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmessage.proto\"F\n\x07Message\x12#\n\x08metadata\x18\x01 \x01(\x0b\x32\x11.Message.Metadata\x1a\x16\n\x08Metadata\x12\n\n\x02id\x18\x01 \x01(\x0c\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,7 +22,7 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'message_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   _globals['_MESSAGE']._serialized_start=17
-  _globals['_MESSAGE']._serialized_end=75
+  _globals['_MESSAGE']._serialized_end=87
   _globals['_MESSAGE_METADATA']._serialized_start=65
-  _globals['_MESSAGE_METADATA']._serialized_end=75
+  _globals['_MESSAGE_METADATA']._serialized_end=87
 # @@protoc_insertion_point(module_scope)
