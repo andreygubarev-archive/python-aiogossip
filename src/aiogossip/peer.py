@@ -46,7 +46,7 @@ class Peer:
 
     @property
     def DSN(self):
-        return "{}@{}:{}".format(self.node["peer_id"].decode(), *self.node["node_addr"])
+        return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
 
     async def _connect(self):
         topic = "connect:{}".format(uuid.uuid4().hex)
@@ -67,7 +67,7 @@ class Peer:
             for seed in seeds:
                 peer_id, addr = seed.split("@")
                 host, port = addr.split(":")
-                nodes.append({"peer_id": peer_id.encode(), "node_addr": (host, int(port))})
+                nodes.append({"node_id": peer_id.encode(), "node_addr": (host, int(port))})
 
         elif isinstance(seeds, list):
             nodes = seeds
