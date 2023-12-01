@@ -13,11 +13,11 @@ from .transport import Transport
 class Peer:
     def __init__(
         self,
-        loop: asyncio.AbstractEventLoop = None,
         host="0.0.0.0",
         port=0,
         fanout=None,
         peer_id=None,
+        loop: asyncio.AbstractEventLoop = None,
     ):
         self._loop = loop or asyncio.get_event_loop()
 
