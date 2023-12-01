@@ -29,7 +29,7 @@ def instances(request):
 
 def get_message():
     message = Message()
-    message.metadata.id = uuid.uuid4().bytes
+    message.message_id = uuid.uuid4().bytes
     return message
 
 

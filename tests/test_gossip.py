@@ -4,9 +4,8 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_gossip(gossips):
-    message = {"message": "", "metadata": {}}
-    await gossips[0].gossip(message)
+async def test_gossip(gossips, message):
+    await gossips[0].send_gossip(message)
 
     async def listener(gossip):
         try:

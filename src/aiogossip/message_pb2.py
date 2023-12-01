@@ -14,15 +14,17 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmessage.proto\"F\n\x07Message\x12#\n\x08metadata\x18\x01 \x01(\x0b\x32\x11.Message.Metadata\x1a\x16\n\x08Metadata\x12\n\n\x02id\x18\x01 \x01(\x0c\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmessage.proto\"S\n\x05Route\x12\x10\n\x08route_id\x18\x01 \x01(\x0c\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x0b\n\x03src\x18\x03 \x01(\x0c\x12\x10\n\x03\x64st\x18\x04 \x01(\x0cH\x00\x88\x01\x01\x42\x06\n\x04_dst\"\xd4\x01\n\x07Message\x12\x12\n\nmessage_id\x18\x01 \x01(\x0c\x12#\n\x08metadata\x18\x02 \x01(\x0b\x32\x11.Message.Metadata\x1a\x8f\x01\n\x08Metadata\x12\x15\n\x05route\x18\x01 \x03(\x0b\x32\x06.Route\x12\x0b\n\x03src\x18\x02 \x01(\x0c\x12\x0b\n\x03\x64st\x18\x03 \x01(\x0c\x12\x13\n\x06gossip\x18\x04 \x01(\x0cH\x00\x88\x01\x01\x12\x10\n\x03syn\x18\x05 \x01(\x0cH\x01\x88\x01\x01\x12\x10\n\x03\x61\x63k\x18\x06 \x01(\x0cH\x02\x88\x01\x01\x42\t\n\x07_gossipB\x06\n\x04_synB\x06\n\x04_ackb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'message_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_MESSAGE']._serialized_start=17
-  _globals['_MESSAGE']._serialized_end=87
-  _globals['_MESSAGE_METADATA']._serialized_start=65
-  _globals['_MESSAGE_METADATA']._serialized_end=87
+  _globals['_ROUTE']._serialized_start=17
+  _globals['_ROUTE']._serialized_end=100
+  _globals['_MESSAGE']._serialized_start=103
+  _globals['_MESSAGE']._serialized_end=315
+  _globals['_MESSAGE_METADATA']._serialized_start=172
+  _globals['_MESSAGE_METADATA']._serialized_end=315
 # @@protoc_insertion_point(module_scope)

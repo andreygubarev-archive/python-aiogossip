@@ -13,7 +13,7 @@ async def test_send_recv(transport, message):
 
 @pytest.mark.asyncio
 async def test_send_large_payload(transport, message):
-    message.metadata.id = b"a" * (transport.PAYLOAD_SIZE + 1)
+    message.message_id = b"a" * (transport.PAYLOAD_SIZE + 1)
     addr = transport.sock.getsockname()
 
     with pytest.raises(ValueError) as excinfo:
