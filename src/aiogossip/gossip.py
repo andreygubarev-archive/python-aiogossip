@@ -101,7 +101,7 @@ class Gossip:
             message.metadata.route[-1].daddr = f"{addr[0]}:{addr[1]}"
 
             self.topology.set_route(message)
-            peer_ids = self.topology.update_routes(message)
+            peer_ids = self.topology.update_route(message)
 
             # connect to new nodes
             for peer_id in peer_ids:
