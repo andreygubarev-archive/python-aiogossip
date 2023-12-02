@@ -27,8 +27,8 @@ class Members:
                 peers = [node]
                 response = await self.peer.request(topic, message, peers=peers, timeout=3)
                 responses = []
-                async for response in response:
-                    responses.append(response)
+                async for r in response:
+                    responses.append(r)
 
                 if len(responses) == 0:
                     print("Node {} is dead".format(node))
