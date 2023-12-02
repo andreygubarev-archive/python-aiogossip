@@ -20,8 +20,8 @@ async def test_mutex():
     assert mutex_id not in MUTEX[func1]
     assert mutex_id not in MUTEX[func2]
 
-    decorated_func1 = mutex(mutex_id)(func1)
-    decorated_func2 = mutex(mutex_id)(func2)
+    decorated_func1 = mutex(func1, mutex_id)(func1)
+    decorated_func2 = mutex(func2, mutex_id)(func2)
 
     decorated_func_task1 = asyncio.create_task(decorated_func1())
     decorated_func_task2 = asyncio.create_task(decorated_func2())

@@ -16,7 +16,7 @@ def test_topology_add():
     assert len(topology) == 2
 
 
-def test_topology_update_routes(message):
+def test_topology_update_route(message):
     topology = Topology("node1", ("localhost", 8000))
     message.metadata.route.append(
         Route(
@@ -33,11 +33,11 @@ def test_topology_update_routes(message):
         )
     )
 
-    topology.update_routes(message)
+    topology.update_route(message)
     assert len(topology) == 2
 
 
-def test_topology_update_routes_invalid(message):
+def test_topology_update_route_invalid(message):
     topology = Topology(b"node1", ("localhost", 8000))
     with pytest.raises(ValueError):
         message.metadata.route.append(
@@ -47,7 +47,7 @@ def test_topology_update_routes_invalid(message):
                 daddr="localhost:8000",
             )
         )
-        topology.update_routes(message)
+        topology.update_route(message)
 
 
 def test_topology_sample():

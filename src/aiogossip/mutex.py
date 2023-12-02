@@ -1,20 +1,26 @@
 import collections
+import functools
+import time
 
-# FIXME: use time-based mutexes
-MUTEX_CAPACITY = 1024
-MUTEX = collections.defaultdict(lambda: collections.deque(maxlen=MUTEX_CAPACITY))
+from .config import MUTEX_TTL
+
+MUTEX = collections.defaultdict(dict)
 
 
-def mutex(mutex_id, owner=None):
+def mutex(owner, mutex_id, mutex_ttl=MUTEX_TTL):
     def decorator(func):
-        mutexes = MUTEX[owner or func]
-
+        @functools.wraps(func)
         async def wrapper(*args, **kwargs):
-            if mutex_id in mutexes:
-                return
-
-            mutexes.append(mutex_id)
-            return await func(*args, **kwargs)
+            mut = MUTEX[owner].get(mutex_id)
+            if mut:
+                if time.time() - mut > mutex_ttl:
+                    MUTEX[owner][mutex_id] = time.time()
+                    return await func(*args, **kwargs)
+                else:
+                    return
+            else:
+                MUTEX[owner][mutex_id] = time.time()
+                return await func(*args, **kwargs)
 
         return wrapper
 

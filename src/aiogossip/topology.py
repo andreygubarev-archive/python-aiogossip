@@ -78,7 +78,7 @@ class Topology:
 
         return message
 
-    def update_routes(self, message):
+    def update_route(self, message):
         if len(message.metadata.route) < 2:
             raise ValueError("Empty route")
 

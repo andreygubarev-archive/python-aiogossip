@@ -30,66 +30,67 @@ class Gossip:
 
         return math.ceil(math.log(len(self.topology), self.fanout))
 
-    async def send(self, _message, peer_id):
-        message = Message()
-        message.CopyFrom(_message)
+    async def send(self, message, peer_id):
+        msg = Message()
+        msg.CopyFrom(message)
 
         if peer_id == self.peer_id:
             raise ValueError("cannot send message to self")
 
-        if not message.message_id:
-            message.message_id = uuid.uuid4().bytes
-        if not message.metadata.src:
-            message.metadata.src = self.peer_id
-        message.metadata.dst = peer_id
-        self.topology.set_route(message)
+        if not msg.message_id:
+            msg.message_id = uuid.uuid4().bytes
+        if not msg.metadata.src:
+            msg.metadata.src = self.peer_id
+        msg.metadata.dst = peer_id
+        self.topology.set_route(msg)
 
         addr = self.topology.get_addr(peer_id)
-        await self.transport.send(message, addr)
+        await self.transport.send(msg, addr)
 
-    async def send_ack(self, _message):
-        message = Message()
-        message.CopyFrom(_message)
+    async def send_ack(self, message):
+        msg = Message()
+        msg.CopyFrom(message)
 
-        if message.metadata.ack:
+        msg.ClearField("message_id")
+        msg.metadata.ClearField("src")
+
+        if msg.metadata.ack:
             return False
 
-        message.ClearField("message_id")
-        message.metadata.ClearField("src")
-
-        message.metadata.ack = self.peer_id
-        await self.send(message, message.metadata.syn)
+        msg.metadata.ack = self.peer_id
+        await self.send(msg, msg.metadata.syn)
         return True
 
-    async def send_forward(self, _message):
-        message = Message()
-        message.CopyFrom(_message)
+    async def send_forward(self, message):
+        msg = Message()
+        msg.CopyFrom(message)
 
-        if message.metadata.dst == self.peer_id:
+        if msg.metadata.dst == self.peer_id:
             return False
         else:
-            await self.send(message, message.metadata.dst)
+            await self.send(msg, msg.metadata.dst)
             return True
 
-    async def send_gossip(self, _message):
-        message = Message()
-        message.CopyFrom(_message)
-        message.ClearField("message_id")
-        message.metadata.ClearField("src")
+    async def send_gossip(self, message):
+        msg = Message()
+        msg.CopyFrom(message)
 
-        if not message.metadata.gossip:
-            message.metadata.gossip = uuid.uuid4().bytes
+        msg.ClearField("message_id")
+        msg.metadata.ClearField("src")
+
+        if not msg.metadata.gossip:
+            msg.metadata.gossip = uuid.uuid4().bytes
 
         gossip_ignore = set([self.peer_id])
-        gossip_ignore.update([r.route_id for r in message.metadata.route])
+        gossip_ignore.update([r.route_id for r in msg.metadata.route])
 
-        @mutex(message.metadata.gossip, owner=self.send_gossip)
+        @mutex(self, msg.metadata.gossip)
         async def multicast():
             cycle = 0
             while cycle < self.cycles:
                 peer_ids = self.topology.sample(self.fanout, ignore=gossip_ignore)
                 for peer_id in peer_ids:
-                    await self.send(message, peer_id)
+                    await self.send(msg, peer_id)
                 gossip_ignore.update(peer_ids)
                 cycle += 1
 
@@ -97,29 +98,29 @@ class Gossip:
 
     async def recv(self):
         while True:
-            message, addr = await self.transport.recv()
-            message.metadata.route[-1].daddr = f"{addr[0]}:{addr[1]}"
+            msg, addr = await self.transport.recv()
+            msg.metadata.route[-1].daddr = f"{addr[0]}:{addr[1]}"
 
-            self.topology.set_route(message)
-            peer_ids = self.topology.update_routes(message)
+            self.topology.set_route(msg)
+            peer_ids = self.topology.update_route(msg)
 
             # connect to new nodes
             for peer_id in peer_ids:
                 await self.send(Message(), peer_id)
 
             # forward message to destination
-            if await self.send_forward(message):
+            if await self.send_forward(msg):
                 continue
 
             # gossip message
-            if message.metadata.gossip:
-                await self.send_gossip(message)
+            if msg.metadata.gossip:
+                await self.send_gossip(msg)
 
             # acknowledge message
-            if message.metadata.syn:
-                await self.send_ack(message)
+            if msg.metadata.syn:
+                await self.send_ack(msg)
 
-            yield message
+            yield msg
 
     async def close(self):
         self.transport.close()

@@ -24,7 +24,7 @@ class Handler:
         while True:
             message = await self.chan.recv()
             result = await self.func(message)
-            print(result)
+
             if result is None:
                 continue
 
