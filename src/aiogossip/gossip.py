@@ -97,29 +97,29 @@ class Gossip:
 
     async def recv(self):
         while True:
-            message, addr = await self.transport.recv()
-            message.metadata.route[-1].daddr = f"{addr[0]}:{addr[1]}"
+            msg, addr = await self.transport.recv()
+            msg.metadata.route[-1].daddr = f"{addr[0]}:{addr[1]}"
 
-            self.topology.set_route(message)
-            peer_ids = self.topology.update_route(message)
+            self.topology.set_route(msg)
+            peer_ids = self.topology.update_route(msg)
 
             # connect to new nodes
             for peer_id in peer_ids:
                 await self.send(Message(), peer_id)
 
             # forward message to destination
-            if await self.send_forward(message):
+            if await self.send_forward(msg):
                 continue
 
             # gossip message
-            if message.metadata.gossip:
-                await self.send_gossip(message)
+            if msg.metadata.gossip:
+                await self.send_gossip(msg)
 
             # acknowledge message
-            if message.metadata.syn:
-                await self.send_ack(message)
+            if msg.metadata.syn:
+                await self.send_ack(msg)
 
-            yield message
+            yield msg
 
     async def close(self):
         self.transport.close()
