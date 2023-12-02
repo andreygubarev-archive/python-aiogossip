@@ -36,4 +36,4 @@ class Members:
                 await asyncio.sleep(1)
 
     async def response(self, message):
-        return message
+        return Message()
