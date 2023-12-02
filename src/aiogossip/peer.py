@@ -132,5 +132,4 @@ class Peer:
         finally:
             if main:
                 main.cancel()
-                self._loop.run_until_complete(main)
             self._loop.run_until_complete(self.disconnect())
