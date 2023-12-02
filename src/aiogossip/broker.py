@@ -28,9 +28,8 @@ class Handler:
             if result is None:
                 continue
 
-            if self._hooks:
-                for hook in self._hooks:
-                    await hook(message, result)
+            for hook in self._hooks:
+                await hook(message, result)
 
     def hook(self, func):
         self._hooks.append(func)
