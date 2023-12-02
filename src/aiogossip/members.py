@@ -21,16 +21,17 @@ class Members:
 
                 if node == self.peer.peer_id:
                     continue
-                topic = "keepalive:{}".format(node["node_id"].decode())
-                message = Message()
-                response = await self.peer.request(topic, message, timeout=3)
 
+                topic = "keepalive:{}".format(node)
+                message = Message()
+                peers = [node]
+                response = await self.peer.request(topic, message, peers=peers, timeout=3)
                 responses = []
                 async for response in response:
                     responses.append(response)
 
                 if len(responses) == 0:
-                    print("Node {} is dead".format(node["node_id"].decode()))
+                    print("Node {} is dead".format(node))
 
                 await asyncio.sleep(1)
 
