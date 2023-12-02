@@ -5,6 +5,8 @@ from .message_pb2 import Message
 
 
 class Members:
+    INTERVAL = 1
+
     def __init__(self, peer):
         self.peer = peer
 
@@ -15,6 +17,8 @@ class Members:
     async def request(self):
         while True:
             for node in self.peer.nodes:
+                await asyncio.sleep(self.INTERVAL)
+
                 if node == self.peer.peer_id:
                     continue
                 topic = "keepalive:{}".format(node["node_id"].decode())
