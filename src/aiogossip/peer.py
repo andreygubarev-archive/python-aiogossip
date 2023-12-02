@@ -6,6 +6,7 @@ from .broker import Broker
 from .debug import debug
 from .errors import print_exception
 from .gossip import Gossip
+from .members import Members
 from .message_pb2 import Message
 from .transport import Transport
 
@@ -35,6 +36,8 @@ class Peer:
         self.task.add_done_callback(print_exception)
 
         self.tasks = []
+
+        self.members = Members(self)
 
     @property
     def node(self):
