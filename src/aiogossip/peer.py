@@ -123,12 +123,14 @@ class Peer:
 
     @debug
     def run_forever(self, main=None):  # pragma: no cover
-        if main:
-            self._loop.run_until_complete(main())
-
         try:
+            if main:
+                main = self._loop.create_task(main())
             self._loop.run_forever()
         except KeyboardInterrupt:
             pass
         finally:
+            if main:
+                main.cancel()
+                self._loop.run_until_complete(main)
             self._loop.run_until_complete(self.disconnect())
