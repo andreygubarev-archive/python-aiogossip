@@ -27,5 +27,6 @@ async def main():
 
 
 if __name__ == "__main__":
+    print("DSN:", peer.DSN)
     peer.connect()
     peer.run_forever(main=main)
