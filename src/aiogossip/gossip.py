@@ -84,7 +84,7 @@ class Gossip:
         gossip_ignore = set([self.peer_id])
         gossip_ignore.update([r.route_id for r in msg.metadata.route])
 
-        @mutex(msg.metadata.gossip, owner=self.send_gossip)
+        @mutex(self, msg.metadata.gossip)
         async def multicast():
             cycle = 0
             while cycle < self.cycles:
