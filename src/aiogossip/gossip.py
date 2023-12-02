@@ -51,11 +51,11 @@ class Gossip:
         msg = Message()
         msg.CopyFrom(message)
 
-        if msg.metadata.ack:
-            return False
-
         msg.ClearField("message_id")
         msg.metadata.ClearField("src")
+
+        if msg.metadata.ack:
+            return False
 
         msg.metadata.ack = self.peer_id
         await self.send(msg, msg.metadata.syn)
@@ -74,6 +74,7 @@ class Gossip:
     async def send_gossip(self, message):
         msg = Message()
         msg.CopyFrom(message)
+
         msg.ClearField("message_id")
         msg.metadata.ClearField("src")
 
