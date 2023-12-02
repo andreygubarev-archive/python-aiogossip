@@ -24,8 +24,8 @@ class Members:
 
                 topic = "keepalive:{}".format(node)
                 message = Message()
-                peers = [node]
-                response = await self.peer.request(topic, message, peers=peers, timeout=3)
+
+                response = await self.peer.request(topic, message, peers=[node], timeout=3)
                 responses = []
                 async for r in response:
                     responses.append(r)
