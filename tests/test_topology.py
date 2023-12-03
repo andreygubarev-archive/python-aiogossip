@@ -51,8 +51,9 @@ def test_topology_update_route_invalid(topology, message):
 
 
 def test_topology_sample(topology):
-    topology.add([{"node_id": "node2", "node_addr": ("127.0.0.1", 8001)}])
-    sample = topology.sample(1)
+    topology.add([{"node_id": "node2", "node_addr": ("127.0.0.1", 8002)}])
+    topology.add([{"node_id": "node3", "node_addr": ("127.0.0.1", 8003)}])
+    sample = topology.sample(1, ignore=["node3"])
     assert len(sample) == 1
     assert sample[0] in ["node1", "node2"]
 
