@@ -4,7 +4,7 @@ import sys
 
 from . import config
 from .message_pb2 import Message
-from .tasks import TaskManager
+from .task_manager import TaskManager
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))

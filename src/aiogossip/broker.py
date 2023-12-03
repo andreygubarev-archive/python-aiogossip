@@ -6,7 +6,7 @@ import itertools
 from .channel import Channel
 from .gossip import Gossip
 from .message_pb2 import Message
-from .tasks import TaskManager
+from .task_manager import TaskManager
 
 
 class Handler:
