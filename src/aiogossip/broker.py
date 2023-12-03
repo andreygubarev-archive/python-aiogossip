@@ -3,8 +3,7 @@ import collections
 import fnmatch
 import itertools
 
-from .channel import Channel
-from .concurrency import TaskManager
+from .concurrency import Channel, TaskManager
 from .gossip import Gossip
 from .message_pb2 import Message
 

@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from aiogossip.channel import Channel
+from aiogossip.concurrency import Channel
 
 
 @pytest.mark.asyncio
