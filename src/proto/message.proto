@@ -7,6 +7,19 @@ message Route {
     string daddr = 4;
 }
 
+enum MessageType {
+    GOSSIP = 0;
+
+    SYN = 1;
+    ACK = 2;
+
+    PUB = 3;
+    SUB = 4;
+
+    REQ = 5;
+    RES = 6;
+}
+
 message Message {
     message Metadata {
         repeated Route route = 1;
@@ -19,6 +32,7 @@ message Message {
     }
 
     bytes message_id = 1;
-    Metadata metadata = 2;
-    bytes payload = 3;
+    MessageType message_type = 2;
+    Metadata metadata = 3;
+    bytes payload = 4;
 }
