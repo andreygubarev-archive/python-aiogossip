@@ -6,21 +6,21 @@ class TaskManager:
         self.loop = loop or asyncio.get_event_loop()
 
         self.tasks = []
-        self.tasks_names = {}
+        self.named_tasks = {}
 
     def create_task(self, coro, name=None):
         task = self.loop.create_task(coro)
         task.add_done_callback(self.on_task_done)
         self.tasks.append(task)
         if name:
-            self.tasks_names[name] = task
+            self.named_tasks[name] = task
         return task
 
     def on_task_done(self, task):
         self.tasks.remove(task)
-        for name, t in self.tasks_names.items():
+        for name, t in self.named_tasks.items():
             if t == task:
-                del self.tasks_names[name]
+                del self.named_tasks[name]
                 break
 
         try:
@@ -37,11 +37,11 @@ class TaskManager:
         for task in self.tasks:
             task.cancel()
         self.tasks = []
-        self.tasks_names = {}
+        self.named_tasks = {}
 
     async def close(self):
         self.cancel()
         await asyncio.gather(*self.tasks, return_exceptions=True)
 
     def __getitem__(self, item):
-        return self.tasks_names[item]
+        return self.named_tasks[item]
