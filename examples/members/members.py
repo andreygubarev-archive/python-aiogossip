@@ -19,7 +19,8 @@ async def main():
         print("---")
         print("members:")
         for node in peer.nodes:
-            print("-", node)
+            reachable = peer.gossip.topology[node]["reachable"]
+            print("-", node, "reachable" if reachable else "unreachable")
         print()
 
 
