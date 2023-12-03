@@ -32,6 +32,18 @@ class TaskManager:
         return task
 
     def _on_done(self, task):
+        """
+        Callback function called when a task is done.
+
+        Removes the task from the task list and the named task dictionary.
+        If the task has an exception, it prints the stack trace.
+
+        Args:
+            task: The completed task.
+
+        Returns:
+            None
+        """
         self.tasks.remove(task)
         for name, t in self.named_tasks.items():
             if t == task:
@@ -49,6 +61,12 @@ class TaskManager:
         task.print_stack()
 
     async def close(self):
+        """
+        Cancels all tasks and then waits for all the tasks to complete using `asyncio.gather()`.
+
+        Returns:
+            None
+        """
         for task in self.tasks:
             task.cancel()
         self.tasks = []
