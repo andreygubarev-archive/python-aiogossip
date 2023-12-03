@@ -76,6 +76,7 @@ class Peer:
         self.tasks.append(task)
 
     async def disconnect(self):
+        await self.members.close()
         await self.broker.close()
 
         for task in self.tasks:
