@@ -30,7 +30,7 @@ class Members:
                 if node == self.peer.peer_id:
                     continue
 
-                topic = "keepalive:{}".format(node)
+                topic = "keepalive"
                 message = Message()
                 message.routing.src_id = self.peer.peer_id
                 message.routing.dst_id = node
