@@ -1,10 +1,10 @@
 """
 Usage:
-    python examples/req-resp/response.py
+    python examples/reqresp/resp.py
 """
 import aiogossip
 
-peer = aiogossip.Peer(port=8000, peer_id="response")
+peer = aiogossip.Peer(port=1337, peer_id="response")
 
 
 @peer.response("query")

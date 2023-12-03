@@ -36,11 +36,14 @@ class Handler:
         self._hooks.append(func)
 
     async def cancel(self):
+        await self.chan.close()
+
         for hook in self._hooks:
             hook.cancel()
         await asyncio.gather(*self._hooks, return_exceptions=True)
-        await self.chan.close()
+
         self.task.cancel()
+        await self.task
 
 
 class Broker:

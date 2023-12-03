@@ -1,10 +1,10 @@
 """
 Usage:
-    GOSSIP_SEEDS=4aed4f3c6900462baa1413fb7ef4f814@127.0.0.1:58295 python examples/members.py
+    GOSSIP_SEEDS=subscriber@127.0.0.1:1337 python examples/pubsub/pub.py
 """
 import aiogossip
 
-peer = aiogossip.Peer()
+peer = aiogossip.Peer(peer_id="publisher")
 
 
 async def main():
