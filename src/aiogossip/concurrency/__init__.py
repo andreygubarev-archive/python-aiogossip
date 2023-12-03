@@ -1,2 +1,2 @@
 from .channel import Channel  # noqa
-from .task_manager import TaskManager  # noqa
+from .taskmanager import TaskManager  # noqa

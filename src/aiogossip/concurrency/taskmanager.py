@@ -2,6 +2,10 @@ import asyncio
 
 
 class TaskManager:
+    """
+    A class that manages asyncio tasks.
+    """
+
     def __init__(self, loop=None):
         self.loop = loop or asyncio.get_event_loop()
 
@@ -9,14 +13,25 @@ class TaskManager:
         self.named_tasks = {}
 
     def create_task(self, coro, name=None):
+        """
+        Create a task for the given coroutine.
+
+        Args:
+            coro: The coroutine to be executed as a task.
+            name: Optional name for the task.
+
+        Returns:
+            The created task.
+
+        """
         task = self.loop.create_task(coro)
-        task.add_done_callback(self.on_task_done)
+        task.add_done_callback(self._on_done)
         self.tasks.append(task)
         if name:
             self.named_tasks[name] = task
         return task
 
-    def on_task_done(self, task):
+    def _on_done(self, task):
         self.tasks.remove(task)
         for name, t in self.named_tasks.items():
             if t == task:
@@ -33,14 +48,12 @@ class TaskManager:
 
         task.print_stack()
 
-    def cancel(self):
+    async def close(self):
         for task in self.tasks:
             task.cancel()
         self.tasks = []
         self.named_tasks = {}
 
-    async def close(self):
-        self.cancel()
         await asyncio.gather(*self.tasks, return_exceptions=True)
 
     def __getitem__(self, item):
