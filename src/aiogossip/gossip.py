@@ -47,7 +47,7 @@ class Gossip:
             msg.metadata.src = self.peer_id
 
         msg.metadata.dst = peer_id
-        self.topology.set_route(msg)
+        self.topology.append_route(msg)
 
         addr = self.topology.get_addr(peer_id)
         await self.transport.send(msg, addr)
@@ -106,7 +106,7 @@ class Gossip:
             msg, addr = await self.transport.recv()
             msg.metadata.route[-1].daddr = f"{addr[0]}:{addr[1]}"
 
-            self.topology.set_route(msg)
+            self.topology.append_route(msg)
             peer_ids = self.topology.update_route(msg)
 
             # connect to new nodes

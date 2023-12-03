@@ -69,7 +69,7 @@ class Topology:
         r.saddr = f"{self.node_addr[0]}:{self.node_addr[1]}"
         return r
 
-    def set_route(self, message):
+    def append_route(self, message):
         if not message.metadata.route:
             message.metadata.route.append(self.route)
 

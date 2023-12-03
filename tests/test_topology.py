@@ -71,7 +71,7 @@ def test_topology_route():
 
 def test_topology_set_route(message):
     topology = Topology(b"node1", ("localhost", 8000))
-    message = topology.set_route(message)
+    message = topology.append_route(message)
     assert len(message.metadata.route) == 1
 
 
