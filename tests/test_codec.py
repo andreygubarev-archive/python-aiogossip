@@ -1,4 +1,4 @@
-from aiogossip.codec import decode, encode
+from aiogossip.transport.codec import decode, encode
 
 
 def test_encode_decode(message):
