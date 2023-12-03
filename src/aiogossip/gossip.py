@@ -37,10 +37,15 @@ class Gossip:
         if peer_id == self.peer_id:
             raise ValueError("cannot send message to self:", msg)
 
+        if not msg.message_type:
+            raise ValueError("message type is required:", msg)
+
         if not msg.message_id:
             msg.message_id = uuid.uuid4().bytes
+
         if not msg.metadata.src:
             msg.metadata.src = self.peer_id
+
         msg.metadata.dst = peer_id
         self.topology.set_route(msg)
 
