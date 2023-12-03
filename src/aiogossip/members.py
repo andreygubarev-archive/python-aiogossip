@@ -5,6 +5,7 @@ import sys
 from . import config
 from .errors import print_exception
 from .message_pb2 import Message
+from .tasks import TaskManager
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -21,10 +22,9 @@ class Members:
     def __init__(self, peer):
         self.peer = peer
 
+        self.tasks = TaskManager()
+        self.tasks.create_task(self.scheduler())
         self.keepalive_tasks = {}
-
-        self.keepalive_scheduler_task = self.peer._loop.create_task(self.keepalive_scheduler())
-        self.keepalive_scheduler_task.add_done_callback(print_exception)
         self.peer.response("keepalive:*")(self.pong)
 
     async def keepalive(self, peer_id):
@@ -48,7 +48,7 @@ class Members:
 
             await asyncio.sleep(self.KEEPALIVE_INTERVAL)
 
-    async def keepalive_scheduler(self):
+    async def scheduler(self):
         while True:
             for node in self.peer.nodes:
                 if node == self.peer.peer_id:
@@ -64,8 +64,7 @@ class Members:
         return Message()
 
     async def close(self):
-        self.keepalive_scheduler_task.cancel()
-        await asyncio.gather(self.keepalive_scheduler_task, return_exceptions=True)
+        await self.tasks.close()
 
         for task in self.keepalive_tasks.values():
             task.cancel()
