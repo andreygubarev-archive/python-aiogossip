@@ -58,6 +58,11 @@ def test_topology_sample(topology):
     assert sample[0] in ["node1", "node2"]
 
 
+def test_topology_iter(topology):
+    topology.add([{"node_id": "node2", "node_addr": ("127.0.0.1", 8002)}])
+    assert list(topology) == [topology.node_id, "node2"]
+
+
 def test_topology_getitem():
     topology = Topology("node1", Transport.parse_addr("127.0.0.1:8000"))
     assert topology["node1"]["node_id"] == "node1"
