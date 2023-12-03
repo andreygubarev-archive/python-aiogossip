@@ -32,16 +32,16 @@ class Gossip:
 
     async def send(self, message, peer_id):
         if not message.id:
-            raise ValueError("message id is required for forwarding:", message)
+            raise ValueError("message id is required:", message)
 
         if not message.kind:
-            raise ValueError("message kind is required for forwarding:", message)
+            raise ValueError("message kind is required:", message)
 
         if not message.routing.src_id:
-            raise ValueError("message routing.src_id is required for forwarding:", message)
+            raise ValueError("message routing.src_id is required:", message)
 
         if not message.routing.dst_id:
-            raise ValueError("message routing.dst_id is required for forwarding:", message)
+            raise ValueError("message routing.dst_id is required:", message)
 
         msg = Message()
         msg.CopyFrom(message)
