@@ -9,7 +9,8 @@ from aiogossip.transport.address import Address
 async def test_send_recv(transport, message):
     await transport.send(message, transport.addr)
 
-    received_message, received_addr = await transport.recv()
+    with pytest.warns(DeprecationWarning):
+        received_message, received_addr = await transport.recv()
     assert received_message == message
     assert received_addr == transport.addr
 
