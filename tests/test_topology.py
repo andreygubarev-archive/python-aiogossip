@@ -33,7 +33,7 @@ def test_topology_update_route(message):
         )
     )
 
-    topology.update_route(message)
+    topology.update(message.routing.routes)
     assert len(topology) == 2
 
 
@@ -47,7 +47,7 @@ def test_topology_update_route_invalid(message):
                 daddr="localhost:8000",
             )
         )
-        topology.update_route(message)
+        topology.update(message.routing.routes)
 
 
 def test_topology_sample():
