@@ -89,11 +89,11 @@ class Topology:
     # Route #
     @property
     def route(self):
-        r = Route()
-        r.route_id = self.node_id
-        r.timestamp = int(time.time_ns())
-        r.saddr = f"{self.node_addr[0]}:{self.node_addr[1]}"
-        return r
+        return Route(
+            route_id=self.node_id,
+            timestamp=int(time.time_ns()),
+            saddr=f"{self.node.node_addr.ip}:{self.node.node_addr.port}",
+        )
 
     def append_route(self, message):
         msg = Message()
