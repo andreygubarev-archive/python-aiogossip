@@ -41,18 +41,19 @@ class Transport:
             addr = (addr[0], int(addr[1]))
 
         await self._loop.sock_sendto(self.sock, msg, addr)
-        logger.debug(f"DEBUG: {self.addr[1]} > {addr[1]} send: {message}\n")
-
         self.tx_packets += 1
         self.tx_bytes += len(msg)
 
+        logger.debug(f"DEBUG: {self.addr[1]} > {addr[1]} send: {message}\n")
+
     async def recv(self):
         msg, addr = await self._loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
-
         self.rx_packets += 1
         self.rx_bytes += len(msg)
+
         message = codec.decode(msg)
         logger.debug(f"DEBUG: {self.addr[1]} < {addr[1]} recv: {message}\n")
+
         return message, addr
 
     def close(self):
