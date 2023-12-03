@@ -113,6 +113,15 @@ class Gossip:
         await multicast()
         return list(messages)
 
+    async def send_gossip_handshake(self):
+        msg = Message()
+        msg.id = uuid.uuid4().bytes
+        msg.kind.append(Message.Kind.HANDSHAKE)
+        msg.kind.append(Message.Kind.SYN)
+        msg.routing.src_id = self.peer_id
+
+        return await self.send_gossip(msg)
+
     async def recv(self):
         while True:
             msg, addr = await self.transport.recv()
@@ -137,13 +146,13 @@ class Gossip:
             if Message.Kind.SYN in msg.kind:
                 await self.send_ack(msg)
 
-            # handshake message
-            if Message.Kind.HANDSHAKE in msg.kind:
-                continue
-
             # gossip message
             if Message.Kind.GOSSIP in msg.kind:
                 await self.send_gossip(msg)
+
+            # handshake message
+            if Message.Kind.HANDSHAKE in msg.kind:
+                continue
 
             yield msg
 
