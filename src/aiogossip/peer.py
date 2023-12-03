@@ -4,10 +4,10 @@ import uuid
 from . import config
 from .broker import Broker
 from .debug import debug
-from .errors import print_exception
 from .gossip import Gossip
 from .members import Members
 from .message_pb2 import Message
+from .tasks import TaskManager
 from .topology import Node
 from .transport import Transport
 from .transport.address import parse_addr
@@ -29,15 +29,12 @@ class Peer:
         else:
             self.peer_id = uuid.uuid1().bytes
 
-        # FIXME: should be lazy
         self.transport = Transport((host, port), loop=self._loop)
         self.gossip = Gossip(self.transport, fanout=fanout, peer_id=self.peer_id)
         self.broker = Broker(self.gossip, loop=self._loop)
 
-        self.task = self._loop.create_task(self.broker.listen())
-        self.task.add_done_callback(print_exception)
-
-        self.tasks = []
+        self.tasks = TaskManager(loop=self._loop)
+        self.tasks.create_task(self.broker.listen())
 
         self.members = Members(self)
 
@@ -73,20 +70,12 @@ class Peer:
             nodes = seeds
 
         self.gossip.topology.add(nodes)
-        task = self._loop.create_task(self._connect())
-        task.add_done_callback(print_exception)
-        self.tasks.append(task)
+        self.tasks.create_task(self._connect())
 
     async def disconnect(self):
         await self.members.close()
         await self.broker.close()
-
-        for task in self.tasks:
-            task.cancel()
-            await asyncio.gather(task, return_exceptions=True)
-
-        self.task.cancel()
-        await asyncio.gather(self.task, return_exceptions=True)
+        await self.tasks.close()
 
     async def publish(self, topic, message, peers=None, syn=False):
         if not message.id:
