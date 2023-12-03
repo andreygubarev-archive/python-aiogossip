@@ -12,6 +12,17 @@ class TaskManager:
         self.tasks = []
         self.named_tasks = {}
 
+    async def close(self):
+        """
+        Cancels all tasks and then waits for all the tasks to complete using `asyncio.gather()`.
+        """
+        for task in self.tasks:
+            task.cancel()
+        self.tasks = []
+        self.named_tasks = {}
+
+        await asyncio.gather(*self.tasks, return_exceptions=True)
+
     def create_task(self, coro, name=None):
         """
         Create a task for the given coroutine.
@@ -40,9 +51,6 @@ class TaskManager:
 
         Args:
             task: The completed task.
-
-        Returns:
-            None
         """
         self.tasks.remove(task)
         for name, t in self.named_tasks.items():
@@ -59,20 +67,6 @@ class TaskManager:
             return
 
         task.print_stack()
-
-    async def close(self):
-        """
-        Cancels all tasks and then waits for all the tasks to complete using `asyncio.gather()`.
-
-        Returns:
-            None
-        """
-        for task in self.tasks:
-            task.cancel()
-        self.tasks = []
-        self.named_tasks = {}
-
-        await asyncio.gather(*self.tasks, return_exceptions=True)
 
     def __getitem__(self, item):
         return self.named_tasks[item]

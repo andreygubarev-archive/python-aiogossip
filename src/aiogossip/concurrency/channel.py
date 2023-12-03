@@ -23,6 +23,13 @@ class Channel:
         self._queue = collections.deque()
         self._waiters = collections.deque()
 
+    async def close(self):
+        """Close the channel. Any pending waiters are cancelled."""
+        for waiter in self._waiters:
+            waiter.cancel()
+        self._waiters.clear()
+        self._queue.clear()
+
     async def send(self, message):
         """Send a message to the channel. If there are any waiters, wake one up.
 
@@ -53,10 +60,3 @@ class Channel:
                     self._waiters.remove(waiter)
                 raise
         return self._queue.popleft()
-
-    async def close(self):
-        """Close the channel. Any pending waiters are cancelled."""
-        for waiter in self._waiters:
-            waiter.cancel()
-        self._waiters.clear()
-        self._queue.clear()
