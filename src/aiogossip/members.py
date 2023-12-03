@@ -3,8 +3,8 @@ import logging
 import sys
 
 from . import config
+from .concurrency import TaskManager
 from .message_pb2 import Message
-from .task_manager import TaskManager
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))

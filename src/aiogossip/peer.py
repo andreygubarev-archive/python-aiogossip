@@ -3,11 +3,11 @@ import uuid
 
 from . import config
 from .broker import Broker
+from .concurrency import TaskManager
 from .debug import debug
 from .gossip import Gossip
 from .members import Members
 from .message_pb2 import Message
-from .task_manager import TaskManager
 from .topology import Node
 from .transport import Transport
 from .transport.address import parse_addr

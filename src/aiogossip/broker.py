@@ -4,9 +4,9 @@ import fnmatch
 import itertools
 
 from .channel import Channel
+from .concurrency import TaskManager
 from .gossip import Gossip
 from .message_pb2 import Message
-from .task_manager import TaskManager
 
 
 class Handler:
