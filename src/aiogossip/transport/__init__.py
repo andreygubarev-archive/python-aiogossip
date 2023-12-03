@@ -1,1 +1,2 @@
-from .transport import Address, Transport  # noqa
+from .address import Address  # noqa
+from .transport import Transport  # noqa

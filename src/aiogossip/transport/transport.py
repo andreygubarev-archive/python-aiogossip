@@ -1,5 +1,4 @@
 import asyncio
-import collections
 import ipaddress
 import logging
 import os
@@ -7,13 +6,12 @@ import socket
 import sys
 
 from . import codec
+from .address import Address
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 if os.environ.get("DEBUG"):
     logger.setLevel(logging.DEBUG)  # pragma: no cover
-
-Address = collections.namedtuple("Address", ["ip", "port"])
 
 
 class Transport:
