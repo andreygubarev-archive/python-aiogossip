@@ -6,6 +6,7 @@ import itertools
 from .channel import Channel
 from .errors import print_exception
 from .gossip import Gossip
+from .message_pb2 import Message
 
 
 class Handler:
@@ -28,9 +29,8 @@ class Handler:
             if result is None:
                 continue
 
-            if self._hooks:
-                for hook in self._hooks:
-                    await hook(message, result)
+            for hook in self._hooks:
+                await hook(message, result)
 
     def hook(self, func):
         self._hooks.append(func)
@@ -44,7 +44,7 @@ class Handler:
 
 
 class Broker:
-    TIMEOUT = 10
+    TIMEOUT = 1
 
     def __init__(self, gossip: Gossip, loop: asyncio.AbstractEventLoop = None):
         self._loop = loop or gossip.transport._loop
@@ -57,17 +57,22 @@ class Broker:
         async for message in self.gossip.recv():
             # FIXME: make messages idempotent (prevent duplicate processing)
 
-            if not message.metadata.topic:
+            handlers = list(self._handlers.keys())
+
+            if f"recv:{message.id}" in handlers:
+                for handler in self._handlers[f"recv:{message.id}"]:
+                    await handler.chan.send(message)
+
+            elif message.topic:
+                for topic in handlers:
+                    if fnmatch.fnmatch(message.topic, topic):
+                        for handler in self._handlers[topic]:
+                            await handler.chan.send(message)
+
+            else:
                 continue
 
-            topics = list(self._handlers.keys())
-
-            for topic in topics:
-                if fnmatch.fnmatch(message.metadata.topic, topic):
-                    for handler in self._handlers[topic]:
-                        await handler.chan.send(message)
-
-            for topic in topics:
+            for topic in handlers:
                 if len(self._handlers[topic]) == 0:
                     del self._handlers[topic]
 
@@ -92,7 +97,11 @@ class Broker:
         """Publish a message to a topic."""
         # FIXME: make messages idempotent (prevent duplicate processing)
         # FIXME: allow sending to specific nodes
-        message.metadata.topic = topic
+        message.topic = topic
+        if not message.id:
+            raise ValueError("Message ID is required:", message)
+        message_id = message.id
+
         if peer_ids:
             for peer_id in peer_ids:
                 if peer_id in self.gossip.topology:
@@ -102,12 +111,11 @@ class Broker:
         else:
             await self.gossip.send_gossip(message)
 
-        if message.metadata.syn:
-            return self._recv(topic, peer_ids=peer_ids)
+        return self._recv(message_id, peer_ids=peer_ids)
 
-    async def _recv(self, topic, peer_ids=None):
+    async def _recv(self, message_id, peer_ids=None):
         chan = Channel(loop=self._loop)
-        handler = self.subscribe(topic, chan.send)
+        handler = self.subscribe(f"recv:{message_id}", chan.send)
 
         acks = set()
         if peer_ids:
@@ -117,12 +125,13 @@ class Broker:
             async with asyncio.timeout(self.TIMEOUT):
                 while True:
                     message = await chan.recv()
-                    if message.metadata.ack:
-                        acks.add(message.metadata.ack)
-                        yield message
 
-                    elif message.metadata.src in acks:
-                        acks.remove(message.metadata.src)
+                    if Message.Kind.ACK in message.kind:
+                        acks.add(message.routing.src_id)
+                        yield message  # FIXME: don't yield acks
+
+                    elif message.routing.src_id in acks:
+                        acks.remove(message.routing.src_id)
                         yield message
 
                     else:

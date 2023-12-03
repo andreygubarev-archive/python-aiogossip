@@ -4,11 +4,12 @@ Usage:
 """
 import aiogossip
 
-peer = aiogossip.Peer(node_id="request")
+peer = aiogossip.Peer(peer_id="request")
 
 
 async def main():
     message = aiogossip.Message()
+
     response = await peer.request("query", message)
     async for resp in response:
         print(resp)

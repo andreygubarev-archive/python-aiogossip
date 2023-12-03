@@ -6,6 +6,7 @@ from .broker import Broker
 from .debug import debug
 from .errors import print_exception
 from .gossip import Gossip
+from .members import Members
 from .message_pb2 import Message
 from .transport import Transport
 
@@ -36,6 +37,8 @@ class Peer:
 
         self.tasks = []
 
+        self.members = Members(self)
+
     @property
     def node(self):
         return self.gossip.topology.node
@@ -49,12 +52,7 @@ class Peer:
         return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
 
     async def _connect(self):
-        topic = "connect:{}".format(uuid.uuid4().hex)
-        message = Message()
-
-        response = await self.publish(topic, message, syn=True)
-        async for r in response:
-            pass
+        await self.gossip.send_gossip_handshake()
 
     def connect(self, seeds=config.GOSSIP_SEEDS):
         if not seeds:
@@ -90,8 +88,8 @@ class Peer:
     async def publish(self, topic, message, peers=None, syn=False):
         topic = topic.replace("{uuid}", uuid.uuid4().hex)
 
-        if syn:
-            message.metadata.syn = self.peer_id
+        if syn and (Message.Kind.SYN not in message.kind):
+            message.kind.append(Message.Kind.SYN)
         return await self.broker.publish(topic, message, peer_ids=peers)
 
     def subscribe(self, topic):
@@ -101,6 +99,10 @@ class Peer:
         return decorator
 
     async def request(self, topic, message, peers=None, timeout=5):
+        if not message.id:
+            message.id = uuid.uuid4().bytes
+        message.kind.append(Message.Kind.REQ)
+
         topic = "request:{}:{}".format(topic, uuid.uuid4().hex)
         response = await self.publish(topic, message, peers=peers, syn=True)
         return response
@@ -109,7 +111,11 @@ class Peer:
         topic = "request:{}:*".format(topic)
 
         async def responder(message, result):
-            await self.publish(message.metadata.topic, result, peers=[message.metadata.syn])
+            result.id = message.id
+            result.routing.src_id = message.routing.dst_id
+            result.routing.dst_id = message.routing.src_id
+            result.kind.append(Message.Kind.RES)
+            await self.publish(message.topic, result, peers=[message.routing.src_id], syn=False)
 
         def decorator(func):
             handler = self.broker.subscribe(topic, func)
@@ -120,12 +126,14 @@ class Peer:
 
     @debug
     def run_forever(self, main=None):  # pragma: no cover
-        if main:
-            self._loop.run_until_complete(main())
-
         try:
+            if main:
+                main = self._loop.create_task(main())
             self._loop.run_forever()
         except KeyboardInterrupt:
             pass
         finally:
+            if main:
+                main.cancel()
+            self._loop.run_until_complete(main)
             self._loop.run_until_complete(self.disconnect())

@@ -8,17 +8,28 @@ message Route {
 }
 
 message Message {
-    message Metadata {
-        repeated Route route = 1;
-        bytes src = 2;
-        bytes dst = 3;
-        optional bytes gossip = 4;
-        optional bytes syn = 5;
-        optional bytes ack = 6;
-        optional string topic = 7;
+    enum Kind {
+        HANDSHAKE = 0;
+        GOSSIP = 1;
+        SYN = 2;
+        ACK = 3;
+
+        PUB = 4;
+        SUB = 5;
+        REQ = 6;
+        RES = 7;
     }
 
-    bytes message_id = 1;
-    Metadata metadata = 2;
-    bytes payload = 3;
+    message Routing {
+        bytes src_id = 1;
+        bytes dst_id = 2;
+        repeated Route routes = 3;
+    }
+
+    bytes id = 1;
+    repeated Kind kind = 2;
+    Routing routing = 3;
+
+    string topic = 4;
+    bytes payload = 5;
 }
