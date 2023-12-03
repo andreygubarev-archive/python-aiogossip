@@ -35,7 +35,7 @@ class Gossip:
         msg.CopyFrom(message)
 
         if peer_id == self.peer_id:
-            raise ValueError("cannot send message to self")
+            raise ValueError("cannot send message to self:", msg)
 
         if not msg.message_id:
             msg.message_id = uuid.uuid4().bytes
