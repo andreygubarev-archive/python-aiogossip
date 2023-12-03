@@ -17,6 +17,7 @@ class Topology:
             node_id,
             node_id=node_id,
             node_addr=parse_addr(node_addr),
+            reachable=True,
         )
 
     # Node #
