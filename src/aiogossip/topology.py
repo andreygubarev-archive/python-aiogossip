@@ -17,6 +17,7 @@ class Topology:
             node_id,
             node_id=node_id,
             node_addr=parse_addr(node_addr),
+            reachable=True,
         )
 
     # Node #
@@ -94,6 +95,14 @@ class Topology:
 
     def __contains__(self, node_id):
         return node_id in self.g
+
+    # Reachability #
+
+    def mark_reachable(self, node_id):
+        self.g.nodes[node_id]["reachable"] = True
+
+    def mark_unreachable(self, node_id):
+        self.g.nodes[node_id]["reachable"] = False
 
     # Route #
     @property

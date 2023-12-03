@@ -1,6 +1,7 @@
 """
 Usage:
-    GOSSIP_SEEDS=4aed4f3c6900462baa1413fb7ef4f814@127.0.0.1:58295 python examples/members.py
+    GOSSIP_ID=p1 GOSSIP_PORT=1337 python examples/members/members.py
+    GOSSIP_ID=p2 GOSSIP_SEEDS=p1@127.0.0.1:1337 python examples/members/members.py
 """
 import asyncio
 import os
@@ -18,7 +19,8 @@ async def main():
         print("---")
         print("members:")
         for node in peer.nodes:
-            print("-", node)
+            reachable = peer.gossip.topology[node]["reachable"]
+            print("-", node, "reachable" if reachable else "unreachable")
         print()
 
 

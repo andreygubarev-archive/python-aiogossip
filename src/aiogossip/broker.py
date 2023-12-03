@@ -43,7 +43,7 @@ class Handler:
         await asyncio.gather(*self._hooks, return_exceptions=True)
 
         self.task.cancel()
-        await self.task
+        await asyncio.gather(self.task, return_exceptions=True)
 
 
 class Broker:
