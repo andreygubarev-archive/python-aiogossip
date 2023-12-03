@@ -39,3 +39,10 @@ class Members:
 
     async def response(self, message):
         return Message()
+
+    async def close(self):
+        self.periodic_task.cancel()
+        try:
+            await self.periodic_task
+        except asyncio.CancelledError:
+            pass
