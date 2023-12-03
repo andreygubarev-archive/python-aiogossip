@@ -44,16 +44,32 @@ class Broker:
     TIMEOUT = 1
 
     def __init__(self, gossip: Gossip, loop: asyncio.AbstractEventLoop = None):
+        """
+        Initialize a Broker instance.
+
+        Args:
+            gossip (Gossip): The Gossip instance used for communication.
+            loop (asyncio.AbstractEventLoop, optional): The event loop to use.
+        """
         self._loop = loop or gossip.transport._loop
 
         self.gossip = gossip
         self.handlers = collections.defaultdict(list)
 
-    async def listen(self):
-        """Connect to the gossip network and start receiving messages."""
-        async for message in self.gossip.recv():
-            # FIXME: make messages idempotent (prevent duplicate processing)
+    async def close(self):
+        """
+        Disconnect from the gossip network and stop receiving messages.
+        """
+        handlers = [h for h in itertools.chain(*self.handlers.values())]
+        await asyncio.gather(*[h.cancel() for h in handlers], return_exceptions=True)
+        await self.gossip.close()
 
+    async def listen(self):
+        """
+        Connect to the gossip network and start receiving messages.
+        """
+        async for message in self.gossip.recv():
+            # FIXME: make messages idempotent (prevent duplicate processing of gossip messages)
             handlers = list(self.handlers.keys())
 
             if f"recv:{message.id}" in handlers:
@@ -73,27 +89,46 @@ class Broker:
                 if len(self.handlers[topic]) == 0:
                     del self.handlers[topic]
 
-    async def close(self):
-        """Disconnect from the gossip network and stop receiving messages."""
-        handlers = [h for h in itertools.chain(*self.handlers.values())]
-        await asyncio.gather(*[h.cancel() for h in handlers], return_exceptions=True)
-        await self.gossip.close()
-
     def subscribe(self, topic, func):
-        """Subscribe to a topic and register a handler."""
+        """
+        Subscribe to a topic and register a handler.
+
+        Args:
+            topic (str): The topic to subscribe to.
+            func (callable): The handler function to be called when a message is received.
+
+        Returns:
+            Handler: The handler object associated with the subscription.
+        """
         handler = Handler(topic, func, loop=self._loop)
         self.handlers[topic].append(handler)
         return handler
 
     async def unsubscribe(self, handler):
-        """Unsubscribe from a topic and unregister a handler."""
+        """
+        Unsubscribe from a topic and unregister a handler.
+
+        Args:
+            handler (Handler): The handler object to be unregistered.
+        """
         await handler.cancel()
         self.handlers[handler.topic].remove(handler)
 
     async def publish(self, topic, message, peer_ids=None):
-        """Publish a message to a topic."""
-        # FIXME: make messages idempotent (prevent duplicate processing)
-        # FIXME: allow sending to specific nodes
+        """
+        Publish a message to a topic.
+
+        Args:
+            topic (str): The topic to publish the message to.
+            message (Message): The message to be published.
+            peer_ids (list, optional):
+                The list of peer IDs to send the message to.
+                If not provided, the message will be sent to all nodes in the gossip network.
+
+        Raises:
+            ValueError: If the message ID is missing.
+        """
+
         message.topic = topic
         if not message.id:
             raise ValueError("Message ID is required:", message)
@@ -111,6 +146,18 @@ class Broker:
         return self._recv(message_id, peer_ids=peer_ids)
 
     async def _recv(self, message_id, peer_ids=None):
+        """
+        Receive messages with the given message ID.
+
+        Args:
+            message_id (str): The message ID to filter the received messages.
+            peer_ids (list, optional):
+                The list of peer IDs to expect messages from.
+                If not provided, the message will be sent to all nodes in the gossip network.
+
+        Yields:
+            Message: The received messages.
+        """
         chan = Channel(loop=self._loop)
         handler = self.subscribe(f"recv:{message_id}", chan.send)
 
