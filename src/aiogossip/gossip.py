@@ -90,7 +90,8 @@ class Gossip:
         if Message.Kind.GOSSIP not in msg.kind:
             msg.kind.append(Message.Kind.GOSSIP)
 
-        msg.routing.src_id = self.peer_id
+        if not msg.routing.src_id:
+            msg.routing.src_id = self.peer_id
 
         messages = set()
         gossip_ignore = set([self.peer_id])

@@ -47,8 +47,8 @@ async def test_peer_publish_ack(peers, message):
         messages.append(message)
 
     assert len(messages) == 1
-    assert messages[0].metadata.syn == peers[0].peer_id
-    assert messages[0].metadata.ack == peers[1].peer_id
+    assert messages[0].routing.src_id == peers[1].peer_id
+    assert messages[0].routing.dst_id == peers[0].peer_id
 
     for peer in peers:
         await peer.disconnect()
