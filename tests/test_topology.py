@@ -1,17 +1,18 @@
 import pytest
 
 from aiogossip.message_pb2 import Route
-from aiogossip.topology import Topology
+from aiogossip.topology import Node, Topology
+from aiogossip.transport import Address
 
 
-def test_topology_initialization():
-    topology = Topology(b"node1", ("localhost", 8000))
-    assert topology.node_id == b"node1"
-    assert topology.node_addr == ("localhost", 8000)
+def test_topology(topology):
+    assert isinstance(topology, Topology)
+    assert isinstance(topology.node, Node)
+    assert isinstance(topology.node_id, bytes)
+    assert isinstance(topology.node_addr, Address)
 
 
-def test_topology_add():
-    topology = Topology("node1", ("localhost", 8000))
+def test_topology_add(topology):
     topology.add([{"node_id": "node2", "node_addr": ("localhost", 8001)}])
     assert len(topology) == 2
 

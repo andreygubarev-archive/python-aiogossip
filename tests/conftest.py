@@ -8,6 +8,7 @@ from aiogossip.broker import Broker
 from aiogossip.gossip import Gossip
 from aiogossip.message_pb2 import Message
 from aiogossip.peer import Peer
+from aiogossip.topology import Topology
 from aiogossip.transport import Transport
 
 # Generic #####################################################################
@@ -53,6 +54,20 @@ def transport(event_loop):
 @pytest.fixture
 def transports(event_loop, instances):
     return [get_transport(event_loop) for _ in range(instances)]
+
+
+# Topology ####################################################################
+
+
+def get_topology(transport):
+    node_id = uuid.uuid4().bytes
+    node_addr = transport.addr
+    return Topology(node_id, node_addr)
+
+
+@pytest.fixture
+def topology(transport):
+    return get_topology(transport)
 
 
 # Gossip ######################################################################
