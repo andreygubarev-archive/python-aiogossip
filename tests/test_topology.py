@@ -68,6 +68,11 @@ def test_topology_getitem():
     assert topology["node1"]["node_id"] == "node1"
 
 
+def test_topology_contains():
+    topology = Topology("node1", Transport.parse_addr("127.0.0.1:8000"))
+    assert "node1" in topology
+
+
 def test_topology_route():
     topology = Topology(b"node1", Transport.parse_addr("127.0.0.1:8000"))
     assert topology.route.route_id == b"node1"
