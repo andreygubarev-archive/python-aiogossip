@@ -8,7 +8,9 @@ from .errors import print_exception
 from .gossip import Gossip
 from .members import Members
 from .message_pb2 import Message
+from .topology import Node
 from .transport import Transport
+from .transport.address import parse_addr
 
 
 class Peer:
@@ -49,7 +51,7 @@ class Peer:
 
     @property
     def DSN(self):
-        return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
+        return "{}@{}:{}".format(self.node.node_id.decode(), *self.node.node_addr)
 
     async def _connect(self):
         await self.gossip.send_gossip_handshake()
@@ -64,8 +66,8 @@ class Peer:
             seeds = seeds.split(",")
             for seed in seeds:
                 peer_id, addr = seed.split("@")
-                host, port = addr.split(":")
-                nodes.append({"node_id": peer_id.encode(), "node_addr": (host, int(port))})
+                addr = parse_addr(addr)
+                nodes.append(Node(node_id=peer_id.encode(), node_addr=addr))
 
         elif isinstance(seeds, list):
             nodes = seeds

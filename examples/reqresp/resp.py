@@ -1,6 +1,6 @@
 """
 Usage:
-    python examples/req-resp/response.py
+    python examples/reqresp/resp.py
 """
 import aiogossip
 
