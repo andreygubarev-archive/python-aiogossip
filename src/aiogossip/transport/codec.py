@@ -1,7 +1,7 @@
 from ..message_pb2 import Message
 
 
-def decode(data):
+def decode(data: bytes) -> Message:
     """
     Decode the given data using the Message.FromString method.
 
@@ -14,7 +14,7 @@ def decode(data):
     return Message.FromString(data)
 
 
-def encode(data):
+def encode(data: Message) -> bytes:
     """
     Encodes the given data object into a serialized byte string.
 
