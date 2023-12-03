@@ -37,6 +37,18 @@ class Transport:
         ip = ipaddress.ip_address(ip)
         return Address(ip, port)
 
+    @classmethod
+    def parse_addr(cls, addr):
+        if isinstance(addr, Address):
+            return addr
+        elif isinstance(addr, tuple):
+            return Address(ipaddress.ip_address(addr[0]), int(addr[1]))
+        elif isinstance(addr, str):
+            ip, port = addr.split(":")
+            return Address(ipaddress.ip_address(ip), int(port))
+        else:
+            raise TypeError(f"Address must be a Address, tuple or str, got: {type(addr)}")
+
     async def send(self, message, addr: Address):
         if not isinstance(addr, Address):
             raise TypeError(f"Address must be a tuple, got: {type(addr)}")

@@ -37,3 +37,33 @@ async def test_send_type_errors(transport, message):
 
     with pytest.raises(TypeError):
         await transport.send(message, Address(ipaddress.ip_address("127.0.0.1"), 1337.0))
+
+
+@pytest.mark.asyncio
+async def test_parse_addr_with_address(transport):
+    addr = Address("127.0.0.1", 1337)
+    result = transport.parse_addr(addr)
+    assert result == addr
+
+
+@pytest.mark.asyncio
+async def test_parse_addr_with_tuple(transport):
+    addr = ("127.0.0.1", 1337)
+    result = transport.parse_addr(addr)
+    assert result == Address(ipaddress.ip_address(addr[0]), int(addr[1]))
+
+
+@pytest.mark.asyncio
+async def test_parse_addr_with_string(transport):
+    addr = "127.0.0.1:1337"
+    result = transport.parse_addr(addr)
+    ip, port = addr.split(":")
+    assert result == Address(ipaddress.ip_address(ip), int(port))
+
+
+@pytest.mark.asyncio
+async def test_parse_addr_with_invalid_type(transport):
+    addr = None
+    with pytest.raises(TypeError) as excinfo:
+        transport.parse_addr(addr)
+    assert str(excinfo.value) == f"Address must be a Address, tuple or str, got: {type(addr)}"
