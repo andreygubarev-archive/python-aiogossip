@@ -3,7 +3,6 @@ import logging
 import sys
 
 from . import config
-from .errors import print_exception
 from .message_pb2 import Message
 from .tasks import TaskManager
 
@@ -24,10 +23,21 @@ class Members:
 
         self.tasks = TaskManager()
         self.tasks.create_task(self.scheduler())
-        self.keepalive_tasks = {}
+
         self.peer.response("keepalive:*")(self.pong)
 
-    async def keepalive(self, peer_id):
+    async def scheduler(self):
+        while True:
+            for node in self.peer.nodes:
+                if node == self.peer.peer_id:
+                    continue
+
+                if node not in self.tasks:
+                    self.tasks.create_task(self.ping(node))
+
+            await asyncio.sleep(self.SCHEDULER_INTERVAL)
+
+    async def ping(self, peer_id):
         while True:
             topic = "keepalive"
             message = Message()
@@ -48,24 +58,8 @@ class Members:
 
             await asyncio.sleep(self.KEEPALIVE_INTERVAL)
 
-    async def scheduler(self):
-        while True:
-            for node in self.peer.nodes:
-                if node == self.peer.peer_id:
-                    continue
-
-                if node not in self.keepalive_tasks:
-                    self.keepalive_tasks[node] = self.peer._loop.create_task(self.keepalive(node))
-                    self.keepalive_tasks[node].add_done_callback(print_exception)
-
-            await asyncio.sleep(self.SCHEDULER_INTERVAL)
-
     async def pong(self, message):
         return Message()
 
     async def close(self):
         await self.tasks.close()
-
-        for task in self.keepalive_tasks.values():
-            task.cancel()
-            await asyncio.gather(task, return_exceptions=True)
