@@ -13,6 +13,7 @@ def test_topology(topology):
 
 
 def test_topology_add(topology):
+    topology.add([{"node_id": topology.node_id, "node_addr": topology.node_addr}])
     topology.add([{"node_id": "node2", "node_addr": ("127.0.0.1", 8001)}])
     assert len(topology) == 2
 
