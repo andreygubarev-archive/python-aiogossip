@@ -33,8 +33,8 @@ class Peer:
         self.gossip = Gossip(self.transport, fanout=fanout, peer_id=self.peer_id)
         self.broker = Broker(self.gossip, loop=self._loop)
 
-        self.tasks = TaskManager(loop=self._loop)
-        self.tasks.create_task(self.broker.listen())
+        self.task_manager = TaskManager(loop=self._loop)
+        self.task_manager.create_task(self.broker.listen())
 
         self.members = Members(self)
 
@@ -70,12 +70,12 @@ class Peer:
             nodes = seeds
 
         self.gossip.topology.add(nodes)
-        self.tasks.create_task(self._connect())
+        self.task_manager.create_task(self._connect())
 
     async def disconnect(self):
         await self.members.close()
         await self.broker.close()
-        await self.tasks.close()
+        await self.task_manager.close()
 
     async def publish(self, topic, message, peers=None, syn=False):
         if not message.id:

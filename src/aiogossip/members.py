@@ -21,8 +21,8 @@ class Members:
     def __init__(self, peer):
         self.peer = peer
 
-        self.tasks = TaskManager()
-        self.tasks.create_task(self.scheduler())
+        self.task_manager = TaskManager()
+        self.task_manager.create_task(self.scheduler())
 
         self.peer.response("keepalive:*")(self.pong)
 
@@ -32,8 +32,8 @@ class Members:
                 if node == self.peer.peer_id:
                     continue
 
-                if node not in self.tasks:
-                    self.tasks.create_task(self.ping(node))
+                if node not in self.task_manager:
+                    self.task_manager.create_task(self.ping(node))
 
             await asyncio.sleep(self.SCHEDULER_INTERVAL)
 
@@ -62,4 +62,4 @@ class Members:
         return Message()
 
     async def close(self):
-        await self.tasks.close()
+        await self.task_manager.close()

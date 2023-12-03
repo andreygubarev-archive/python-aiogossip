@@ -17,8 +17,8 @@ class Handler:
         self.func = func
 
         self.chan = Channel(loop=self._loop)
-        self.tasks = TaskManager(loop=self._loop)
-        self.tasks.create_task(self())
+        self.task_manager = TaskManager(loop=self._loop)
+        self.task_manager.create_task(self())
 
         self.hooks = []
 
@@ -31,14 +31,14 @@ class Handler:
                 continue
 
             for hook in self.hooks:
-                self.tasks.create_task(hook(message, result))
+                self.task_manager.create_task(hook(message, result))
 
     def hook(self, func):
         self.hooks.append(func)
 
     async def cancel(self):
         await self.chan.close()
-        await self.tasks.close()
+        await self.task_manager.close()
 
 
 class Broker:
