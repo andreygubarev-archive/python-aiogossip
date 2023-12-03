@@ -15,8 +15,8 @@ if config.DEBUG:
 class Members:
     SCHEDULER_INTERVAL = 5
 
-    KEEPALIVE_INTERVAL = 15
-    KEEPALIVE_TIMEOUT = 5
+    PING_INTERVAL = 15
+    PING_TIMEOUT = 5
 
     def __init__(self, peer):
         self.peer = peer
@@ -44,7 +44,7 @@ class Members:
             message.routing.src_id = self.peer.peer_id
             message.routing.dst_id = peer_id
 
-            response = await self.peer.request(topic, message, peers=[peer_id], timeout=self.KEEPALIVE_TIMEOUT)
+            response = await self.peer.request(topic, message, peers=[peer_id], timeout=self.PING_TIMEOUT)
             responses = []
             async for r in response:
                 responses.append(r)
@@ -56,7 +56,7 @@ class Members:
                 self.peer.gossip.topology.mark_unreachable(peer_id)
                 logger.debug(f"Node is unreachable: {peer_id}")
 
-            await asyncio.sleep(self.KEEPALIVE_INTERVAL)
+            await asyncio.sleep(self.PING_INTERVAL)
 
     async def pong(self, message):
         return Message()
