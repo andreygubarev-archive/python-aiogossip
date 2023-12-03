@@ -24,7 +24,7 @@ test: ## Test Python Package
 ifeq ($(MODULE),)
 	python -m pytest --pdb
 else
-	python -m pytest --pdb $(MAKEFILE_DIR)/tests/test_$(MODULE).py
+	python -m pytest --pdb $(MAKEFILE_DIR)/tests/test_$(MODULE)*.py
 endif
 
 .PHONY: run
