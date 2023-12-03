@@ -15,6 +15,10 @@ if os.environ.get("DEBUG"):
 
 
 class Transport:
+    """
+    Represents a transport layer for sending and receiving messages over UDP.
+    """
+
     PACKET_SIZE = 4096
 
     def __init__(self, bind, loop: asyncio.AbstractEventLoop):
@@ -31,11 +35,28 @@ class Transport:
 
     @property
     def addr(self):
+        """
+        Returns the local address of the transport.
+        """
         ip, port = self.sock.getsockname()
         ip = ipaddress.ip_address(ip)
         return Address(ip, port)
 
     async def send(self, message, addr: Address):
+        """
+        Sends a message to the specified address.
+
+        Args:
+            message: The message to send.
+            addr: The address to send the message to.
+
+        Raises:
+            TypeError: If the address is not of type Address.
+            ValueError: If the message size exceeds the packet size.
+
+        Returns:
+            None
+        """
         if not isinstance(addr, Address):
             raise TypeError(f"Address must be a tuple, got: {type(addr)}")
         if not isinstance(addr.ip, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
@@ -54,6 +75,12 @@ class Transport:
         logger.debug(f"DEBUG: {self.addr[1]} > {addr[1]} send: {message}\n")
 
     async def recv(self):
+        """
+        Receives a message from the transport.
+
+        Returns:
+            A tuple containing the received message and the address it was received from.
+        """
         msg, addr = await self._loop.sock_recvfrom(self.sock, self.PACKET_SIZE)
         self.rx_packets += 1
         self.rx_bytes += len(msg)
@@ -65,4 +92,7 @@ class Transport:
         return message, addr
 
     def close(self):
+        """
+        Closes the transport.
+        """
         self.sock.close()
