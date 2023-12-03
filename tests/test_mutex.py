@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from aiogossip.mutex import MUTEX, mutex
+from aiogossip.concurrency.mutex import MUTEX, mutex
 
 
 @pytest.mark.asyncio

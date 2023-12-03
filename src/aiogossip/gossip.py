@@ -1,8 +1,8 @@
 import math
 import uuid
 
+from .concurrency.mutex import mutex
 from .message_pb2 import Message
-from .mutex import mutex
 from .topology import Topology
 
 

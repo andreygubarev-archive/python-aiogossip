@@ -2,7 +2,7 @@ import collections
 import functools
 import time
 
-from .config import MUTEX_TTL
+from ..config import MUTEX_TTL
 
 MUTEX = collections.defaultdict(dict)
 
