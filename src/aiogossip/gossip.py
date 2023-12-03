@@ -87,7 +87,7 @@ class Gossip:
             msg.metadata.gossip = uuid.uuid4().bytes
 
         gossip_ignore = set([self.peer_id])
-        gossip_ignore.update([r.route_id for r in msg.metadata.route])
+        gossip_ignore.update([r.route_id for r in msg.routing.routes])
 
         @mutex(self, msg.metadata.gossip)
         async def multicast():
@@ -104,7 +104,7 @@ class Gossip:
     async def recv(self):
         while True:
             msg, addr = await self.transport.recv()
-            msg.metadata.route[-1].daddr = f"{addr[0]}:{addr[1]}"
+            msg.routing.routes[-1].daddr = f"{addr[0]}:{addr[1]}"
 
             peer_ids = self.topology.update_route(msg)
             for peer_id in peer_ids:
