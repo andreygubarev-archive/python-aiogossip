@@ -9,7 +9,7 @@ from .message_pb2 import Message, Route
 class Topology:
     def __init__(self, node_id, node_addr):
         self.graph = nx.DiGraph(node_id=node_id, node_addr=node_addr)
-        self.add([self.node])
+        self.graph.add_node(node_id, node_id=node_id, node_addr=node_addr)
 
     # Node #
     @property
