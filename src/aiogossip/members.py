@@ -24,6 +24,8 @@ class Members:
 
                 topic = "keepalive:{}".format(node)
                 message = Message()
+                message.routing.src_id = self.peer.peer_id
+                message.routing.dst_id = node
 
                 response = await self.peer.request(topic, message, peers=[node], timeout=3)
                 responses = []

@@ -131,7 +131,7 @@ class Broker:
                         yield message  # FIXME: don't yield acks
 
                     elif message.routing.src_id in acks:
-                        acks.remove(message.metadata.src)
+                        acks.remove(message.routing.src_id)
                         yield message
 
                     else:
