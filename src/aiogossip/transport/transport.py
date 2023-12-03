@@ -6,7 +6,7 @@ import socket
 import sys
 
 from . import codec
-from .address import Address, parse_addr
+from .address import Address
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -58,7 +58,7 @@ class Transport:
         self.rx_packets += 1
         self.rx_bytes += len(msg)
 
-        addr = parse_addr(addr)
+        addr = Address(ipaddress.ip_address(addr[0]), int(addr[1]))
         message = codec.decode(msg)
         logger.debug(f"DEBUG: {self.addr.port} < {addr.port} recv: {message}\n")
 
