@@ -5,7 +5,7 @@ import warnings
 Address = collections.namedtuple("Address", ["ip", "port"])
 
 
-def parse_addr(addr):
+def parse_addr(addr: Address | tuple | str) -> Address:
     """
     Parse the given address and return an Address object.
 
