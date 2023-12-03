@@ -4,7 +4,7 @@ import pytest
 
 from aiogossip.message_pb2 import Route
 from aiogossip.topology import Node, Topology
-from aiogossip.transport import Address, parse_addr
+from aiogossip.transport.address import Address, parse_addr
 
 
 def test_topology(topology):

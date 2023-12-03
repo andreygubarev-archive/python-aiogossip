@@ -2,7 +2,7 @@ import ipaddress
 
 import pytest
 
-from aiogossip.transport import Address, parse_addr
+from aiogossip.transport.address import Address, parse_addr
 
 
 @pytest.mark.asyncio

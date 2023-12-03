@@ -5,7 +5,7 @@ import time
 import networkx as nx
 
 from .message_pb2 import Message, Route
-from .transport import parse_addr
+from .transport.address import parse_addr
 
 Node = collections.namedtuple("Node", ["node_id", "node_addr"])
 
