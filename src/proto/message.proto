@@ -13,6 +13,7 @@ message Message {
         GOSSIP = 1;
         SYN = 2;
         ACK = 3;
+
         PUB = 4;
         SUB = 5;
         REQ = 6;

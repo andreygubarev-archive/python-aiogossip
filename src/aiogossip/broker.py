@@ -7,6 +7,8 @@ from .channel import Channel
 from .errors import print_exception
 from .gossip import Gossip
 
+# from .message_pb2 import Message
+
 
 class Handler:
     def __init__(self, topic, func, loop: asyncio.AbstractEventLoop):
@@ -56,13 +58,13 @@ class Broker:
         async for message in self.gossip.recv():
             # FIXME: make messages idempotent (prevent duplicate processing)
 
-            if not message.metadata.topic:
+            if not message.topic:
                 continue
 
             topics = list(self._handlers.keys())
 
             for topic in topics:
-                if fnmatch.fnmatch(message.metadata.topic, topic):
+                if fnmatch.fnmatch(message.topic, topic):
                     for handler in self._handlers[topic]:
                         await handler.chan.send(message)
 
@@ -91,7 +93,8 @@ class Broker:
         """Publish a message to a topic."""
         # FIXME: make messages idempotent (prevent duplicate processing)
         # FIXME: allow sending to specific nodes
-        message.metadata.topic = topic
+        message.topic = topic
+
         if peer_ids:
             for peer_id in peer_ids:
                 if peer_id in self.gossip.topology:
@@ -101,8 +104,7 @@ class Broker:
         else:
             await self.gossip.send_gossip(message)
 
-        if message.metadata.syn:
-            return self._recv(topic, peer_ids=peer_ids)
+        return self._recv(topic, peer_ids=peer_ids)
 
     async def _recv(self, topic, peer_ids=None):
         chan = Channel(loop=self._loop)

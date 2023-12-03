@@ -33,7 +33,7 @@ async def test_subscribe(brokers, message):
     except asyncio.TimeoutError:
         pass
 
-    assert handler_message.metadata.topic == topic
+    assert handler_message.topic == topic
     assert handler_message.payload == message.payload
 
     await sub.unsubscribe(handler)
@@ -70,7 +70,7 @@ async def test_connect_cleans_up_empty_topics(brokers, message):
     topic = "test"
 
     async def recv():
-        message.metadata.topic = topic
+        message.topic = topic
         yield message
 
     broker.gossip.recv = recv
@@ -94,9 +94,9 @@ async def test_wildcard_topic(brokers, message):
     topic = "test.*"
 
     async def recv():
-        message.metadata.topic = "test.1"
+        message.topic = "test.1"
         yield message
-        message.metadata.topic = "test.2"
+        message.topic = "test.2"
         yield message
 
     broker.gossip.recv = recv
