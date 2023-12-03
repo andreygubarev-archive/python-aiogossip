@@ -4,9 +4,9 @@ import fnmatch
 import itertools
 
 from .channel import Channel
-from .errors import print_exception
 from .gossip import Gossip
 from .message_pb2 import Message
+from .tasks import TaskManager
 
 
 class Handler:
@@ -15,11 +15,12 @@ class Handler:
 
         self.topic = topic
         self.func = func
-        self.chan = Channel(loop=self._loop)
 
-        self.task = self._loop.create_task(self())
-        self.task.add_done_callback(print_exception)
-        self._hooks = []
+        self.chan = Channel(loop=self._loop)
+        self.tasks = TaskManager(loop=self._loop)
+        self.tasks.create_task(self())
+
+        self.hooks = []
 
     async def __call__(self):
         while True:
@@ -29,21 +30,15 @@ class Handler:
             if result is None:
                 continue
 
-            for hook in self._hooks:
-                await hook(message, result)
+            for hook in self.hooks:
+                self.tasks.create_task(hook(message, result))
 
     def hook(self, func):
-        self._hooks.append(func)
+        self.hooks.append(func)
 
     async def cancel(self):
         await self.chan.close()
-
-        for hook in self._hooks:
-            hook.cancel()
-        await asyncio.gather(*self._hooks, return_exceptions=True)
-
-        self.task.cancel()
-        await asyncio.gather(self.task, return_exceptions=True)
+        await self.tasks.close()
 
 
 class Broker:
