@@ -53,12 +53,10 @@ class Peer:
         return "{}@{}:{}".format(self.node["node_id"].decode(), *self.node["node_addr"])
 
     async def _connect(self):
-        topic = "connect:{}".format(uuid.uuid4().hex)
-        message = Message()
-
-        response = await self.publish(topic, message, syn=True)
-        async for r in response:
-            pass
+        for node in self.gossip.topology:
+            if node == self.peer_id:
+                continue
+            await self.gossip.send_handshake(node)
 
     def connect(self, seeds=config.GOSSIP_SEEDS):
         if not seeds:
