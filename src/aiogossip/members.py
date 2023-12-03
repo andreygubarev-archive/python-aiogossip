@@ -1,7 +1,15 @@
 import asyncio
+import logging
+import sys
 
+from . import config
 from .errors import print_exception
 from .message_pb2 import Message
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+if config.DEBUG:
+    logger.setLevel(logging.DEBUG)  # pragma: no cover
 
 
 class Members:
@@ -42,7 +50,4 @@ class Members:
 
     async def close(self):
         self.periodic_task.cancel()
-        try:
-            await self.periodic_task
-        except asyncio.CancelledError:
-            pass
+        await asyncio.gather(self.periodic_task, return_exceptions=True)

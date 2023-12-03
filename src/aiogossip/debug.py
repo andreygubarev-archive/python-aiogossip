@@ -9,7 +9,7 @@ def debug(func):
         try:
             return func(*args, **kwargs)
         except Exception:
-            if config.GOSSIP_DEBUG and sys.stdout.isatty():
+            if config.DEBUG and sys.stdout.isatty():
                 pdb.post_mortem()  # pragma: no cover
             raise
 

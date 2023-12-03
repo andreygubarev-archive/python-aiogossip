@@ -56,7 +56,7 @@ class Peer:
     async def _connect(self):
         await self.gossip.send_gossip_handshake()
 
-    def connect(self, seeds=config.GOSSIP_SEEDS):
+    def connect(self, seeds=config.SEEDS):
         if not seeds:
             return
 
