@@ -100,6 +100,10 @@ class Peer:
         return decorator
 
     async def request(self, topic, message, peers=None, timeout=5):
+        if not message.id:
+            message.id = uuid.uuid4().bytes
+        message.kind.append(Message.Kind.REQ)
+
         topic = "request:{}:{}".format(topic, uuid.uuid4().hex)
         response = await self.publish(topic, message, peers=peers, syn=True)
         return response
@@ -108,6 +112,10 @@ class Peer:
         topic = "request:{}:*".format(topic)
 
         async def responder(message, result):
+            result.id = message.id
+            result.routing.src_id = message.routing.dst_id
+            result.routing.dst_id = message.routing.src_id
+            result.kind.append(Message.Kind.RES)
             await self.publish(message.topic, result, peers=[message.routing.src_id], syn=False)
 
         def decorator(func):
@@ -128,4 +136,5 @@ class Peer:
         finally:
             if main:
                 main.cancel()
+            self._loop.run_until_complete(main)
             self._loop.run_until_complete(self.disconnect())
