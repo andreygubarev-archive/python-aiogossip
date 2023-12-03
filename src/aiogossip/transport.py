@@ -32,27 +32,27 @@ class Transport:
         return self.sock.getsockname()
 
     async def send(self, message, addr):
-        message = codec.encode(message)
-        if len(message) > self.PAYLOAD_SIZE:
+        msg = codec.encode(message)
+        if len(msg) > self.PAYLOAD_SIZE:
             raise ValueError(f"Message size exceeds payload size of {self.PAYLOAD_SIZE} bytes")
 
         if isinstance(addr, str):
             addr = addr.split(":")
             addr = (addr[0], int(addr[1]))
 
-        await self._loop.sock_sendto(self.sock, message, addr)
+        await self._loop.sock_sendto(self.sock, msg, addr)
         logger.debug(f"DEBUG: {self.addr[1]} > {addr[1]} send: {message}\n")
 
         self.tx_packets += 1
-        self.tx_bytes += len(message)
+        self.tx_bytes += len(msg)
 
     async def recv(self):
-        message, addr = await self._loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
-        logger.debug(f"DEBUG: {self.addr[1]} < {addr[1]} recv: {message}\n")
+        msg, addr = await self._loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
 
         self.rx_packets += 1
-        self.rx_bytes += len(message)
-        message = codec.decode(message)
+        self.rx_bytes += len(msg)
+        message = codec.decode(msg)
+        logger.debug(f"DEBUG: {self.addr[1]} < {addr[1]} recv: {message}\n")
         return message, addr
 
     def close(self):
