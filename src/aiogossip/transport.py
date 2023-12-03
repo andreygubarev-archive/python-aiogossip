@@ -1,4 +1,6 @@
 import asyncio
+import collections
+import ipaddress
 import logging
 import os
 import socket
@@ -11,9 +13,11 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 if os.environ.get("DEBUG"):
     logger.setLevel(logging.DEBUG)  # pragma: no cover
 
+Address = collections.namedtuple("Address", ["ip", "port"])
+
 
 class Transport:
-    PAYLOAD_SIZE = 4096
+    PACKET_SIZE = 4096
 
     def __init__(self, bind, loop: asyncio.AbstractEventLoop):
         self._loop = loop
@@ -29,30 +33,48 @@ class Transport:
 
     @property
     def addr(self):
-        return self.sock.getsockname()
+        ip, port = self.sock.getsockname()
+        ip = ipaddress.ip_address(ip)
+        return Address(ip, port)
 
-    async def send(self, message, addr):
+    @classmethod
+    def parse_addr(cls, addr):
+        if isinstance(addr, Address):
+            return addr
+        elif isinstance(addr, tuple):
+            return Address(ipaddress.ip_address(addr[0]), int(addr[1]))
+        elif isinstance(addr, str):
+            ip, port = addr.split(":")
+            return Address(ipaddress.ip_address(ip), int(port))
+        else:
+            raise TypeError(f"Address must be a Address, tuple or str, got: {type(addr)}")
+
+    async def send(self, message, addr: Address):
+        if not isinstance(addr, Address):
+            raise TypeError(f"Address must be a tuple, got: {type(addr)}")
+        if not isinstance(addr.ip, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
+            raise TypeError(f"IP address must be IPv4, got: {type(addr.ip)}")
+        if not isinstance(addr.port, int):
+            raise TypeError(f"Port must be an integer, got: {type(addr.port)}")
+
         msg = codec.encode(message)
-        if len(msg) > self.PAYLOAD_SIZE:
-            raise ValueError(f"Message size exceeds payload size of {self.PAYLOAD_SIZE} bytes")
+        if len(msg) > self.PACKET_SIZE:
+            raise ValueError(f"Message size exceeds packet size of {self.PACKET_SIZE} bytes: {len(msg)}")
 
-        if isinstance(addr, str):
-            addr = addr.split(":")
-            addr = (addr[0], int(addr[1]))
-
-        await self._loop.sock_sendto(self.sock, msg, addr)
+        await self._loop.sock_sendto(self.sock, msg, (addr.ip.exploded, addr.port))
         self.tx_packets += 1
         self.tx_bytes += len(msg)
 
         logger.debug(f"DEBUG: {self.addr[1]} > {addr[1]} send: {message}\n")
 
     async def recv(self):
-        msg, addr = await self._loop.sock_recvfrom(self.sock, self.PAYLOAD_SIZE)
+        msg, addr = await self._loop.sock_recvfrom(self.sock, self.PACKET_SIZE)
         self.rx_packets += 1
         self.rx_bytes += len(msg)
 
+        addr = Address(ipaddress.ip_address(addr[0]), int(addr[1]))
         message = codec.decode(msg)
-        logger.debug(f"DEBUG: {self.addr[1]} < {addr[1]} recv: {message}\n")
+        logger.debug(f"DEBUG: {self.addr.port} < {addr.port} recv: {message}\n")
 
         return message, addr
 
