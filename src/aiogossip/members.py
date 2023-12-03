@@ -33,7 +33,7 @@ class Members:
                     continue
 
                 if node not in self.task_manager:
-                    self.task_manager.create_task(self.ping(node))
+                    self.task_manager.create_task(self.ping(node), name=node)
 
             await asyncio.sleep(self.SCHEDULER_INTERVAL)
 
