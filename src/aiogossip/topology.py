@@ -3,7 +3,7 @@ import time
 
 import networkx as nx
 
-from .message_pb2 import Route
+from .message_pb2 import Message, Route
 
 
 class Topology:
@@ -41,6 +41,29 @@ class Topology:
             }
             self.graph.add_edge(src["node_id"], dst["node_id"], **attrs)
 
+    def update(self, routes):
+        if len(routes) < 2:
+            raise ValueError("Empty route")
+
+        nodes = set()
+        for r in (r for r in routes if r.route_id not in self.graph):
+            self.graph.add_node(r.route_id, node_id=r.route_id, node_addr=r.daddr or r.saddr)
+            nodes.add(r.route_id)
+
+        def edge(src, dst):
+            return {
+                "saddr": src.daddr or src.saddr,
+                "daddr": dst.daddr or dst.saddr,
+                "latency": abs(src.timestamp - dst.timestamp),
+            }
+
+        hops = ((routes[r], routes[r + 1]) for r in range(len(routes) - 1))
+        for src, dst in hops:
+            self.graph.add_edge(src.route_id, dst.route_id, **edge(src, dst))
+        self.graph.add_edge(dst.route_id, src.route_id, **edge(dst, src))
+
+        return nodes
+
     def sample(self, k, ignore=None):
         nodes = [e[1] for e in self.graph.out_edges(self.node_id)]
         if ignore:
@@ -70,37 +93,16 @@ class Topology:
         return r
 
     def append_route(self, message):
-        if not message.routing.routes:
-            message.routing.routes.append(self.route)
+        msg = Message()
+        msg.CopyFrom(message)
 
-        if message.routing.routes[-1].route_id != self.node_id:
-            message.routing.routes.append(self.route)
+        if not msg.routing.routes:
+            msg.routing.routes.append(self.route)
 
-        return message
+        if msg.routing.routes[-1].route_id != self.node_id:
+            msg.routing.routes.append(self.route)
 
-    def update_route(self, message):
-        if len(message.routing.routes) < 2:
-            raise ValueError("Empty route")
-
-        nodes = set()
-        for r in (r for r in message.routing.routes if r.route_id not in self.graph):
-            self.graph.add_node(r.route_id, node_id=r.route_id, node_addr=r.daddr or r.saddr)
-            nodes.add(r.route_id)
-
-        def edge(src, dst):
-            return {
-                "saddr": src.daddr or src.saddr,
-                "daddr": dst.daddr or dst.saddr,
-                "latency": abs(src.timestamp - dst.timestamp),
-            }
-
-        routes = message.routing.routes
-        hops = ((routes[r], routes[r + 1]) for r in range(len(routes) - 1))
-        for src, dst in hops:
-            self.graph.add_edge(src.route_id, dst.route_id, **edge(src, dst))
-        self.graph.add_edge(dst.route_id, src.route_id, **edge(dst, src))
-
-        return nodes
+        return msg
 
     # Addr #
     def get_addr(self, node_id):

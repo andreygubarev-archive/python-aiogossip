@@ -9,7 +9,7 @@ message Route {
 
 message Message {
     enum Kind {
-        UNKNOWN = 0;
+        HANDSHAKE = 0;
         GOSSIP = 1;
         SYN = 2;
         ACK = 3;

@@ -34,7 +34,11 @@ async def test_gossip(gossips, message):
 @pytest.mark.parametrize("instances", [2])
 @pytest.mark.asyncio
 async def test_send_and_receive(gossips, message):
+    message.kind.append(message.Kind.REQ)
+    message.routing.src_id = gossips[0].topology.node_id
+    message.routing.dst_id = gossips[1].topology.node_id
     message.payload = b"test_send_and_receive"
     await gossips[0].send(message, gossips[1].topology.node_id)
+
     received_message = await anext(gossips[1].recv())
     assert received_message.payload == message.payload
