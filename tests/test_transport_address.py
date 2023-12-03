@@ -13,13 +13,15 @@ def test_parse_addr_with_address_object():
 def test_parse_addr_with_tuple():
     addr = ("127.0.0.1", 8000)
     expected = Address(ipaddress.ip_address("127.0.0.1"), 8000)
-    assert parse_addr(addr) == expected
+    with pytest.warns(DeprecationWarning):
+        assert parse_addr(addr) == expected
 
 
 def test_parse_addr_with_string():
     addr = "127.0.0.1:8000"
     expected = Address(ipaddress.ip_address("127.0.0.1"), 8000)
-    assert parse_addr(addr) == expected
+    with pytest.warns(DeprecationWarning):
+        assert parse_addr(addr) == expected
 
 
 def test_parse_addr_with_invalid_type():

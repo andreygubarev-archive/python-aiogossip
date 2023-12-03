@@ -37,7 +37,7 @@ async def test_subscribe(brokers, message):
     assert handler_message.payload == message.payload
 
     await sub.unsubscribe(handler)
-    assert handler not in sub._handlers[topic]
+    assert handler not in sub.handlers[topic]
     await pub.close()
     await sub.close()
 
@@ -76,13 +76,13 @@ async def test_connect_cleans_up_empty_topics(brokers, message):
     broker.gossip.recv = recv
 
     handler = broker.subscribe(topic, MagicMock())
-    assert topic in broker._handlers
+    assert topic in broker.handlers
     await broker.unsubscribe(handler)
-    assert topic in broker._handlers
-    assert len(broker._handlers[topic]) == 0
+    assert topic in broker.handlers
+    assert len(broker.handlers[topic]) == 0
 
     await broker.listen()
-    assert topic not in broker._handlers
+    assert topic not in broker.handlers
     await broker.close()
 
 

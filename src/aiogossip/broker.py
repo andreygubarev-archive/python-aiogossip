@@ -4,9 +4,9 @@ import fnmatch
 import itertools
 
 from .channel import Channel
-from .errors import print_exception
 from .gossip import Gossip
 from .message_pb2 import Message
+from .task_manager import TaskManager
 
 
 class Handler:
@@ -15,11 +15,12 @@ class Handler:
 
         self.topic = topic
         self.func = func
-        self.chan = Channel(loop=self._loop)
 
-        self.task = self._loop.create_task(self())
-        self.task.add_done_callback(print_exception)
-        self._hooks = []
+        self.chan = Channel(loop=self._loop)
+        self.task_manager = TaskManager(loop=self._loop)
+        self.task_manager.create_task(self())
+
+        self.hooks = []
 
     async def __call__(self):
         while True:
@@ -29,21 +30,15 @@ class Handler:
             if result is None:
                 continue
 
-            for hook in self._hooks:
-                await hook(message, result)
+            for hook in self.hooks:
+                self.task_manager.create_task(hook(message, result))
 
     def hook(self, func):
-        self._hooks.append(func)
+        self.hooks.append(func)
 
     async def cancel(self):
         await self.chan.close()
-
-        for hook in self._hooks:
-            hook.cancel()
-        await asyncio.gather(*self._hooks, return_exceptions=True)
-
-        self.task.cancel()
-        await asyncio.gather(self.task, return_exceptions=True)
+        await self.task_manager.close()
 
 
 class Broker:
@@ -53,48 +48,48 @@ class Broker:
         self._loop = loop or gossip.transport._loop
 
         self.gossip = gossip
-        self._handlers = collections.defaultdict(list)
+        self.handlers = collections.defaultdict(list)
 
     async def listen(self):
         """Connect to the gossip network and start receiving messages."""
         async for message in self.gossip.recv():
             # FIXME: make messages idempotent (prevent duplicate processing)
 
-            handlers = list(self._handlers.keys())
+            handlers = list(self.handlers.keys())
 
             if f"recv:{message.id}" in handlers:
-                for handler in self._handlers[f"recv:{message.id}"]:
+                for handler in self.handlers[f"recv:{message.id}"]:
                     await handler.chan.send(message)
 
             elif message.topic:
                 for topic in handlers:
                     if fnmatch.fnmatch(message.topic, topic):
-                        for handler in self._handlers[topic]:
+                        for handler in self.handlers[topic]:
                             await handler.chan.send(message)
 
             else:
                 continue
 
             for topic in handlers:
-                if len(self._handlers[topic]) == 0:
-                    del self._handlers[topic]
+                if len(self.handlers[topic]) == 0:
+                    del self.handlers[topic]
 
     async def close(self):
         """Disconnect from the gossip network and stop receiving messages."""
-        handlers = [h for h in itertools.chain(*self._handlers.values())]
+        handlers = [h for h in itertools.chain(*self.handlers.values())]
         await asyncio.gather(*[h.cancel() for h in handlers], return_exceptions=True)
         await self.gossip.close()
 
     def subscribe(self, topic, func):
         """Subscribe to a topic and register a handler."""
         handler = Handler(topic, func, loop=self._loop)
-        self._handlers[topic].append(handler)
+        self.handlers[topic].append(handler)
         return handler
 
     async def unsubscribe(self, handler):
         """Unsubscribe from a topic and unregister a handler."""
         await handler.cancel()
-        self._handlers[handler.topic].remove(handler)
+        self.handlers[handler.topic].remove(handler)
 
     async def publish(self, topic, message, peer_ids=None):
         """Publish a message to a topic."""

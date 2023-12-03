@@ -8,11 +8,9 @@ from aiogossip.transport.address import Address
 @pytest.mark.asyncio
 async def test_send_recv(transport, message):
     await transport.send(message, transport.addr)
-
     received_message, received_addr = await transport.recv()
     assert received_message == message
     assert received_addr == transport.addr
-
     transport.close()
 
 
