@@ -7,14 +7,35 @@ from .topology import Topology
 
 
 class Gossip:
+    """
+    Gossip class represents a gossip protocol implementation.
+
+    Attributes:
+        FANOUT (int): The default fanout value for the gossip protocol.
+    """
+
     FANOUT = 5
 
     def __init__(self, transport, fanout=None, peer_id=None):
+        """
+        Initialize a Gossip instance.
+
+        Args:
+            transport (Transport): The transport object used for sending and receiving messages.
+            fanout (int, optional): The fanout value for the gossip protocol. Defaults to None.
+            peer_id (bytes, optional): The ID of the peer. Defaults to None.
+        """
         self.peer_id = peer_id or uuid.uuid4().bytes
         self.transport = transport
         self.topology = Topology(self.peer_id, self.transport.addr)
 
         self._fanout = fanout or self.FANOUT
+
+    async def close(self):
+        """
+        Close the Gossip instance and the associated transport.
+        """
+        self.transport.close()
 
     @property
     def fanout(self):
@@ -155,6 +176,3 @@ class Gossip:
                 continue
 
             yield msg
-
-    async def close(self):
-        self.transport.close()
