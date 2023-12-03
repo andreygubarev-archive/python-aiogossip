@@ -6,7 +6,8 @@ from .broker import Broker
 from .debug import debug
 from .errors import print_exception
 from .gossip import Gossip
-from .members import Members
+
+# from .members import Members
 from .message_pb2 import Message
 from .transport import Transport
 
@@ -37,7 +38,7 @@ class Peer:
 
         self.tasks = []
 
-        self.members = Members(self)
+        # self.members = Members(self)
 
     @property
     def node(self):
@@ -93,8 +94,8 @@ class Peer:
     async def publish(self, topic, message, peers=None, syn=False):
         topic = topic.replace("{uuid}", uuid.uuid4().hex)
 
-        if syn:
-            message.metadata.syn = self.peer_id
+        if syn and (Message.Kind.SYN not in message.kind):
+            message.kind.append(Message.Kind.SYN)
         return await self.broker.publish(topic, message, peer_ids=peers)
 
     def subscribe(self, topic):
