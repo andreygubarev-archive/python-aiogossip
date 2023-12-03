@@ -1,9 +1,12 @@
+import collections
 import random
 import time
 
 import networkx as nx
 
 from .message_pb2 import Message, Route
+
+Node = collections.namedtuple("Node", ["node_id", "node_addr"])
 
 
 class Topology:
@@ -22,7 +25,7 @@ class Topology:
 
     @property
     def node(self):
-        return {"node_id": self.node_id, "node_addr": tuple(self.node_addr)}
+        return Node(self.node_id, self.node_addr)
 
     # Topology #
     def add(self, nodes):
