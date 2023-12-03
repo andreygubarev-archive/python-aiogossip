@@ -5,6 +5,7 @@ import time
 import networkx as nx
 
 from .message_pb2 import Message, Route
+from .transport import Transport
 
 Node = collections.namedtuple("Node", ["node_id", "node_addr"])
 
@@ -12,7 +13,11 @@ Node = collections.namedtuple("Node", ["node_id", "node_addr"])
 class Topology:
     def __init__(self, node_id, node_addr):
         self.g = nx.DiGraph(node_id=node_id, node_addr=node_addr)
-        self.g.add_node(node_id, node_id=node_id, node_addr=node_addr)
+        self.g.add_node(
+            node_id,
+            node_id=node_id,
+            node_addr=Transport.parse_addr(node_addr),
+        )
 
     # Node #
     @property
@@ -30,19 +35,23 @@ class Topology:
     # Topology #
     def add(self, nodes):
         for node in nodes:
-            self.g.add_node(node["node_id"], **node)
-
-            if node["node_id"] == self.node_id:
+            if node.node_id == self.node_id:
                 continue
 
+            self.g.add_node(
+                node.node_id,
+                node_id=node.node_id,
+                node_addr=Transport.parse_addr(node.node_addr),
+            )
+
             src = self.g.nodes[self.node_id]
-            dst = self.g.nodes[node["node_id"]]
-            attrs = {
-                "saddr": tuple(src["node_addr"]),
-                "daddr": tuple(dst["node_addr"]),
-                "latency": 0,
-            }
-            self.g.add_edge(src["node_id"], dst["node_id"], **attrs)
+            dst = self.g.nodes[node.node_id]
+            self.g.add_edge(
+                src["node_id"],
+                dst["node_id"],
+                saddr=Transport.parse_addr(src["node_addr"]),
+                daddr=Transport.parse_addr(dst["node_addr"]),
+            )
 
     def update(self, routes):
         if len(routes) < 2:
@@ -50,13 +59,13 @@ class Topology:
 
         nodes = set()
         for r in (r for r in routes if r.route_id not in self.g):
-            self.g.add_node(r.route_id, node_id=r.route_id, node_addr=r.daddr or r.saddr)
+            self.g.add_node(r.route_id, node_id=r.route_id, node_addr=Transport.parse_addr(r.daddr or r.saddr))
             nodes.add(r.route_id)
 
         def edge(src, dst):
             return {
-                "saddr": src.daddr or src.saddr,
-                "daddr": dst.daddr or dst.saddr,
+                "saddr": Transport.parse_addr(src.daddr or src.saddr),
+                "daddr": Transport.parse_addr(dst.daddr or dst.saddr),
                 "latency": abs(src.timestamp - dst.timestamp),
             }
 
