@@ -7,18 +7,7 @@ message Route {
     string daddr = 4;
 }
 
-enum MessageType {
-    GOSSIP = 0;
 
-    SYN = 1;
-    ACK = 2;
-
-    PUB = 3;
-    SUB = 4;
-
-    REQ = 5;
-    RES = 6;
-}
 
 message Message {
     message Metadata {
@@ -31,8 +20,18 @@ message Message {
         optional string topic = 7;
     }
 
+    enum Type {
+        GOSSIP = 0;
+        SYN = 1;
+        ACK = 2;
+        PUB = 3;
+        SUB = 4;
+        REQ = 5;
+        RES = 6;
+    }
+
     bytes message_id = 1;
-    MessageType message_type = 2;
+    Type message_type = 2;
     Metadata metadata = 3;
     bytes payload = 4;
 }
