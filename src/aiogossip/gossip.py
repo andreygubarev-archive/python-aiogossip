@@ -34,16 +34,16 @@ class Gossip:
         msg = Message()
         msg.CopyFrom(message)
 
-        if peer_id == self.peer_id:
+        if self.peer_id == peer_id:
             raise ValueError("cannot send message to self:", msg)
 
-        if not msg.message_type:
-            raise ValueError("message type is required:", msg)
+        if msg.kind == Message.Kind.UNKNOWN:
+            raise ValueError("message kind is required:", msg)
 
-        if not msg.message_id:
-            msg.message_id = uuid.uuid4().bytes
+        if not msg.id:
+            msg.id = uuid.uuid4().bytes
 
-        if not msg.metadata.src:
+        if not msg.routing.src_id:
             msg.metadata.src = self.peer_id
 
         msg.metadata.dst = peer_id
@@ -51,6 +51,29 @@ class Gossip:
 
         addr = self.topology.get_addr(peer_id)
         await self.transport.send(msg, addr)
+
+    async def send_forward(self, message):
+        if not message.id:
+            raise ValueError("message id is required for forwarding:", message)
+
+        if not message.kind:
+            raise ValueError("message kind is required for forwarding:", message)
+
+        if not message.routing.src_id:
+            raise ValueError("message routing.src_id is required for forwarding:", message)
+
+        if not message.routing.dst_id:
+            raise ValueError("message routing.dst_id is required for forwarding:", message)
+
+        if self.peer_id == message.routing.dst_id:
+            return False
+
+        msg = Message()
+        msg.CopyFrom(message)
+        self.topology.append_route(msg)
+
+        daddr = self.topology.get_addr(message.routing.dst_id)
+        await self.transport.send(msg, daddr)
 
     async def send_ack(self, message):
         msg = Message()
@@ -65,16 +88,6 @@ class Gossip:
         msg.metadata.ack = self.peer_id
         await self.send(msg, msg.metadata.syn)
         return True
-
-    async def send_forward(self, message):
-        msg = Message()
-        msg.CopyFrom(message)
-
-        if msg.metadata.dst == self.peer_id:
-            return False
-        else:
-            await self.send(msg, msg.metadata.dst)
-            return True
 
     async def send_gossip(self, message):
         msg = Message()
