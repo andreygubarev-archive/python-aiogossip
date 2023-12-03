@@ -49,6 +49,7 @@ class Gossip:
 
         addr = self.topology.get_addr(peer_id)
         await self.transport.send(msg, addr)
+        return msg.id
 
     async def send_handshake(self, peer_id):
         msg = Message()
@@ -58,13 +59,13 @@ class Gossip:
         msg.routing.src_id = self.peer_id
         msg.routing.dst_id = peer_id
 
-        await self.send(msg, peer_id)
+        return await self.send(msg, peer_id)
 
     async def send_forward(self, message):
         msg = Message()
         msg.CopyFrom(message)
 
-        await self.send(msg, message.routing.dst_id)
+        return await self.send(msg, message.routing.dst_id)
 
     async def send_ack(self, message):
         if message.Kind.SYN not in message.kind:
@@ -76,7 +77,7 @@ class Gossip:
         msg.routing.src_id = self.peer_id
         msg.routing.dst_id = message.routing.src_id
 
-        await self.send(msg, message.routing.src_id)
+        return await self.send(msg, message.routing.src_id)
 
     async def send_gossip(self, message):
         msg = Message()
@@ -90,6 +91,7 @@ class Gossip:
 
         msg.routing.src_id = self.peer_id
 
+        messages = set()
         gossip_ignore = set([self.peer_id])
         gossip_ignore.update([r.route_id for r in msg.routing.routes])
 
@@ -102,11 +104,12 @@ class Gossip:
                     m = Message()
                     m.CopyFrom(msg)
                     m.routing.dst_id = peer_id
-                    await self.send(m, peer_id)
+                    messages.add(await self.send(m, peer_id))
                 gossip_ignore.update(peer_ids)
                 cycle += 1
 
         await multicast()
+        return list(messages)
 
     async def recv(self):
         while True:
