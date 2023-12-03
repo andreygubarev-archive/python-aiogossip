@@ -76,6 +76,7 @@ class Gossip:
         msg.kind.append(Message.Kind.ACK)
         msg.routing.src_id = self.peer_id
         msg.routing.dst_id = message.routing.src_id
+        msg.topic = message.topic
 
         return await self.send(msg, message.routing.src_id)
 
