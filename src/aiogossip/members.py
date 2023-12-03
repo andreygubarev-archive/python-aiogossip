@@ -40,10 +40,12 @@ class Members:
                 async for r in response:
                     responses.append(r)
 
-                if len(responses) == 0:
-                    print("Node {} is dead".format(node))
-
-                await asyncio.sleep(1)
+                if len(responses):
+                    self.peer.gossip.topology.mark_reachable(node)
+                    logger.debug(f"Node is reachable: {node}")
+                else:
+                    self.peer.gossip.topology.mark_unreachable(node)
+                    logger.debug(f"Node is unreachable: {node}")
 
     async def response(self, message):
         return Message()

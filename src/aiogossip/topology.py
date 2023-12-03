@@ -95,6 +95,14 @@ class Topology:
     def __contains__(self, node_id):
         return node_id in self.g
 
+    # Reachability #
+
+    def mark_reachable(self, node_id):
+        self.g.nodes[node_id]["reachable"] = True
+
+    def mark_unreachable(self, node_id):
+        self.g.nodes[node_id]["reachable"] = False
+
     # Route #
     @property
     def route(self):
