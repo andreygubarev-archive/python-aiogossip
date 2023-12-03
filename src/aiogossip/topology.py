@@ -5,7 +5,7 @@ import time
 import networkx as nx
 
 from .message_pb2 import Message, Route
-from .transport import Transport
+from .transport import parse_addr
 
 Node = collections.namedtuple("Node", ["node_id", "node_addr"])
 
@@ -16,7 +16,7 @@ class Topology:
         self.g.add_node(
             node_id,
             node_id=node_id,
-            node_addr=Transport.parse_addr(node_addr),
+            node_addr=parse_addr(node_addr),
         )
 
     # Node #
@@ -41,7 +41,7 @@ class Topology:
             self.g.add_node(
                 node.node_id,
                 node_id=node.node_id,
-                node_addr=Transport.parse_addr(node.node_addr),
+                node_addr=parse_addr(node.node_addr),
             )
 
             src = self.g.nodes[self.node_id]
@@ -49,8 +49,8 @@ class Topology:
             self.g.add_edge(
                 src["node_id"],
                 dst["node_id"],
-                saddr=Transport.parse_addr(src["node_addr"]),
-                daddr=Transport.parse_addr(dst["node_addr"]),
+                saddr=parse_addr(src["node_addr"]),
+                daddr=parse_addr(dst["node_addr"]),
             )
 
     def update(self, routes):
@@ -59,13 +59,13 @@ class Topology:
 
         nodes = set()
         for r in (r for r in routes if r.route_id not in self.g):
-            self.g.add_node(r.route_id, node_id=r.route_id, node_addr=Transport.parse_addr(r.daddr or r.saddr))
+            self.g.add_node(r.route_id, node_id=r.route_id, node_addr=parse_addr(r.daddr or r.saddr))
             nodes.add(r.route_id)
 
         def edge(src, dst):
             return {
-                "saddr": Transport.parse_addr(src.daddr or src.saddr),
-                "daddr": Transport.parse_addr(dst.daddr or dst.saddr),
+                "saddr": parse_addr(src.daddr or src.saddr),
+                "daddr": parse_addr(dst.daddr or dst.saddr),
                 "latency": abs(src.timestamp - dst.timestamp),
             }
 
@@ -119,4 +119,5 @@ class Topology:
     # Addr #
     def get_addr(self, node_id):
         path = nx.shortest_path(self.g.to_undirected(), self.node_id, node_id)
-        return self.g.edges[path[0], path[1]]["daddr"]
+        addr = self.g.edges[path[0], path[1]]["daddr"]
+        return parse_addr(addr)

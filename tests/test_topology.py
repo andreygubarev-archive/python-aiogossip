@@ -4,7 +4,7 @@ import pytest
 
 from aiogossip.message_pb2 import Route
 from aiogossip.topology import Node, Topology
-from aiogossip.transport import Address, Transport
+from aiogossip.transport import Address, parse_addr
 
 
 def test_topology(topology):
@@ -66,29 +66,29 @@ def test_topology_iter(topology):
 
 
 def test_topology_getitem():
-    topology = Topology("node1", Transport.parse_addr("127.0.0.1:8000"))
+    topology = Topology("node1", parse_addr("127.0.0.1:8000"))
     assert topology["node1"]["node_id"] == "node1"
 
 
 def test_topology_contains():
-    topology = Topology("node1", Transport.parse_addr("127.0.0.1:8000"))
+    topology = Topology("node1", parse_addr("127.0.0.1:8000"))
     assert "node1" in topology
 
 
 def test_topology_route():
-    topology = Topology(b"node1", Transport.parse_addr("127.0.0.1:8000"))
+    topology = Topology(b"node1", parse_addr("127.0.0.1:8000"))
     assert topology.route.route_id == b"node1"
     assert topology.route.saddr == "127.0.0.1:8000"
 
 
 def test_topology_append_route_empty(message):
-    topology = Topology(b"node2", Transport.parse_addr("127.0.0.1:8001"))
+    topology = Topology(b"node2", parse_addr("127.0.0.1:8001"))
     message = topology.append_route(message)
     assert len(message.routing.routes) == 1
 
 
 def test_topology_append_route(message):
-    topology = Topology(b"node2", Transport.parse_addr("127.0.0.1:8001"))
+    topology = Topology(b"node2", parse_addr("127.0.0.1:8001"))
     message.routing.routes.append(
         Route(
             route_id=b"node1",
@@ -101,7 +101,7 @@ def test_topology_append_route(message):
 
 
 def test_topology_get_addr():
-    topology = Topology(b"node1", Transport.parse_addr("127.0.0.1:8000"))
+    topology = Topology(b"node1", parse_addr("127.0.0.1:8000"))
     topology.add([Node(node_id="node2", node_addr="127.0.0.1:8002")])
     addr = topology.get_addr("node2")
     assert addr.ip == ipaddress.ip_address("127.0.0.1")

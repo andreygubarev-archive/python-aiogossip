@@ -48,7 +48,6 @@ class Gossip:
         msg = self.topology.append_route(msg)
 
         addr = self.topology.get_addr(peer_id)
-        addr = self.transport.parse_addr(addr)
         await self.transport.send(msg, addr)
         return msg.id
 
