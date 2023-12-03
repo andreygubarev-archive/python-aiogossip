@@ -89,6 +89,8 @@ class Peer:
         await asyncio.gather(self.task, return_exceptions=True)
 
     async def publish(self, topic, message, peers=None, syn=False):
+        if not message.id:
+            message.id = uuid.uuid4().bytes
         topic = topic.replace("{uuid}", uuid.uuid4().hex)
 
         if syn and (Message.Kind.SYN not in message.kind):

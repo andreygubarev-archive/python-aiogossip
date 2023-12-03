@@ -1,6 +1,6 @@
 """
 Usage:
-    GOSSIP_SEEDS=response@127.0.0.1:8000 python examples/reqresp/req.py
+    GOSSIP_SEEDS=response@127.0.0.1:1337 python examples/reqresp/req.py
 """
 import aiogossip
 
