@@ -156,9 +156,9 @@ class Routing:
                 )
             )
 
-        msg.routing.routes[-2].timestamp = int(time.time_ns())
-        msg.routing.routes[-2].saddr = f"{self.topology.node_addr.ip}:{self.topology.node_addr.port}"
         msg.routing.routes[-1].daddr = f"{peer_addr[0]}:{peer_addr[1]}"
+        msg.routing.routes[-2].saddr = f"{self.topology.node_addr.ip}:{self.topology.node_addr.port}"
+        msg.routing.routes[-2].timestamp = int(time.time_ns())
 
         return msg
 
@@ -167,6 +167,6 @@ class Routing:
         msg.CopyFrom(message)
 
         msg.routing.routes[-2].daddr = f"{peer_addr[0]}:{peer_addr[1]}"
-        msg.routing.routes[-1].timestamp = int(time.time_ns())
         msg.routing.routes[-1].saddr = f"{self.topology.node_addr.ip}:{self.topology.node_addr.port}"
+        msg.routing.routes[-1].timestamp = int(time.time_ns())
         return msg
