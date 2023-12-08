@@ -1,4 +1,12 @@
 import asyncio
+import logging
+import sys
+
+from .. import config
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+logger.setLevel(getattr(logging, config.LOG_LEVEL))
 
 
 class TaskManager:
@@ -18,8 +26,6 @@ class TaskManager:
         """
         for task in self.tasks:
             task.cancel()
-        self.tasks = []
-        self.named_tasks = {}
 
         await asyncio.gather(*self.tasks, return_exceptions=True)
 
@@ -52,6 +58,10 @@ class TaskManager:
         Args:
             task: The completed task.
         """
+        if task not in self.tasks:
+            logger.warning("Task not in task list: {}".format(task))
+            return
+
         self.tasks.remove(task)
         for name, t in self.named_tasks.items():
             if t == task:
@@ -67,6 +77,9 @@ class TaskManager:
             return
 
         task.print_stack()
+
+    def __contains__(self, item):
+        return item in self.named_tasks
 
     def __getitem__(self, item):
         return self.named_tasks[item]
