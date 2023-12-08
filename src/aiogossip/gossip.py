@@ -5,7 +5,7 @@ import uuid
 
 from . import config
 from .concurrency.mutex import mutex
-from .message_pb2 import Message, Route
+from .message_pb2 import Message
 from .topology import Routing, Topology
 
 logger = logging.getLogger(__name__)
@@ -76,11 +76,11 @@ class Gossip:
         msg.CopyFrom(message)
         msg = self.topology.append_route(msg)
 
-        peer_id, addr = self.topology.get_addr(peer_id)
-        saddr = f"{addr.ip}:{addr.port}"
-        msg.routing.routes.append(Route(route_id=peer_id, saddr=saddr))
+        peer_addr = self.topology.get_addr(peer_id)
+        # saddr = f"{addr.ip}:{addr.port}"
+        # msg.routing.routes.append(Route(route_id=peer_id, saddr=saddr))
 
-        await self.transport.send(msg, addr)
+        await self.transport.send(msg, peer_addr)
         return msg.id
 
     async def send_handshake(self, peer_id):
@@ -157,7 +157,7 @@ class Gossip:
     async def recv(self):
         while True:
             msg, addr = await self.transport.recv()
-            msg.routing.routes[-2].daddr = f"{addr[0]}:{addr[1]}"
+            msg.routing.routes[-1].daddr = f"{addr[0]}:{addr[1]}"
 
             logger.debug("RECV1 %s", msg)
 
