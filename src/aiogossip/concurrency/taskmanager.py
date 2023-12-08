@@ -26,8 +26,6 @@ class TaskManager:
         """
         for task in self.tasks:
             task.cancel()
-        self.tasks = []
-        self.named_tasks = {}
 
         await asyncio.gather(*self.tasks, return_exceptions=True)
 
