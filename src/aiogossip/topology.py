@@ -128,24 +128,6 @@ class Topology:
             saddr=f"{self.node.node_addr.ip}:{self.node.node_addr.port}",
         )
 
-    def append_route(self, message):
-        msg = Message()
-        msg.CopyFrom(message)
-
-        if not msg.routing.routes:
-            msg.routing.routes.append(self.route)
-
-        if msg.routing.routes[-1].route_id != self.node_id:
-            msg.routing.routes.append(self.route)
-
-        if not msg.routing.routes[-1].timestamp:
-            msg.routing.routes[-1].timestamp = int(time.time_ns())
-
-        if not msg.routing.routes[-1].daddr:
-            msg.routing.routes[-1].daddr = f"{self.node.node_addr.ip}:{self.node.node_addr.port}"
-
-        return msg
-
     # Addr #
     def get_addr(self, node_id):
         path = nx.shortest_path(self.g.to_undirected(), self.node_id, node_id)
@@ -158,7 +140,27 @@ class Routing:
         self.topology = topology
 
     def set_send_route(self, message, peer_id, peer_addr):
-        pass
+        msg = Message()
+        msg.CopyFrom(message)
+
+        if not msg.routing.routes:
+            msg.routing.routes.append(self.topology.route)
+
+        if msg.routing.routes[-1].route_id != self.topology.node_id:
+            msg.routing.routes.append(self.topology.route)
+
+        return msg
 
     def set_recv_route(self, message, peer_id, peer_addr):
-        pass
+        msg = Message()
+        msg.CopyFrom(message)
+
+        msg.routing.routes[-1].daddr = f"{peer_addr[0]}:{peer_addr[1]}"
+
+        if not msg.routing.routes:
+            msg.routing.routes.append(self.topology.route)
+
+        if msg.routing.routes[-1].route_id != self.topology.node_id:
+            msg.routing.routes.append(self.topology.route)
+
+        return msg

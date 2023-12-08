@@ -74,9 +74,10 @@ class Gossip:
 
         msg = Message()
         msg.CopyFrom(message)
-        msg = self.topology.append_route(msg)
 
         peer_addr = self.topology.get_addr(peer_id)
+        msg = self.routing.set_send_route(msg, peer_id, peer_addr)
+
         # saddr = f"{addr.ip}:{addr.port}"
         # msg.routing.routes.append(Route(route_id=peer_id, saddr=saddr))
 
@@ -156,12 +157,12 @@ class Gossip:
 
     async def recv(self):
         while True:
-            msg, addr = await self.transport.recv()
-            msg.routing.routes[-1].daddr = f"{addr[0]}:{addr[1]}"
+            msg, peer_addr = await self.transport.recv()
+            peer_id = msg.routing.routes[-1].route_id
+            msg = self.routing.set_recv_route(msg, peer_id, peer_addr)
 
             logger.debug("RECV1 %s", msg)
 
-            msg = self.topology.append_route(msg)
             route_ids = self.topology.update(msg.routing.routes)
             for route_id in route_ids:
                 await self.send_handshake(route_id)

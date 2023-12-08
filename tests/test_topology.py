@@ -81,25 +81,6 @@ def test_topology_route():
     assert topology.route.saddr == "127.0.0.1:8000"
 
 
-def test_topology_append_route_empty(message):
-    topology = Topology(b"node2", parse_addr("127.0.0.1:8001"))
-    message = topology.append_route(message)
-    assert len(message.routing.routes) == 1
-
-
-def test_topology_append_route(message):
-    topology = Topology(b"node2", parse_addr("127.0.0.1:8001"))
-    message.routing.routes.append(
-        Route(
-            route_id=b"node1",
-            saddr="127.0.0.1:8000",
-            daddr="127.0.0.1:8000",
-        )
-    )
-    message = topology.append_route(message)
-    assert len(message.routing.routes) == 2
-
-
 def test_topology_get_addr():
     topology = Topology(b"node1", parse_addr("127.0.0.1:8000"))
     topology.add([Node(node_id="node2", node_addr="127.0.0.1:8002")])
