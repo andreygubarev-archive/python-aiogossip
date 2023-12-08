@@ -80,5 +80,8 @@ class TaskManager:
 
         task.print_stack()
 
+    def __contains__(self, item):
+        return item in self.named_tasks
+
     def __getitem__(self, item):
         return self.named_tasks[item]
