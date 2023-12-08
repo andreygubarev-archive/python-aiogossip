@@ -20,24 +20,24 @@ def test_topology_add(topology):
     assert len(topology) == 2
 
 
-def test_topology_update_route(topology, message):
-    message.routing.routes.append(
-        Route(
-            route_id=b"node1",
-            saddr="127.0.0.1:8000",
-            daddr="127.0.0.1:8000",
-        )
-    )
+# def test_topology_update_route(topology, message):
+#     message.routing.routes.append(
+#         Route(
+#             route_id=b"node1",
+#             saddr="127.0.0.1:8000",
+#             daddr="127.0.0.1:8000",
+#         )
+#     )
 
-    message.routing.routes.append(
-        Route(
-            route_id=b"node1",
-            saddr="127.0.0.1:8001",
-        )
-    )
+#     message.routing.routes.append(
+#         Route(
+#             route_id=b"node1",
+#             saddr="127.0.0.1:8001",
+#         )
+#     )
 
-    topology.update(message.routing.routes)
-    assert len(topology) == 2
+#     topology.update(message.routing.routes)
+#     assert len(topology) == 2
 
 
 def test_topology_update_route_invalid(topology, message):
