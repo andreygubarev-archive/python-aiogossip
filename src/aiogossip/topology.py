@@ -84,9 +84,6 @@ class Topology:
         k = min(k, len(nodes))
         return random.sample(nodes, k)
 
-    def __getitem__(self, node_id):
-        return self.g.nodes[node_id]
-
     def __len__(self):
         return len(self.g)
 
@@ -95,6 +92,24 @@ class Topology:
 
     def __contains__(self, node_id):
         return node_id in self.g
+
+    def __getitem__(self, node_id):
+        return self.g.nodes[node_id]
+
+    def to_dict(self):
+        nodes = {}
+        for node_id in self.g.nodes:
+            addr = set()
+            for edge in self.g.out_edges(node_id):
+                daddr = self.g.edges[edge]["daddr"]
+                daddr = "{}:{}".format(daddr.ip, daddr.port)
+                addr.add(daddr)
+            for edge in self.g.in_edges(node_id):
+                saddr = self.g.edges[edge]["saddr"]
+                saddr = "{}:{}".format(saddr.ip, saddr.port)
+                addr.add(saddr)
+            nodes[node_id.decode()] = list(addr)
+        return nodes
 
     # Reachability #
 

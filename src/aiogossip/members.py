@@ -21,7 +21,7 @@ class Members:
     def __init__(self, peer):
         self.peer = peer
 
-        self.task_manager = TaskManager()
+        self.task_manager = TaskManager(loop=self.peer._loop)
         self.task_manager.create_task(self.scheduler())
 
         self.peer.response("keepalive:*")(self.pong)
@@ -63,3 +63,11 @@ class Members:
 
     async def close(self):
         await self.task_manager.close()
+
+    def print_topology(self, *args, **kwargs):
+        print("Topology:")
+        print("---------")
+        import json
+
+        print(json.dumps(self.peer.gossip.topology.to_dict(), indent=4))
+        print("---------")
