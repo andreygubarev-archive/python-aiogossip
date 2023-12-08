@@ -1,9 +1,16 @@
+import logging
 import math
+import sys
 import uuid
 
+from . import config
 from .concurrency.mutex import mutex
 from .message_pb2 import Message
 from .topology import Topology
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+logger.setLevel(getattr(logging, config.LOG_LEVEL))
 
 
 class Gossip:
@@ -147,6 +154,8 @@ class Gossip:
         while True:
             msg, addr = await self.transport.recv()
             msg.routing.routes[-1].daddr = f"{addr[0]}:{addr[1]}"
+
+            logger.debug("RECV %s", msg)
 
             msg = self.topology.append_route(msg)
             route_ids = self.topology.update(msg.routing.routes)
