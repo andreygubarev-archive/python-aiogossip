@@ -119,15 +119,6 @@ class Topology:
     def mark_unreachable(self, node_id):
         self.g.nodes[node_id]["reachable"] = False
 
-    # Route #
-    @property
-    def route(self):
-        return Route(
-            route_id=self.node_id,
-            timestamp=int(time.time_ns()),
-            saddr=f"{self.node.node_addr.ip}:{self.node.node_addr.port}",
-        )
-
     # Addr #
     def get_next_peer(self, node_id):
         path = nx.shortest_path(self.g.to_undirected(), self.node_id, node_id)

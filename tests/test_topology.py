@@ -75,12 +75,6 @@ def test_topology_contains():
     assert "node1" in topology
 
 
-def test_topology_route():
-    topology = Topology(b"node1", parse_addr("127.0.0.1:8000"))
-    assert topology.route.route_id == b"node1"
-    assert topology.route.saddr == "127.0.0.1:8000"
-
-
 def test_topology_get_next_peer():
     topology = Topology(b"node1", parse_addr("127.0.0.1:8000"))
     topology.add([Node(node_id="node2", node_addr="127.0.0.1:8002")])
