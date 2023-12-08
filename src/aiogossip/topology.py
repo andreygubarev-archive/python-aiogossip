@@ -138,10 +138,16 @@ class Topology:
         if msg.routing.routes[-1].route_id != self.node_id:
             msg.routing.routes.append(self.route)
 
+        if not msg.routing.routes[-1].timestamp:
+            msg.routing.routes[-1].timestamp = int(time.time_ns())
+
+        if not msg.routing.routes[-1].daddr:
+            msg.routing.routes[-1].daddr = f"{self.node.node_addr.ip}:{self.node.node_addr.port}"
+
         return msg
 
     # Addr #
     def get_addr(self, node_id):
         path = nx.shortest_path(self.g.to_undirected(), self.node_id, node_id)
         addr = self.g.edges[path[0], path[1]]["daddr"]
-        return parse_addr(addr)
+        return path[1], parse_addr(addr)
