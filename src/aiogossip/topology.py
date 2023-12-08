@@ -101,13 +101,13 @@ class Topology:
         for node_id in self.g.nodes:
             addr = set()
             for edge in self.g.out_edges(node_id):
-                daddr = self.g.edges[edge]["daddr"]
-                daddr = "{}:{}".format(daddr.ip, daddr.port)
-                addr.add(daddr)
-            for edge in self.g.in_edges(node_id):
                 saddr = self.g.edges[edge]["saddr"]
                 saddr = "{}:{}".format(saddr.ip, saddr.port)
                 addr.add(saddr)
+            for edge in self.g.in_edges(node_id):
+                daddr = self.g.edges[edge]["daddr"]
+                daddr = "{}:{}".format(daddr.ip, daddr.port)
+                addr.add(daddr)
             nodes[node_id.decode()] = list(addr)
         return nodes
 
