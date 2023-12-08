@@ -6,7 +6,7 @@ import uuid
 from . import config
 from .concurrency.mutex import mutex
 from .message_pb2 import Message, Route
-from .topology import Topology
+from .topology import Routing, Topology
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -35,6 +35,7 @@ class Gossip:
         self.peer_id = peer_id or uuid.uuid4().bytes
         self.transport = transport
         self.topology = Topology(self.peer_id, self.transport.addr)
+        self.routing = Routing(self.topology)
 
         self._fanout = fanout or self.FANOUT
 

@@ -150,4 +150,15 @@ class Topology:
     def get_addr(self, node_id):
         path = nx.shortest_path(self.g.to_undirected(), self.node_id, node_id)
         addr = self.g.edges[path[0], path[1]]["daddr"]
-        return path[1], parse_addr(addr)
+        return parse_addr(addr)
+
+
+class Routing:
+    def __init__(self, topology):
+        self.topology = topology
+
+    def set_send_route(self, message, peer_id, peer_addr):
+        pass
+
+    def set_recv_route(self, message, peer_id, peer_addr):
+        pass
