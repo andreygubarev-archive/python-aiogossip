@@ -20,6 +20,9 @@ dependencies = [
   "protobuf==4.21.12",
 ]
 
+[project.scripts]
+aiogossip = "aiogossip.__main__:main"
+
 [project.urls]
 Homepage = "https://github.com/andreygubarev/python-aiogossip/"
 
