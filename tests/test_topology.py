@@ -81,9 +81,10 @@ def test_topology_route():
     assert topology.route.saddr == "127.0.0.1:8000"
 
 
-def test_topology_get_addr():
+def test_topology_get_next_peer():
     topology = Topology(b"node1", parse_addr("127.0.0.1:8000"))
     topology.add([Node(node_id="node2", node_addr="127.0.0.1:8002")])
-    addr = topology.get_addr("node2")
-    assert addr.ip == ipaddress.ip_address("127.0.0.1")
-    assert addr.port == 8002
+    peer_id, peer_addr = topology.get_next_peer("node2")
+    assert peer_id == "node2"
+    assert peer_addr.ip == ipaddress.ip_address("127.0.0.1")
+    assert peer_addr.port == 8002

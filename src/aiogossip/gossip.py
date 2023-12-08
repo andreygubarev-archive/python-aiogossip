@@ -75,13 +75,13 @@ class Gossip:
         msg = Message()
         msg.CopyFrom(message)
 
-        peer_addr = self.topology.get_addr(peer_id)
-        msg = self.routing.set_send_route(msg, peer_id, peer_addr)
+        next_peer_id, next_peer_addr = self.topology.get_next_peer(peer_id)
+        msg = self.routing.set_send_route(msg, next_peer_id, next_peer_addr)
 
         # saddr = f"{addr.ip}:{addr.port}"
         # msg.routing.routes.append(Route(route_id=peer_id, saddr=saddr))
 
-        await self.transport.send(msg, peer_addr)
+        await self.transport.send(msg, next_peer_addr)
         return msg.id
 
     async def send_handshake(self, peer_id):
