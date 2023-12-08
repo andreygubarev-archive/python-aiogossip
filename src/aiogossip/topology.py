@@ -108,7 +108,10 @@ class Topology:
                 daddr = self.g.edges[edge]["daddr"]
                 daddr = "{}:{}".format(daddr.ip, daddr.port)
                 addr.add(daddr)
-            nodes[node_id.decode()] = list(addr)
+            nodes[node_id.decode()] = {
+                "addresses": list(addr),
+                "reachable": self.g.nodes[node_id]["reachable"],
+            }
         return nodes
 
     # Reachability #
