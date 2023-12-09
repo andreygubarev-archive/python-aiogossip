@@ -12,19 +12,41 @@ Node = collections.namedtuple("Node", ["node_id", "node_addr"])
 
 class Topology:
     def __init__(self, node_id, node_addr):
+        node_addr = parse_addr(node_addr)
         self.g = nx.DiGraph(node_id=node_id, node_addr=node_addr)
-        self.g.add_node(
-            node_id,
-            node_id=node_id,
-            node_addr=parse_addr(node_addr),
-            node_addrs=set(),
-            network_address={
+        self.create_node(node_id, node_addr=node_addr)
+
+    def create_node(self, node_id, node_addr=None):
+        self.g.add_node(node_id)
+
+        node = self.g.nodes[node_id]
+        if "node_id" not in node:
+            node["node_id"] = node_id
+
+        if "node_addrs" not in node:
+            node["node_addrs"] = {
                 "local": {},
                 "lan": {},
                 "wan": {},
-            },
-            reachable=True,
-        )
+            }
+
+        if node_addr:
+            self.create_node_addr(node_id, node_addr)
+
+    def create_node_addr(self, node_id, node_addr):
+        node = self.g.nodes[node_id]
+        node_addr = parse_addr(node_addr)
+
+        if node_addr.ip.is_loopback:
+            node_addr_type = "local"
+        elif node_addr.ip.is_private:
+            node_addr_type = "lan"
+        elif node_addr.ip.is_global:
+            node_addr_type = "wan"
+        else:
+            raise ValueError(f"Unknown address type {node_addr}")
+
+        node["node_addrs"][node_addr_type][node_addr] = True
 
     # Node #
     @property
@@ -45,13 +67,7 @@ class Topology:
             if node.node_id == self.node_id:
                 continue
 
-            self.g.add_node(
-                node.node_id,
-                node_id=node.node_id,
-                node_addr=parse_addr(node.node_addr),
-                node_addrs=set(),
-                reachable=True,
-            )
+            self.create_node(node.node_id, node_addr=node.node_addr)
 
             src = self.g.nodes[self.node_id]
             dst = self.g.nodes[node.node_id]
@@ -69,9 +85,9 @@ class Topology:
         nodes = set()
         for r in routes:
             if r.route_id not in self.g:
-                self.g.add_node(r.route_id, node_id=r.route_id, node_addrs=set())
+                self.create_node(r.route_id)
                 nodes.add(r.route_id)
-            self.g.nodes[r.route_id]["node_addrs"].add(parse_addr(r.daddr))
+            self.create_node_addr(r.route_id, r.daddr)
 
         def edge(src, dst):
             return {
