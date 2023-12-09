@@ -18,6 +18,11 @@ class Topology:
             node_id=node_id,
             node_addr=parse_addr(node_addr),
             node_addrs=set(),
+            network_address={
+                "local": {},
+                "lan": {},
+                "wan": {},
+            },
             reachable=True,
         )
 
