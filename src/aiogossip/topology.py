@@ -133,18 +133,11 @@ class Routing:
         msg = Message()
         msg.CopyFrom(message)
 
-        if not msg.routing.routes or (msg.routing.routes[-1].route_id != self.topology.node_id):
-            msg.routing.routes.append(
-                Route(
-                    route_id=self.topology.node_id,
-                )
-            )
-
-            msg.routing.routes.append(
-                Route(
-                    route_id=peer_id,
-                )
-            )
+        if not msg.routing.routes:
+            msg.routing.routes.append(Route(route_id=self.topology.node_id))
+            msg.routing.routes.append(Route(route_id=peer_id))
+        elif msg.routing.routes[-1].route_id == self.topology.node_id:
+            msg.routing.routes.append(Route(route_id=peer_id))
 
         msg.routing.routes[-1].daddr = f"{peer_addr[0]}:{peer_addr[1]}"
         msg.routing.routes[-2].saddr = f"{self.topology.node_addr.ip}:{self.topology.node_addr.port}"
