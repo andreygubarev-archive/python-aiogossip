@@ -118,16 +118,14 @@ class Topology:
         return self.g.nodes[node_id]
 
     def to_dict(self):
-        nodes = {}
+        nodes = collections.defaultdict(set)
         for node_id in self.g.nodes:
-            # addr = set()
-            node_data = self.g.nodes[node_id]
-            node_addr = list(node_data["node_addrs"])[0]
-            addr = f"{node_addr.ip}:{node_addr.port}"
-            nodes[node_id.decode()] = {
-                "addresses": [addr],
-                "reachable": self.g.nodes[node_id].get("reachable", False),
-            }
+            node_addrs = self.g.nodes[node_id]["node_addrs"]
+            for addr_type in node_addrs:
+                for addr in node_addrs[addr_type]:
+                    nodes[node_id.decode()].add(f"{addr.ip}:{addr.port}")
+        for node_id in nodes:
+            nodes[node_id] = list(nodes[node_id])
         return nodes
 
     # Reachability #
