@@ -17,6 +17,7 @@ class Topology:
             node_id,
             node_id=node_id,
             node_addr=parse_addr(node_addr),
+            node_addrs=set(),
             reachable=True,
         )
 
@@ -43,6 +44,8 @@ class Topology:
                 node.node_id,
                 node_id=node.node_id,
                 node_addr=parse_addr(node.node_addr),
+                node_addrs=set(),
+                reachable=True,
             )
 
             src = self.g.nodes[self.node_id]
@@ -59,13 +62,15 @@ class Topology:
             raise ValueError("Empty route")
 
         nodes = set()
-        for r in (r for r in routes if r.route_id not in self.g):
-            self.g.add_node(r.route_id, node_id=r.route_id, node_addr=parse_addr(r.daddr))
-            nodes.add(r.route_id)
+        for r in routes:
+            if r.route_id not in self.g:
+                self.g.add_node(r.route_id, node_id=r.route_id, node_addrs=set())
+                nodes.add(r.route_id)
+            self.g.nodes[r.route_id]["node_addrs"].add(parse_addr(r.daddr))
 
         def edge(src, dst):
             return {
-                "saddr": parse_addr(dst.saddr),
+                "saddr": parse_addr(src.daddr),
                 "daddr": parse_addr(dst.daddr),
                 "latency": abs(src.timestamp - dst.timestamp),
             }
@@ -101,7 +106,8 @@ class Topology:
         for node_id in self.g.nodes:
             # addr = set()
             node_data = self.g.nodes[node_id]
-            addr = f"{node_data['node_addr'].ip}:{node_data['node_addr'].port}"
+            node_addr = list(node_data["node_addrs"])[0]
+            addr = f"{node_addr.ip}:{node_addr.port}"
             nodes[node_id.decode()] = {
                 "addresses": [addr],
                 "reachable": self.g.nodes[node_id].get("reachable", False),
