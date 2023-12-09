@@ -67,11 +67,12 @@ class Peer:
                 peer_id, addr = seed.split("@")
                 addr = parse_addr(addr)
                 nodes.append(Node(node_id=peer_id.encode(), node_addr=addr))
-
         elif isinstance(seeds, list):
             nodes = seeds
 
-        self.gossip.topology.add(nodes)
+        for node in nodes:
+            self.gossip.topology.create_node_edge(node)
+
         self.task_manager.create_task(self._connect())
 
     async def disconnect(self):

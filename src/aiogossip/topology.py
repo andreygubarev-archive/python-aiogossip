@@ -48,6 +48,18 @@ class Topology:
 
         node["node_addrs"][node_addr_type][node_addr] = True
 
+    def create_node_edge(self, node):
+        if node.node_id == self.node_id:
+            return
+
+        self.create_node(node.node_id, node_addr=node.node_addr)
+        self.g.add_edge(
+            self.node_id,
+            node.node_id,
+            saddr=self.node_addr,
+            daddr=node.node_addr,
+        )
+
     # Node #
     @property
     def node_id(self):
@@ -60,23 +72,6 @@ class Topology:
     @property
     def node(self):
         return Node(self.node_id, self.node_addr)
-
-    # Topology #
-    def add(self, nodes):
-        for node in nodes:
-            if node.node_id == self.node_id:
-                continue
-
-            self.create_node(node.node_id, node_addr=node.node_addr)
-
-            src = self.g.nodes[self.node_id]
-            dst = self.g.nodes[node.node_id]
-            self.g.add_edge(
-                src["node_id"],
-                dst["node_id"],
-                saddr=parse_addr(src["node_addr"]),
-                daddr=parse_addr(dst["node_addr"]),
-            )
 
     def update(self, routes):
         if len(routes) < 2:
