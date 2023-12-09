@@ -60,7 +60,7 @@ class Topology:
 
         nodes = set()
         for r in (r for r in routes if r.route_id not in self.g):
-            self.g.add_node(r.route_id, node_id=r.route_id, node_addr=parse_addr(r.daddr or r.saddr))
+            self.g.add_node(r.route_id, node_id=r.route_id, node_addr=parse_addr(r.daddr))
             nodes.add(r.route_id)
 
         def edge(src, dst):
@@ -99,13 +99,11 @@ class Topology:
     def to_dict(self):
         nodes = {}
         for node_id in self.g.nodes:
-            addr = set()
-            for edge in self.g.in_edges(node_id):
-                daddr = self.g.edges[edge]["daddr"]
-                daddr = "{}:{}".format(daddr.ip, daddr.port)
-                addr.add(daddr)
+            # addr = set()
+            node_data = self.g.nodes[node_id]
+            addr = f"{node_data['node_addr'].ip}:{node_data['node_addr'].port}"
             nodes[node_id.decode()] = {
-                "addresses": list(addr),
+                "addresses": [addr],
                 "reachable": self.g.nodes[node_id].get("reachable", False),
             }
         return nodes
@@ -148,7 +146,6 @@ class Routing:
     def set_recv_route(self, message, peer_id, peer_addr):
         msg = Message()
         msg.CopyFrom(message)
-
         msg.routing.routes[-2].daddr = f"{peer_addr[0]}:{peer_addr[1]}"
         msg.routing.routes[-1].saddr = f"{self.topology.node_addr.ip}:{self.topology.node_addr.port}"
         msg.routing.routes[-1].timestamp = int(time.time_ns())
