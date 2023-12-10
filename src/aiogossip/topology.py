@@ -8,12 +8,15 @@ from .message_pb2 import Message, Route
 from .transport.address import parse_addr
 
 Node = collections.namedtuple("Node", ["node_id", "node_addr"])
+Node.__str__ = lambda self: f"{self.node_id.decode()}@{self.node_addr}"
+Node.__repr__ = lambda self: f"<Node: {self}>"
 
 
 class Topology:
     def __init__(self, node_id, node_addr):
         node_addr = parse_addr(node_addr)
         self.g = nx.DiGraph(node_id=node_id, node_addr=node_addr)
+
         self.create_node(node_id, node_addr=node_addr)
 
     def create_node(self, node_id, node_addr=None):
