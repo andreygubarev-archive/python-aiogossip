@@ -3,6 +3,8 @@ import ipaddress
 import warnings
 
 Address = collections.namedtuple("Address", ["ip", "port"])
+Address.__str__ = lambda self: f"{self.ip}:{self.port}"
+Address.__repr__ = lambda self: f"<Address: {self}>"
 
 
 def parse_addr(addr: Address | tuple | str) -> Address:

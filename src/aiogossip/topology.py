@@ -25,9 +25,9 @@ class Topology:
 
         if "node_addrs" not in node:
             node["node_addrs"] = {
-                "local": {},
-                "lan": {},
-                "wan": {},
+                "local": None,
+                "lan": None,
+                "wan": None,
             }
 
         if node_addr:
@@ -46,7 +46,7 @@ class Topology:
         else:
             raise ValueError(f"Unknown address type {node_addr}")
 
-        node["node_addrs"][node_addr_type][node_addr] = True
+        node["node_addrs"][node_addr_type] = node_addr
 
     def create_node_edge(self, node):
         if node.node_id == self.node_id:
@@ -72,6 +72,10 @@ class Topology:
     @property
     def node(self):
         return Node(self.node_id, self.node_addr)
+
+    @property
+    def _node(self):
+        return self.g.nodes[self.node_id]
 
     def update(self, routes):
         if len(routes) < 2:
@@ -118,14 +122,11 @@ class Topology:
         return self.g.nodes[node_id]
 
     def to_dict(self):
-        nodes = collections.defaultdict(set)
+        nodes = {}
         for node_id in self.g.nodes:
             node_addrs = self.g.nodes[node_id]["node_addrs"]
-            for addr_type in node_addrs:
-                for addr in node_addrs[addr_type]:
-                    nodes[node_id.decode()].add(f"{addr.ip}:{addr.port}")
-        for node_id in nodes:
-            nodes[node_id] = list(nodes[node_id])
+            node_addrs = {k: str(v) for k, v in node_addrs.items()}
+            nodes[node_id.decode()] = node_addrs
         return nodes
 
     # Reachability #
@@ -157,8 +158,25 @@ class Routing:
         elif msg.routing.routes[-1].route_id == self.topology.node_id:
             msg.routing.routes.append(Route(route_id=peer_id))
 
+        if peer_addr.ip.is_loopback:
+            peer_addr_type = "local"
+        elif peer_addr.ip.is_private:
+            peer_addr_type = "lan"
+        elif peer_addr.ip.is_global:
+            peer_addr_type = "wan"
+
+        node_saddrs = self.topology._node["node_addrs"]
+        node_saddr = (
+            node_saddrs.get(peer_addr_type)
+            or node_saddrs.get("wan")
+            or node_saddrs.get("lan")
+            or node_saddrs.get("local")
+        )
+        if not node_saddr:
+            raise ValueError(f"Unknown address type {peer_addr}")
+
         msg.routing.routes[-1].daddr = f"{peer_addr[0]}:{peer_addr[1]}"
-        msg.routing.routes[-2].saddr = f"{self.topology.node_addr.ip}:{self.topology.node_addr.port}"
+        msg.routing.routes[-2].saddr = f"{node_saddr.ip}:{node_saddr.port}"
         msg.routing.routes[-2].timestamp = int(time.time_ns())
         return msg
 
