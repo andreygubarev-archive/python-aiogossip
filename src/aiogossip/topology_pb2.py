@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0etopology.proto\"#\n\x07\x41\x64\x64ress\x12\n\n\x02ip\x18\x01 \x01(\x0c\x12\x0c\n\x04port\x18\x02 \x01(\x05\"F\n\x08\x45ndpoint\x12\x16\n\x04\x61\x64\x64r\x18\x01 \x01(\x0b\x32\x08.Address\x12\x11\n\treachable\x18\x02 \x01(\x08\x12\x0f\n\x07latency\x18\x03 \x01(\x05\"0\n\x04Node\x12\n\n\x02id\x18\x01 \x01(\x0c\x12\x1c\n\tendpoints\x18\x02 \x03(\x0b\x32\t.Endpointb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0etopology.proto\"#\n\x07\x41\x64\x64ress\x12\n\n\x02ip\x18\x01 \x01(\x0c\x12\x0c\n\x04port\x18\x02 \x01(\x05\"5\n\x08\x45ndpoint\x12\x16\n\x04\x61\x64\x64r\x18\x01 \x01(\x0b\x32\x08.Address\x12\x11\n\treachable\x18\x02 \x01(\x08\"0\n\x04Node\x12\n\n\x02id\x18\x01 \x01(\x0c\x12\x1c\n\tendpoints\x18\x02 \x03(\x0b\x32\t.Endpointb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -24,7 +24,7 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_ADDRESS']._serialized_start=18
   _globals['_ADDRESS']._serialized_end=53
   _globals['_ENDPOINT']._serialized_start=55
-  _globals['_ENDPOINT']._serialized_end=125
-  _globals['_NODE']._serialized_start=127
-  _globals['_NODE']._serialized_end=175
+  _globals['_ENDPOINT']._serialized_end=108
+  _globals['_NODE']._serialized_start=110
+  _globals['_NODE']._serialized_end=158
 # @@protoc_insertion_point(module_scope)
