@@ -158,13 +158,9 @@ class Gossip:
             peer_id = msg.routing.routes[-1].route_id
             msg = self.routing.set_recv_route(msg, peer_id, peer_addr)
 
-            logger.debug("RECV1 %s", msg)
-
             route_ids = self.topology.update(msg.routing.routes)
             for route_id in route_ids:
                 await self.send_handshake(route_id)
-
-            logger.debug("RECV2 %s", msg)
 
             # forward message to destination
             if self.peer_id != msg.routing.dst_id:
