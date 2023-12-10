@@ -87,9 +87,12 @@ def gossips(transports, random_seed):
     gossips = [get_gossip(transport) for transport in transports]
     gossips_connections = math.ceil(math.sqrt(len(gossips)))
     for gossip in gossips:
-        gossips[0].topology.add([gossip.topology.node])
+        gossips[0].topology.create_node(gossip.topology.node, gossip.topology.node_addr)
+        gossips[0].topology.create_node_edge(gossip.topology.node)
+
         for g in random.sample(gossips, gossips_connections):
-            gossip.topology.add([g.topology.node])
+            gossip.topology.create_node(g.topology.node, g.topology.node_addr)
+            gossip.topology.create_node_edge(g.topology.node)
     return gossips
 
 

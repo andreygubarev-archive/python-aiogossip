@@ -117,7 +117,8 @@ async def test_publish_to_specific_nodes(brokers, message):
     pub = brokers[0]
     pub.gossip.send = AsyncMagicMock()
     sub = brokers[1]
-    pub.gossip.topology.add([sub.gossip.topology.node])
+    pub.gossip.topology.create_node(sub.gossip.topology.node)
+    pub.gossip.topology.create_node_edge(sub.gossip.topology.node)
 
     topic = "test"
 
