@@ -18,8 +18,8 @@ class Topology:
 
     def create_node(self, node_id, node_addr=None):
         self.g.add_node(node_id)
-
         node = self.g.nodes[node_id]
+
         if "node_id" not in node:
             node["node_id"] = node_id
 
