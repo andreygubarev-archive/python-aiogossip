@@ -20,12 +20,12 @@ class Topology:
         return self.g.edges[snode, dnode]["daddr"]
 
 
-class Routing:
-    def __init__(self, topology):
-        self.topology = topology
+# class Routing:
+#     def __init__(self, topology):
+#         self.topology = topology
 
-    def update_routes_send(self, message, peer_id, peer_addr):
-        ...
+#     def update_routes_send(self, message, peer_id, peer_addr):
+#         ...
 
-    def update_routes_recv(self, message, peer_id, peer_addr):
-        ...
+#     def update_routes_recv(self, message, peer_id, peer_addr):
+#         ...
