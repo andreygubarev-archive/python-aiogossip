@@ -19,6 +19,12 @@ class Topology:
     def get_route(self, snode: bytes, dnode: bytes) -> topology_pb2.Address:
         return self.g.edges[snode, dnode]["daddr"]
 
+    def add_endpoint(self, node: bytes | topology_pb2.Node, endpoint: topology_pb2.Endpoint):
+        if isinstance(node, bytes):
+            node = self.get_node(node)
+        if endpoint not in node.endpoints:
+            node.endpoints.append(endpoint)
+
 
 # class Routing:
 #     def __init__(self, topology):
