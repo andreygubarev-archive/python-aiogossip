@@ -3,6 +3,7 @@ aiogossip.cli - Command line interface for aiogossip
 """
 
 import argparse
+import os
 
 from aiogossip.peer import Peer
 
@@ -15,7 +16,7 @@ def main():
     parser.add_argument("--seeds", default=None, help="comma separated list of seeds")
     args = parser.parse_args()
 
-    print("aiogossip: starting peer '{}' on {}:{}".format(args.name, args.host, args.port))
+    print("aiogossip: starting peer '{}': {}".format(args.name, os.getpid()))
     peer = Peer(host=args.host, port=args.port, peer_id=args.name)
     if args.seeds:
         print("aiogossip: connecting to seeds {}".format(args.seeds))

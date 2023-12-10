@@ -1,9 +1,16 @@
+import logging
 import math
+import sys
 import uuid
 
+from . import config
 from .concurrency.mutex import mutex
 from .message_pb2 import Message
-from .topology import Topology
+from .topology import Routing, Topology
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+logger.setLevel(getattr(logging, config.LOG_LEVEL))
 
 
 class Gossip:
@@ -28,6 +35,7 @@ class Gossip:
         self.peer_id = peer_id or uuid.uuid4().bytes
         self.transport = transport
         self.topology = Topology(self.peer_id, self.transport.addr)
+        self.routing = Routing(self.topology)
 
         self._fanout = fanout or self.FANOUT
 
@@ -66,10 +74,11 @@ class Gossip:
 
         msg = Message()
         msg.CopyFrom(message)
-        msg = self.topology.append_route(msg)
 
-        addr = self.topology.get_addr(peer_id)
-        await self.transport.send(msg, addr)
+        next_peer_id, next_peer_addr = self.topology.get_next_peer(peer_id)
+        msg = self.routing.set_send_route(msg, next_peer_id, next_peer_addr)
+
+        await self.transport.send(msg, next_peer_addr)
         return msg.id
 
     async def send_handshake(self, peer_id):
@@ -145,10 +154,10 @@ class Gossip:
 
     async def recv(self):
         while True:
-            msg, addr = await self.transport.recv()
-            msg.routing.routes[-1].daddr = f"{addr[0]}:{addr[1]}"
+            msg, peer_addr = await self.transport.recv()
+            peer_id = msg.routing.routes[-1].route_id
+            msg = self.routing.set_recv_route(msg, peer_id, peer_addr)
 
-            msg = self.topology.append_route(msg)
             route_ids = self.topology.update(msg.routing.routes)
             for route_id in route_ids:
                 await self.send_handshake(route_id)
