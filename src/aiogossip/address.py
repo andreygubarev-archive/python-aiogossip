@@ -25,12 +25,6 @@ class Address:
         else:
             raise TypeError("ip must be str, bytes, IPv4Address or IPv6Address")
 
-        if ip == ipaddress.IPv4Address("0.0.0.0"):
-            ip = ipaddress.IPv4Address("127.0.0.1")
-
-        if ip == ipaddress.IPv6Address("::"):
-            ip = ipaddress.IPv6Address("::1")
-
         return ip
 
     @classmethod
