@@ -5,8 +5,8 @@ import uuid
 
 from . import config
 from .concurrency.mutex import mutex
-from .message_pb2 import Message
 from .topology import Routing, Topology
+from .types_pb2 import Message
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))

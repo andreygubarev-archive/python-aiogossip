@@ -8,10 +8,10 @@ from .concurrency import TaskManager
 from .debug import debug
 from .gossip import Gossip
 from .members import Members
-from .message_pb2 import Message
 from .topology import Node
 from .transport import Transport
 from .transport.address import parse_addr
+from .types_pb2 import Message
 
 
 class Peer:

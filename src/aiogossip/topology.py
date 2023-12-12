@@ -4,8 +4,8 @@ import time
 
 import networkx as nx
 
-from .message_pb2 import Message, Route
 from .transport.address import parse_addr
+from .types_pb2 import Message, Route
 
 Node = collections.namedtuple("Node", ["node_id", "node_addr"])
 Node.__str__ = lambda self: f"{self.node_id.decode()}@{self.node_addr}"

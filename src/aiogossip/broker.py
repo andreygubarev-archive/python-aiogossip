@@ -5,7 +5,7 @@ import itertools
 
 from .concurrency import Channel, TaskManager
 from .gossip import Gossip
-from .message_pb2 import Message
+from .types_pb2 import Message
 
 
 class Handler:

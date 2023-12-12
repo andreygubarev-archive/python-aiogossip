@@ -4,7 +4,7 @@ import sys
 
 from . import config
 from .concurrency import TaskManager
-from .message_pb2 import Message
+from .types_pb2 import Message
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))

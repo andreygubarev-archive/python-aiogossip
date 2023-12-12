@@ -2,7 +2,7 @@
 
 # import pytest
 
-# from aiogossip.message_pb2 import Route
+# from aiogossip.types_pb2 import Route
 # from aiogossip.topology import Node, Topology
 # from aiogossip.transport.address import Address, parse_addr
 
