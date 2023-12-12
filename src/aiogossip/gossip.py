@@ -158,9 +158,9 @@ class Gossip:
             peer_id = msg.routing.routes[-1].node_id
             msg = self.routing.set_recv_route(msg, peer_id, peer_addr)
 
-            route_ids = self.topology.update(msg.routing.routes)
-            for route_id in route_ids:
-                await self.send_handshake(route_id)
+            node_ids = self.topology.update(msg.routing.routes)
+            for node_id in node_ids:
+                await self.send_handshake(node_id)
 
             # forward message to destination
             if self.peer_id != msg.routing.dnode:
