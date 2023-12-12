@@ -30,6 +30,14 @@ def test_parse_ip():
     ip = Address.parse_ip("192.168.1.1")
     assert isinstance(ip, ipaddress.IPv4Address)
 
+    # Test with 0.0.0.0
+    ip = Address.parse_ip("0.0.0.0")
+    assert ip == ipaddress.IPv4Address("127.0.0.1")
+
+    # Test with :: (IPv6)
+    ip = Address.parse_ip("::")
+    assert ip == ipaddress.IPv6Address("::1")
+
     # Test with valid IPv6 address
     ip = Address.parse_ip("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
     assert isinstance(ip, ipaddress.IPv6Address)
