@@ -16,6 +16,3 @@ class Address:
         self.port = int(self.port)
         if not isinstance(self.port, int):
             raise TypeError("port must be int")
-
-    def packb(self) -> bytes:
-        return self.ip.packed + self.port.to_bytes(2, "big")
