@@ -11,16 +11,16 @@ class Topology:
 
     def add_node(self, node: bytes | uuid.UUID | topology_pb2.Node):
         if isinstance(node, bytes):
-            node = topology_pb2.Node(id=node)
+            node = topology_pb2.Node(node_id=node)
         elif isinstance(node, uuid.UUID):
-            node = topology_pb2.Node(id=node.bytes)
+            node = topology_pb2.Node(node_id=node.bytes)
         elif isinstance(node, topology_pb2.Node):
             pass
         else:
             raise TypeError(f"Unknown node type {type(node)}")
 
-        if node.id not in self.g:
-            self.g.add_node(node.id, node=node)
+        if node.node_id not in self.g:
+            self.g.add_node(node.node_id, node=node)
 
     def get_node(self, node_id: bytes | uuid.UUID) -> topology_pb2.Node:
         if isinstance(node_id, bytes):
@@ -44,7 +44,7 @@ class Topology:
         if not isinstance(dnode, topology_pb2.Node):
             dnode = self.get_node(dnode)
 
-        self.g.add_edge(snode.id, dnode.id, saddr=saddr, daddr=daddr)
+        self.g.add_edge(snode.node_id, dnode.node_id, saddr=saddr, daddr=daddr)
 
     def get_route(
         self, snode: bytes | uuid.UUID | topology_pb2.Node, dnode: bytes | uuid.UUID | topology_pb2.Node
@@ -54,7 +54,7 @@ class Topology:
         if not isinstance(dnode, topology_pb2.Node):
             dnode = self.get_node(dnode)
 
-        return self.g.edges[snode.id, dnode.id]["daddr"]
+        return self.g.edges[snode.node_id, dnode.node_id]["daddr"]
 
     def add_route_latency(
         self, snode: bytes | uuid.UUID | topology_pb2.Node, dnode: bytes | uuid.UUID | topology_pb2.Node, latency: float

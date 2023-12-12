@@ -109,10 +109,10 @@ class Peer:
 
         async def responder(message, result):
             result.id = message.id
-            result.routing.src_id = message.routing.dst_id
-            result.routing.dst_id = message.routing.src_id
+            result.routing.snode = message.routing.dnode
+            result.routing.dnode = message.routing.snode
             result.kind.append(Message.Kind.RES)
-            await self.publish(message.topic, result, peers=[message.routing.src_id], syn=False)
+            await self.publish(message.topic, result, peers=[message.routing.snode], syn=False)
 
         def decorator(func):
             handler = self.broker.subscribe(topic, func)

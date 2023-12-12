@@ -41,8 +41,8 @@ class Members:
         while True:
             topic = "keepalive"
             message = Message()
-            message.routing.src_id = self.peer.peer_id
-            message.routing.dst_id = peer_id
+            message.routing.snode = self.peer.peer_id
+            message.routing.dnode = peer_id
 
             response = await self.peer.request(topic, message, peers=[peer_id], timeout=self.PING_TIMEOUT)
             responses = []
