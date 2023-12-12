@@ -17,7 +17,7 @@ lint: ## Lint Python Package
 compile: ## Compile Python Package and Protobuf
 	protoc -I=$(MAKEFILE_DIR)/src/protos/ \
 		--python_out=$(MAKEFILE_DIR)/src/aiogossip/ \
-		$(MAKEFILE_DIR)/src/proto/*.proto
+		$(MAKEFILE_DIR)/src/protos/*.proto
 
 .PHONY: test
 test: ## Test Python Package
