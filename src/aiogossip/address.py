@@ -17,5 +17,7 @@ class Address:
             self.port = int(self.port)
         elif isinstance(self.port, str) and self.port.isdigit():
             self.port = int(self.port)
+        elif isinstance(self.port, bytes) and self.port.isdigit():
+            self.port = int(self.port)
         if not isinstance(self.port, int):
             raise TypeError("port must be int")

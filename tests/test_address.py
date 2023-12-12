@@ -22,6 +22,7 @@ def test_address_initialization():
     # Test initialization with non-int port
     assert Address(ip, 8080.0).port == 8080
     assert Address(ip, "8080").port == 8080
+    assert Address(ip, b"8080").port == 8080
 
     # Test initialization with incorrect types
     with pytest.raises(ValueError):
