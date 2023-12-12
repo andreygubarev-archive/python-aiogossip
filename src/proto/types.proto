@@ -11,13 +11,13 @@ message Endpoint {
 }
 
 message Node {
-    bytes id = 1;
+    bytes node_id = 1;
 
     repeated Endpoint endpoints = 2;
 }
 
 message Route {
-    bytes route_id = 1;
+    bytes node_id = 1;
     int64 timestamp = 2;
     string saddr = 3;
     string daddr = 4;
@@ -37,8 +37,8 @@ message Message {
     }
 
     message Routing {
-        bytes src_id = 1;
-        bytes dst_id = 2;
+        bytes snode = 1;
+        bytes dnode = 2;
         repeated Route routes = 3;
     }
 
