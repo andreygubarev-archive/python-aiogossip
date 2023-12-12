@@ -13,6 +13,9 @@ class Address:
         if not isinstance(self.ip, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
             raise TypeError("ip must be IPv4Address or IPv6Address")
 
-        self.port = int(self.port)
+        if isinstance(self.port, float):
+            self.port = int(self.port)
+        elif isinstance(self.port, str) and self.port.isdigit():
+            self.port = int(self.port)
         if not isinstance(self.port, int):
             raise TypeError("port must be int")
