@@ -14,7 +14,7 @@ def encoder(obj):
         return msgpack.ExtType(1, bytes(obj.bytes))
     if isinstance(obj, address.Address):
         return msgpack.ExtType(2, packb(dataclasses.asdict(obj)))
-    raise TypeError(f"Object of type {type(obj)} is not serializable")
+    raise TypeError(f"Object of type {type(obj)} is not serializable")  # pragma: no cover
 
 
 def decoder(code, data):
@@ -24,7 +24,7 @@ def decoder(code, data):
         return uuid.UUID(bytes=data)
     if code == 2:
         return address.Address(**unpackb(data))
-    return msgpack.ExtType(code, data)
+    return msgpack.ExtType(code, data)  # pragma: no cover
 
 
 def packb(message):
