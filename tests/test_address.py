@@ -1,3 +1,4 @@
+import dataclasses
 import ipaddress
 
 import pytest
@@ -23,6 +24,21 @@ def test_post_init():
     # Test with invalid port
     with pytest.raises(TypeError):
         Address(ipaddress.IPv4Address("192.168.1.1"), "invalid_port")
+
+    # Test frozen
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        address.ip = ipaddress.IPv4Address("127.0.0.1")
+
+    # Test slots
+    with pytest.raises(AttributeError):
+        address.invalid_attribute
+
+    with pytest.raises(TypeError):
+        address.invalid_attribute = "test"
+
+    # Test frozen replacement
+    address = dataclasses.replace(address, ip=ipaddress.IPv4Address("192.168.0.1"))
+    assert address.ip == ipaddress.IPv4Address("192.168.0.1")
 
 
 def test_parse_ip():
