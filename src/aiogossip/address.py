@@ -19,11 +19,13 @@ class Address:
         cls, ip: str | bytes | ipaddress.IPv4Address | ipaddress.IPv6Address
     ) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
         if isinstance(ip, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
-            return ip
+            pass
         elif isinstance(ip, (str, bytes)):
-            return ipaddress.ip_address(ip)
+            ip = ipaddress.ip_address(ip)
         else:
             raise TypeError("ip must be str, bytes, IPv4Address or IPv6Address")
+
+        return ip
 
     @classmethod
     def parse_port(cls, port: int | float | str | bytes) -> int:
