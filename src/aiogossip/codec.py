@@ -4,7 +4,7 @@ import uuid
 
 import msgpack
 
-from . import address, node
+from . import address, endpoint, message, node
 
 
 def encoder(obj):
@@ -18,6 +18,10 @@ def encoder(obj):
         return msgpack.ExtType(3, packb(dataclasses.astuple(obj)))
     if isinstance(obj, node.Node):
         return msgpack.ExtType(4, packb(dataclasses.astuple(obj)))
+    if isinstance(obj, endpoint.Endpoint):
+        return msgpack.ExtType(5, packb(dataclasses.astuple(obj)))
+    if isinstance(obj, message.Message):
+        return msgpack.ExtType(6, packb(dataclasses.asdict(obj)))
     raise TypeError(f"Object of type {type(obj)} is not serializable")  # pragma: no cover
 
 
@@ -32,6 +36,10 @@ def decoder(code, data):
         return address.Address(*unpackb(data))
     if code == 4:
         return node.Node(*unpackb(data))
+    if code == 5:
+        return endpoint.Endpoint(*unpackb(data))
+    if code == 6:
+        return message.Message(**unpackb(data))
     return msgpack.ExtType(code, data)  # pragma: no cover
 
 
