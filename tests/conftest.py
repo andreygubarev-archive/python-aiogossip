@@ -118,9 +118,8 @@ def get_gossip(node, transport, fanout=0):
 
 def get_random_gossip(event_loop):
     node = get_node()
-    address = get_address()
-    node.addresses.add(address)
-    transport = get_transport(event_loop, address)
+    transport = get_transport(event_loop, get_address())
+    node.addresses.add(transport.addr)
     return get_gossip(node, transport)
 
 
