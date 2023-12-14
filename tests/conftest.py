@@ -1,3 +1,4 @@
+import math
 import random
 import uuid
 
@@ -115,10 +116,47 @@ def get_gossip(node, transport, fanout=0):
     return Gossip(node, transport, fanout)
 
 
-@pytest.fixture
-def gossip(event_loop):
+def get_random_gossip(event_loop):
     node = get_node()
     address = get_address()
     node.addresses.add(address)
     transport = get_transport(event_loop, address)
     return get_gossip(node, transport)
+
+
+@pytest.fixture
+def gossip(event_loop):
+    return get_random_gossip(event_loop)
+
+
+@pytest.fixture
+def gossips(event_loop, instances):
+    gossips = [get_random_gossip(event_loop) for _ in range(instances)]
+    gossips_connections = math.ceil(math.sqrt(len(gossips)))
+    for gossip in gossips:
+        if gossips[0] == gossip:
+            continue
+
+        gossips[0].topology.add_node(gossip.node)
+        gossips[0].topology.add_route(
+            Route(
+                gossips[0].node,
+                list(gossips[0].node.addresses)[0],
+                gossip.node,
+                list(gossip.node.addresses)[0],
+            )
+        )
+
+        for g in random.sample(gossips, gossips_connections):
+            if g == gossip:
+                continue
+            gossip.topology.add_node(g.node)
+            gossip.topology.add_route(
+                Route(
+                    gossip.node,
+                    list(gossip.node.addresses)[0],
+                    g.node,
+                    list(g.node.addresses)[0],
+                )
+            )
+    return gossips
