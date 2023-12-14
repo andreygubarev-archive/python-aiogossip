@@ -1,6 +1,7 @@
 import pytest
 
-from aiogossip import gossip  # noqa: F401
+from aiogossip import gossip
+from aiogossip.message import Message
 from aiogossip.route import Route
 
 
@@ -52,18 +53,20 @@ async def test_gossip_cycles(node, transport, nodes):
     assert g.cycles == 3
 
 
-async def test_send_message(gossip, address):
-    message = "Hello, World!"
-    await gossip._send(message, address)
-    assert gossip.transport.tx_packets > 0
-
-
 @pytest.mark.parametrize("instances", [2])
 async def test_send_message_to_node(gossip, nodes):
-    gossip.topology.add_node(nodes[1])
-    saddr = list(gossip.node.addresses)[0]
-    daddr = list(nodes[1].addresses)[0]
-    gossip.topology.add_route(Route(gossip.node, saddr, nodes[1], daddr))
-    message = "Hello, World!"
-    await gossip.send(message, nodes[1])
+    snode = gossip.node
+    dnode = nodes[1]
+    saddr = list(snode.addresses)[0]
+    daddr = list(dnode.addresses)[0]
+    gossip.topology.add_node(dnode)
+    gossip.topology.add_route(Route(snode, saddr, dnode, daddr))
+
+    message = Message(snode.node_id, dnode.node_id)
+    sent_message = await gossip.send(message, dnode)
     assert gossip.transport.tx_packets > 0
+    assert sent_message.message_id == message.message_id
+    assert sent_message.route_endpoints[-2].node == snode
+    assert sent_message.route_endpoints[-2].saddr == saddr
+    assert sent_message.route_endpoints[-1].node == dnode
+    assert sent_message.route_endpoints[-1].daddr == daddr

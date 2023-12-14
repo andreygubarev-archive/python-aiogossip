@@ -1,9 +1,9 @@
 import math
-from typing import Any
 
 import typeguard
 
-from .address import Address
+from .endpoint import Endpoint
+from .message import Message, update_send_endpoints
 from .node import Node
 from .topology import Topology
 from .transport import Transport
@@ -60,30 +60,17 @@ class Gossip:
         return math.ceil(math.log(len(self.topology), self.fanout))
 
     @typeguard.typechecked
-    async def _send(self, message: Any, addr: Address) -> None:
-        """
-        Send a message to the specified address.
-
-        Args:
-            message (Any): The message to be sent.
-            addr (Address): The address of the destination node.
-
-        Returns:
-            None
-        """
-        await self.transport.send(message, addr)
-
-    @typeguard.typechecked
-    async def send(self, message: Any, node: Node):
-        """
-        Sends a message to the specified node using the shortest route in the topology.
-
-        Args:
-            message (Any): The message to be sent.
-            node (Node): The destination node.
-
-        Returns:
-            None
-        """
+    async def send(self, message: Message, node: Node) -> Message:
         route = self.topology.get_shortest_route(self.node, node)
-        await self._send(message, route.daddr)
+        message = update_send_endpoints(
+            message,
+            send=Endpoint(route.snode, saddr=route.saddr),
+            recv=Endpoint(route.dnode, daddr=route.daddr),
+        )
+        await self.transport.send(message, route.daddr)
+        return message
+
+    async def recv(self):
+        while True:
+            message, addr = await self.transport.recv()
+            yield message

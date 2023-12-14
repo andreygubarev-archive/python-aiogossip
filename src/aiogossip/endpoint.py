@@ -8,15 +8,15 @@ from .node import Node
 class Endpoint:
     node: Node
 
-    saddr: Address
-    daddr: Address
+    saddr: Address | None = None
+    daddr: Address | None = None
 
     def __post_init__(self):
         if not isinstance(self.node, Node):
             raise TypeError("node must be Node")
 
-        if not isinstance(self.saddr, Address):
+        if self.saddr and not isinstance(self.saddr, Address):
             raise TypeError("saddr must be Address")
 
-        if not isinstance(self.daddr, Address):
+        if self.daddr and not isinstance(self.daddr, Address):
             raise TypeError("daddr must be Address")
