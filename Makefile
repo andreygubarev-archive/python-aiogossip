@@ -27,6 +27,14 @@ else
 	python -m pytest --pdb $(MAKEFILE_DIR)/tests/test_$(MODULE)*.py
 endif
 
+.PHONY: coverage
+coverage: ## Test Python Package
+ifeq ($(MODULE),)
+	python -m pytest --pdb
+else
+	python -m pytest --pdb --cov="aiogossip.$(MODULE)" --cov-fail-under=100 $(MAKEFILE_DIR)/tests/test_$(MODULE).py
+endif
+
 .PHONY: run
 run: ## Run Python Package
 	python $(MAKEFILE_DIR)/examples/gossip.py
