@@ -27,13 +27,15 @@ else
 	python -m pytest --pdb $(MAKEFILE_DIR)/tests/test_$(MODULE)*.py
 endif
 
+MODULES := $(shell ls src/aiogossip | grep -v "__" | xargs basename | cut -d "." -f 1)
+COVERAGE_MODULES := $(foreach mod,$(MODULES),coverage-$(mod))
+
+.PHONY: $(COVERAGE_MODULES)
+$(COVERAGE_MODULES):
+	python -m pytest --pdb --cov="aiogossip.$(subst coverage-,,$@)" --cov-fail-under=100 $(MAKEFILE_DIR)/tests/test_$(subst coverage-,,$@).py
+
 .PHONY: coverage
-coverage: ## Test Python Package
-ifeq ($(MODULE),)
-	python -m pytest --pdb
-else
-	python -m pytest --pdb --cov="aiogossip.$(MODULE)" --cov-fail-under=100 $(MAKEFILE_DIR)/tests/test_$(MODULE).py
-endif
+coverage: $(COVERAGE_MODULES) ## Test Python Package
 
 .PHONY: run
 run: ## Run Python Package
