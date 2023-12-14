@@ -28,7 +28,7 @@ def update_send_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> M
 
     if not endpoints:
         endpoints = [send, recv]
-    elif endpoints[-1].node_id == send.route_id:
+    elif endpoints[-1].node == send.node:
         endpoints.append(recv)
 
     endpoints[-2] = dataclasses.replace(endpoints[-2], saddr=send.saddr)
