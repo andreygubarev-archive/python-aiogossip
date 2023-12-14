@@ -3,7 +3,7 @@ import ipaddress
 
 import pytest
 
-from aiogossip.address import Address, to_ipaddress, to_port
+from aiogossip.address import Address, to_address, to_ipaddress, to_port
 
 
 def test_post_init():
@@ -41,7 +41,7 @@ def test_post_init():
     assert address.ip == ipaddress.IPv4Address("192.168.0.1")
 
 
-def test_parse_ip():
+def test_to_ip():
     # Test with valid IPv4 address
     ip = to_ipaddress("192.168.1.1")
     assert isinstance(ip, ipaddress.IPv4Address)
@@ -75,7 +75,7 @@ def test_parse_ip():
         to_ipaddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334:1234")
 
 
-def test_parse_port():
+def test_to_port():
     # Test with valid integer port
     port = to_port(8080)
     assert isinstance(port, int)
@@ -119,3 +119,40 @@ def test_parse_port():
     # Test with invalid type
     with pytest.raises(TypeError):
         to_port([])
+
+
+def test_to_address():
+    # Test with valid Address object
+    address = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
+    result = to_address(address)
+    assert isinstance(result, Address)
+    assert result.ip == ipaddress.IPv4Address("192.168.1.1")
+    assert result.port == 8080
+
+    # Test with valid string address
+    result = to_address("192.168.1.1:8080")
+    assert isinstance(result, Address)
+    assert result.ip == ipaddress.IPv4Address("192.168.1.1")
+    assert result.port == 8080
+
+    # Test with valid tuple address
+    result = to_address(("192.168.1.1", 8080))
+    assert isinstance(result, Address)
+    assert result.ip == ipaddress.IPv4Address("192.168.1.1")
+    assert result.port == 8080
+
+    # Test with invalid type
+    with pytest.raises(TypeError):
+        to_address(123)
+
+    # Test with invalid string format
+    with pytest.raises(ValueError):
+        to_address("invalid_address")
+
+    # Test with invalid tuple format
+    with pytest.raises(ValueError):
+        to_address(("192.168.1.1", "invalid_port"))
+
+    # Test with tuple of wrong size
+    with pytest.raises(ValueError):
+        to_address(("192.168.1.1", 8080, "extra_value"))

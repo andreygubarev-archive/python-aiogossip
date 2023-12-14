@@ -76,3 +76,31 @@ def to_port(port: int | float | str | bytes) -> int:
         raise ValueError("port must be between 0 and 65535")
 
     return port
+
+
+def to_address(addr: Address | str | tuple[str | bytes, int]) -> Address:
+    """
+    Convert the given address representation to an instance of `Address`.
+
+    Args:
+        addr (Address | str | tuple[str | bytes, int]): The address representation.
+
+    Returns:
+        Address: The converted address.
+
+    Raises:
+        TypeError: If the `addr` argument is not of type `Address`, `str`, or `tuple`.
+    """
+    if isinstance(addr, Address):
+        pass
+    elif isinstance(addr, str):
+        ip, port = addr.rsplit(":", 1)
+        addr = Address(to_ipaddress(ip), to_port(port))
+    elif isinstance(addr, tuple):
+        if len(addr) != 2:
+            raise ValueError("addr must be tuple of length 2")
+        addr = Address(to_ipaddress(addr[0]), to_port(addr[1]))
+    else:
+        raise TypeError("addr must be Address, str, bytes or tuple")
+
+    return addr
