@@ -2,6 +2,8 @@ import dataclasses
 import uuid
 from typing import Set
 
+import typeguard
+
 from .address import Address, to_address
 
 
@@ -25,6 +27,7 @@ class Node:
                 raise TypeError("addresses must be set of Address")
 
 
+@typeguard.typechecked
 def to_node(node: Node | uuid.UUID | str) -> Node:
     """
     Convert the given node representation to an instance of `Node`.
@@ -38,9 +41,7 @@ def to_node(node: Node | uuid.UUID | str) -> Node:
     Raises:
         TypeError: If the `node` argument is not of type `Node`, `UUID`, or `str`.
     """
-    if isinstance(node, Node):
-        pass
-    elif isinstance(node, uuid.UUID):
+    if isinstance(node, uuid.UUID):
         node = Node(node, set())
     elif isinstance(node, str):
         if "@" in node:
@@ -55,7 +56,5 @@ def to_node(node: Node | uuid.UUID | str) -> Node:
             if node.version != 1:
                 raise ValueError("node must be UUIDv1")
             node = Node(node, set())
-    else:
-        raise TypeError("node must be Node, UUID, or str")
 
     return node

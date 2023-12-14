@@ -2,10 +2,13 @@ import asyncio
 import socket
 from typing import Any
 
+import typeguard
+
 from . import codec
 from .address import Address, to_address
 
 
+@typeguard.typechecked
 class Transport:
     PACKET_SIZE = 4096
 
@@ -38,9 +41,6 @@ class Transport:
         Returns:
             None
         """
-        if not isinstance(addr, Address):
-            raise TypeError(f"addr must be of type Address, not {type(addr)}")
-
         data = codec.packb(message)
         if len(data) > self.PACKET_SIZE:
             raise ValueError(f"Message size exceeds packet size of {self.PACKET_SIZE} bytes: {len(data)}")

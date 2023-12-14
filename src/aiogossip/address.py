@@ -93,8 +93,6 @@ def to_address(addr: Address | str | tuple[str | bytes, int]) -> Address:
         ip, port = addr.rsplit(":", 1)
         addr = Address(to_ipaddress(ip), to_port(port))
     elif isinstance(addr, tuple):
-        if len(addr) != 2:
-            raise ValueError("addr must be tuple of length 2")
         addr = Address(to_ipaddress(addr[0]), to_port(addr[1]))
 
     return addr

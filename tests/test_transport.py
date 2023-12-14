@@ -1,6 +1,7 @@
 import ipaddress
 
 import pytest
+import typeguard
 
 from aiogossip.address import Address
 
@@ -27,7 +28,7 @@ async def test_send_large_packet(transport, message):
 
 @pytest.mark.asyncio
 async def test_send_type_errors(transport, message):
-    with pytest.raises(TypeError):
+    with pytest.raises(typeguard.TypeCheckError):
         await transport.send(message, ("127.0.0.1", 1337))
 
     with pytest.raises(TypeError):

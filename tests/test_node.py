@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+import typeguard
 
 from aiogossip.address import Address, to_address
 from aiogossip.node import Node, to_node
@@ -68,7 +69,7 @@ def test_to_node_with_uuid_str_and_address():
 
 
 def test_to_node_with_invalid_type():
-    with pytest.raises(TypeError):
+    with pytest.raises(typeguard.TypeCheckError):
         to_node(123)  # not a Node, UUID, or str
 
 
