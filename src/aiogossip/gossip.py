@@ -1,3 +1,5 @@
+import math
+
 from .topology import Topology
 
 
@@ -33,3 +35,19 @@ class Gossip:
             int: The minimum value between the fanout and the length of the topology.
         """
         return min(self._fanout, len(self.topology))
+
+    @property
+    def cycles(self) -> int:
+        """
+        Calculate the number of cycles required for gossip dissemination.
+
+        Returns:
+            int: The number of cycles required.
+        """
+        if self.fanout == 0:
+            return 0
+
+        if self.fanout == 1:
+            return 1
+
+        return math.ceil(math.log(len(self.topology), self.fanout))
