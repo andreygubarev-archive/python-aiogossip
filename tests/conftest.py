@@ -4,6 +4,7 @@ import uuid
 import pytest
 
 from aiogossip.address import Address, to_ipaddress
+from aiogossip.node import Node
 from aiogossip.transport import Transport
 
 # Generic #####################################################################
@@ -49,6 +50,30 @@ def address():
 @pytest.fixture
 def addresses(instances):
     return [get_address() for _ in range(instances)]
+
+
+# Node #####################################################################
+
+
+def get_node(address):
+    node_id = uuid.uuid1()
+    addresses = {address}
+    return Node(node_id, addresses)
+
+
+@pytest.fixture
+def node_id():
+    return uuid.uuid1()
+
+
+@pytest.fixture
+def node(address):
+    return get_node(address)
+
+
+@pytest.fixture
+def nodes(addresses):
+    return [get_node(address) for address in addresses]
 
 
 # Transport ###################################################################
