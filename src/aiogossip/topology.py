@@ -87,3 +87,12 @@ class Topology:
         """
         path = nx.shortest_path(self.g.to_undirected(), snode.node_id, dnode.node_id)
         return self.get_route(self.get_node(path[0]), self.get_node(path[1]))
+
+    def __len__(self) -> int:
+        """
+        Returns the number of nodes in the topology.
+
+        Returns:
+            int: The number of nodes in the topology.
+        """
+        return len(self.g)

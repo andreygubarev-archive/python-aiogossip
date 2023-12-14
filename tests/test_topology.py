@@ -117,3 +117,11 @@ def test_topology_get_shortest_route_reverse(nodes, addresses):
     assert shortest_route.saddr == addresses[2]
     assert shortest_route.dnode == nodes[1]
     assert shortest_route.daddr == addresses[1]
+
+
+@pytest.mark.parametrize("instances", [3])
+def test_topology_len(nodes):
+    topology = Topology()
+    for node in nodes:
+        topology.add_node(node)
+    assert len(topology) == len(nodes)
