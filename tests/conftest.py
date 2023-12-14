@@ -84,12 +84,6 @@ def get_route(snode, saddr, dnode, daddr):
     return Route(snode, saddr, dnode, daddr)
 
 
-@pytest.mark.parametrize("instances", [2])
-@pytest.fixture
-def route(nodes):
-    return get_route(nodes[0], list(nodes[0].addresses)[0], nodes[1], list(nodes[1].addresses)[0])
-
-
 # Transport ###################################################################
 
 

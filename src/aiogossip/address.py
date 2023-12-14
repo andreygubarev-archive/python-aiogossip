@@ -1,6 +1,8 @@
 import dataclasses
 import ipaddress
 
+import typeguard
+
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class Address:
@@ -19,6 +21,7 @@ class Address:
             raise TypeError("port must be int")
 
 
+@typeguard.typechecked
 def to_ipaddress(
     ip: str | bytes | ipaddress.IPv4Address | ipaddress.IPv6Address,
 ) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
@@ -34,16 +37,13 @@ def to_ipaddress(
     Raises:
         TypeError: If the `ip` argument is not of type `str`, `bytes`, `IPv4Address`, or `IPv6Address`.
     """
-    if isinstance(ip, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
-        pass
-    elif isinstance(ip, (str, bytes)):
+    if isinstance(ip, (str, bytes)):
         ip = ipaddress.ip_address(ip)
-    else:
-        raise TypeError("ip must be str, bytes, IPv4Address or IPv6Address")
 
     return ip
 
 
+@typeguard.typechecked
 def to_port(port: int | float | str | bytes) -> int:
     """
     Convert the given port to an integer.
@@ -60,17 +60,14 @@ def to_port(port: int | float | str | bytes) -> int:
         ValueError: If the port is not between 0 and 65535.
 
     """
-    if isinstance(port, int):
-        pass
-    elif isinstance(port, float):
+
+    if isinstance(port, float):
         port = int(port)
     elif isinstance(port, (str, bytes)):
         if port.isdigit():
             port = int(port)
         else:
             raise ValueError("port must be digit")
-    else:
-        raise TypeError("port must be int")
 
     if not 0 <= port <= 65535:
         raise ValueError("port must be between 0 and 65535")
@@ -78,6 +75,7 @@ def to_port(port: int | float | str | bytes) -> int:
     return port
 
 
+@typeguard.typechecked
 def to_address(addr: Address | str | tuple[str | bytes, int]) -> Address:
     """
     Convert the given address representation to an instance of `Address`.
@@ -91,16 +89,12 @@ def to_address(addr: Address | str | tuple[str | bytes, int]) -> Address:
     Raises:
         TypeError: If the `addr` argument is not of type `Address`, `str`, or `tuple`.
     """
-    if isinstance(addr, Address):
-        pass
-    elif isinstance(addr, str):
+    if isinstance(addr, str):
         ip, port = addr.rsplit(":", 1)
         addr = Address(to_ipaddress(ip), to_port(port))
     elif isinstance(addr, tuple):
         if len(addr) != 2:
             raise ValueError("addr must be tuple of length 2")
         addr = Address(to_ipaddress(addr[0]), to_port(addr[1]))
-    else:
-        raise TypeError("addr must be Address, str, bytes or tuple")
 
     return addr

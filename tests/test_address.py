@@ -2,6 +2,7 @@ import dataclasses
 import ipaddress
 
 import pytest
+import typeguard
 
 from aiogossip.address import Address, to_address, to_ipaddress, to_port
 
@@ -69,7 +70,7 @@ def test_to_ip_with_valid_ipv6_object():
 
 
 def test_to_ip_with_invalid_ip_type():
-    with pytest.raises(TypeError):
+    with pytest.raises(typeguard.TypeCheckError):
         to_ipaddress(123)
 
 
@@ -138,7 +139,7 @@ def test_to_port_with_non_numeric_bytes():
 
 
 def test_to_port_with_invalid_type():
-    with pytest.raises(TypeError):
+    with pytest.raises(typeguard.TypeCheckError):
         to_port([])
 
 
@@ -165,7 +166,7 @@ def test_to_address_with_valid_tuple_address():
 
 
 def test_to_address_with_invalid_type():
-    with pytest.raises(TypeError):
+    with pytest.raises(typeguard.TypeCheckError):
         to_address(123)
 
 
@@ -175,10 +176,10 @@ def test_to_address_with_invalid_string_format():
 
 
 def test_to_address_with_invalid_tuple_format():
-    with pytest.raises(ValueError):
+    with pytest.raises(typeguard.TypeCheckError):
         to_address(("192.168.1.1", "invalid_port"))
 
 
 def test_to_address_with_tuple_of_wrong_size():
-    with pytest.raises(ValueError):
+    with pytest.raises(typeguard.TypeCheckError):
         to_address(("192.168.1.1", 8080, "extra_value"))
