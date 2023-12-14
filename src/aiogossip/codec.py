@@ -4,26 +4,34 @@ import uuid
 
 import msgpack
 
-from . import address
+from . import address, node
 
 
 def encoder(obj):
+    if isinstance(obj, set):
+        return msgpack.ExtType(0, packb(list(obj)))
     if isinstance(obj, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
-        return msgpack.ExtType(0, bytes(obj.packed))
+        return msgpack.ExtType(1, bytes(obj.packed))
     if isinstance(obj, uuid.UUID):
-        return msgpack.ExtType(1, bytes(obj.bytes))
+        return msgpack.ExtType(2, bytes(obj.bytes))
     if isinstance(obj, address.Address):
-        return msgpack.ExtType(2, packb(dataclasses.asdict(obj)))
+        return msgpack.ExtType(3, packb(dataclasses.astuple(obj)))
+    if isinstance(obj, node.Node):
+        return msgpack.ExtType(4, packb(dataclasses.astuple(obj)))
     raise TypeError(f"Object of type {type(obj)} is not serializable")  # pragma: no cover
 
 
 def decoder(code, data):
     if code == 0:
-        return ipaddress.ip_address(data)
+        return set(unpackb(data))
     if code == 1:
-        return uuid.UUID(bytes=data)
+        return ipaddress.ip_address(data)
     if code == 2:
-        return address.Address(**unpackb(data))
+        return uuid.UUID(bytes=data)
+    if code == 3:
+        return address.Address(*unpackb(data))
+    if code == 4:
+        return node.Node(*unpackb(data))
     return msgpack.ExtType(code, data)  # pragma: no cover
 
 

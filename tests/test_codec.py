@@ -6,14 +6,14 @@ import uuid
 from aiogossip import address, codec
 
 
-def test_packb():
+def test_packb(node, route):
     # Test with IPv4Address
     ip = ipaddress.IPv4Address("127.0.0.1")
     port = 8080
     addr = address.Address(ip, port)
     identifier = uuid.uuid4()
 
-    data = {"addr": addr, "identifier": identifier, "test": "test"}
+    data = {"addr": addr, "identifier": identifier, "test": "test", "node": node, "route": route}
 
     packed = codec.packb(data)
     assert isinstance(packed, bytes)
@@ -23,3 +23,5 @@ def test_packb():
     assert upacked["addr"].port == port
     assert upacked["identifier"] == identifier
     assert upacked["test"] == "test"
+    assert upacked["node"] == node
+    assert upacked["route"] == route
