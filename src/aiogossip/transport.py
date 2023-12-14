@@ -3,7 +3,7 @@ import socket
 from typing import Any
 
 from . import codec
-from .address import Address, to_ipaddress, to_port
+from .address import Address, to_address
 
 
 class Transport:
@@ -16,8 +16,7 @@ class Transport:
         self.sock.bind((addr.ip.exploded, addr.port))
         self.sock.setblocking(False)
 
-        ip, port = self.sock.getsockname()
-        self.addr = Address(to_ipaddress(ip), port)
+        self.addr = to_address(self.sock.getsockname())
 
         self.rx_bytes = 0
         self.rx_packets = 0
@@ -61,9 +60,8 @@ class Transport:
         self.rx_packets += 1
         self.rx_bytes += len(data)
 
-        addr = Address(to_ipaddress(addr[0]), to_port(addr[1]))
+        addr = to_address(addr)
         message = codec.unpackb(data)
-
         return message, addr
 
     def close(self):
