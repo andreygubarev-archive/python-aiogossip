@@ -72,3 +72,18 @@ class Topology:
             dnode=dnode,
             daddr=self.g.edges[snode.node_id, dnode.node_id]["daddr"],
         )
+
+    @typeguard.typechecked
+    def get_shortest_route(self, snode: Node, dnode: Node) -> Route:
+        """
+        Get the shortest route between two nodes.
+
+        Args:
+            snode (Node): The source node.
+            dnode (Node): The destination node.
+
+        Returns:
+            Route: The shortest route between the source and destination nodes.
+        """
+        path = nx.shortest_path(self.g.to_undirected(), snode.node_id, dnode.node_id)
+        return self.get_route(self.get_node(path[0]), self.get_node(path[1]))

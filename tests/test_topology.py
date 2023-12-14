@@ -66,3 +66,54 @@ def test_topology_get_route(nodes, addresses):
     assert retrieved_route.saddr == addresses[0]
     assert retrieved_route.dnode == nodes[1]
     assert retrieved_route.daddr == addresses[1]
+
+
+@pytest.mark.parametrize("instances", [3])
+def test_topology_get_shortest_route(nodes, addresses):
+    topology = Topology()
+
+    nodes[0].addresses.add(addresses[0])
+    topology.add_node(nodes[0])
+
+    nodes[1].addresses.add(addresses[1])
+    topology.add_node(nodes[1])
+
+    nodes[2].addresses.add(addresses[2])
+    topology.add_node(nodes[2])
+
+    topology.add_route(Route(nodes[0], addresses[0], nodes[1], addresses[1]))
+    topology.add_route(Route(nodes[1], addresses[1], nodes[2], addresses[2]))
+
+    shortest_route = topology.get_shortest_route(nodes[0], nodes[2])
+
+    assert shortest_route.snode == nodes[0]
+    assert shortest_route.saddr == addresses[0]
+    assert shortest_route.dnode == nodes[1]
+    assert shortest_route.daddr == addresses[1]
+
+
+@pytest.mark.parametrize("instances", [3])
+def test_topology_get_shortest_route_reverse(nodes, addresses):
+    topology = Topology()
+
+    nodes[0].addresses.add(addresses[0])
+    topology.add_node(nodes[0])
+
+    nodes[1].addresses.add(addresses[1])
+    topology.add_node(nodes[1])
+
+    nodes[2].addresses.add(addresses[2])
+    topology.add_node(nodes[2])
+
+    topology.add_route(Route(nodes[0], addresses[0], nodes[1], addresses[1]))
+    # skip adding the reverse route, because node[2] doesn't know about node[0] to node[1] route
+
+    topology.add_route(Route(nodes[1], addresses[1], nodes[2], addresses[2]))
+    topology.add_route(Route(nodes[2], addresses[2], nodes[1], addresses[1]))
+
+    shortest_route = topology.get_shortest_route(nodes[2], nodes[0])
+
+    assert shortest_route.snode == nodes[2]
+    assert shortest_route.saddr == addresses[2]
+    assert shortest_route.dnode == nodes[1]
+    assert shortest_route.daddr == addresses[1]
