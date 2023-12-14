@@ -13,13 +13,23 @@ class Gossip:
         """
         self.node = node
         self.transport = transport
-        self.fanout = fanout
+        self._fanout = fanout
 
         self.topology = Topology()
         self.topology.add_node(node)
 
-    async def close(self):
+    async def close(self) -> None:
         """
         Close the Gossip instance by closing the transport layer.
         """
         self.transport.close()
+
+    @property
+    def fanout(self) -> int:
+        """
+        Returns the minimum value between the fanout and the length of the topology.
+
+        Returns:
+            int: The minimum value between the fanout and the length of the topology.
+        """
+        return min(self._fanout, len(self.topology))
