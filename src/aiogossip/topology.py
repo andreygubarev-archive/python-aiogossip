@@ -63,7 +63,7 @@ class Topology:
             dnode (Node): The destination node.
 
         Returns:
-            nx.DiGraph: The route.
+            Route: The route.
 
         """
         return Route(
