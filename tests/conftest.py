@@ -8,6 +8,8 @@ from aiogossip.node import Node
 from aiogossip.route import Route
 from aiogossip.transport import Transport
 
+random.seed(0)
+
 # Generic #####################################################################
 
 
@@ -39,13 +41,17 @@ def message():
 # Address #####################################################################
 
 
-def get_address():
-    return Address(to_ipaddress("127.0.0.1"), 0)
+def get_address(port=0):
+    return Address(to_ipaddress("127.0.0.1"), port)
+
+
+def get_random_address():
+    return get_address(port=random.randint(0, 65535))
 
 
 @pytest.fixture
 def address():
-    return Address(to_ipaddress("127.0.0.1"), 0)
+    return get_address()
 
 
 @pytest.fixture
@@ -56,9 +62,9 @@ def addresses(instances):
 # Node #####################################################################
 
 
-def get_node(address):
+def get_node():
     node_id = uuid.uuid1()
-    addresses = {address}
+    addresses = {get_random_address()}
     return Node(node_id, addresses)
 
 
@@ -68,13 +74,13 @@ def node_id():
 
 
 @pytest.fixture
-def node(address):
-    return get_node(address)
+def node():
+    return get_node()
 
 
 @pytest.fixture
-def nodes(addresses):
-    return [get_node(address) for address in addresses]
+def nodes(instances):
+    return [get_node() for _ in range(instances)]
 
 
 # Route #######################################################################
