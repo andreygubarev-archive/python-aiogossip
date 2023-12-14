@@ -7,6 +7,14 @@ import msgpack
 from . import address, endpoint, message, node
 
 
+def to_dict(dc):
+    return {f.name: getattr(dc, f.name) for f in dataclasses.fields(dc)}
+
+
+def to_tuple(dc):
+    return tuple(getattr(dc, f.name) for f in dataclasses.fields(dc))
+
+
 def encoder(obj):
     if isinstance(obj, set):
         return msgpack.ExtType(0, packb(list(obj)))
@@ -15,13 +23,13 @@ def encoder(obj):
     if isinstance(obj, uuid.UUID):
         return msgpack.ExtType(2, bytes(obj.bytes))
     if isinstance(obj, address.Address):
-        return msgpack.ExtType(3, packb(dataclasses.astuple(obj)))
+        return msgpack.ExtType(3, packb(to_tuple(obj)))
     if isinstance(obj, node.Node):
-        return msgpack.ExtType(4, packb(dataclasses.astuple(obj)))
+        return msgpack.ExtType(4, packb(to_tuple(obj)))
     if isinstance(obj, endpoint.Endpoint):
-        return msgpack.ExtType(5, packb(dataclasses.astuple(obj)))
+        return msgpack.ExtType(5, packb(to_tuple(obj)))
     if isinstance(obj, message.Message):
-        return msgpack.ExtType(6, packb(dataclasses.asdict(obj)))
+        return msgpack.ExtType(6, packb(to_dict(obj)))
     raise TypeError(f"Object of type {type(obj)} is not serializable")  # pragma: no cover
 
 
@@ -44,7 +52,7 @@ def decoder(code, data):
 
 
 def packb(message):
-    return msgpack.packb(message, default=encoder)
+    return msgpack.packb(message, default=encoder, use_bin_type=False)
 
 
 def unpackb(message):
