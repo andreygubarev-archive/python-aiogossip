@@ -3,7 +3,7 @@ import uuid
 
 import pytest
 
-from aiogossip.address import Address
+from aiogossip.address import Address, to_ipaddress
 from aiogossip.transport import Transport
 
 # Generic #####################################################################
@@ -38,12 +38,12 @@ def message():
 
 
 def get_address():
-    return Address(Address.parse_ip("127.0.0.1"), 0)
+    return Address(to_ipaddress("127.0.0.1"), 0)
 
 
 @pytest.fixture
 def address():
-    return Address(Address.parse_ip("127.0.0.1"), 0)
+    return Address(to_ipaddress("127.0.0.1"), 0)
 
 
 @pytest.fixture
