@@ -1,6 +1,7 @@
 import pytest
 
 from aiogossip import gossip  # noqa: F401
+from aiogossip.route import Route
 
 
 async def test_gossip_initialization(node, transport):
@@ -49,3 +50,20 @@ async def test_gossip_cycles(node, transport, nodes):
     for node in nodes[:50]:
         g.topology.add_node(node)
     assert g.cycles == 3
+
+
+async def test_send_message(gossip, address):
+    message = "Hello, World!"
+    await gossip._send(message, address)
+    assert gossip.transport.tx_packets > 0
+
+
+@pytest.mark.parametrize("instances", [2])
+async def test_send_message_to_node(gossip, nodes):
+    gossip.topology.add_node(nodes[1])
+    saddr = list(gossip.node.addresses)[0]
+    daddr = list(nodes[1].addresses)[0]
+    gossip.topology.add_route(Route(gossip.node, saddr, nodes[1], daddr))
+    message = "Hello, World!"
+    await gossip.send(message, nodes[1])
+    assert gossip.transport.tx_packets > 0

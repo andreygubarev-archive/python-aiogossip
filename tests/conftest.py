@@ -4,6 +4,7 @@ import uuid
 import pytest
 
 from aiogossip.address import Address, to_ipaddress
+from aiogossip.gossip import Gossip
 from aiogossip.node import Node
 from aiogossip.route import Route
 from aiogossip.transport import Transport
@@ -105,3 +106,19 @@ def transport(event_loop, address):
 @pytest.fixture
 def transports(event_loop, addresses):
     return [get_transport(event_loop, address) for address in addresses]
+
+
+# Gossip ######################################################################
+
+
+def get_gossip(node, transport, fanout=0):
+    return Gossip(node, transport, fanout)
+
+
+@pytest.fixture
+def gossip(event_loop):
+    node = get_node()
+    address = get_address()
+    node.addresses.add(address)
+    transport = get_transport(event_loop, address)
+    return get_gossip(node, transport)
