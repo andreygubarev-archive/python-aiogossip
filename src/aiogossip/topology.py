@@ -3,8 +3,8 @@ import uuid
 import networkx as nx
 import typeguard
 
-from .address import Address
 from .node import Node
+from .route import Route
 
 
 class Topology:
@@ -40,18 +40,35 @@ class Topology:
     @typeguard.typechecked
     def add_route(
         self,
-        snode: Node,
-        saddr: Address,
-        dnode: Node,
-        daddr: Address,
+        route: Route,
     ) -> None:
         """
-        Add a route between two nodes in the topology.
+        Adds a route to the topology.
+
+        Args:
+            route (Route): The route to be added.
+
+        Returns:
+            None
+        """
+        self.g.add_edge(route.snode.node_id, route.dnode.node_id, saddr=route.saddr, daddr=route.daddr)
+
+    @typeguard.typechecked
+    def get_route(self, snode: Node, dnode: Node) -> Route:
+        """
+        Retrieve a route between two nodes in the topology.
 
         Args:
             snode (Node): The source node.
-            saddr (Address): The source address.
             dnode (Node): The destination node.
-            daddr (Address): The destination address.
+
+        Returns:
+            nx.DiGraph: The route.
+
         """
-        self.g.add_edge(snode.node_id, dnode.node_id, saddr=saddr, daddr=daddr)
+        return Route(
+            snode=snode,
+            saddr=self.g.edges[snode.node_id, dnode.node_id]["saddr"],
+            dnode=dnode,
+            daddr=self.g.edges[snode.node_id, dnode.node_id]["daddr"],
+        )
