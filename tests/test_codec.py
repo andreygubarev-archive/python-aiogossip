@@ -16,6 +16,7 @@ def test_packb(gossips):
     identifier = uuid.uuid4()
 
     message = Message(
+        message_type={Message.Type.HANDSHAKE},
         route_snode=gossips[0].node,
         route_dnode=gossips[1].node,
         payload={

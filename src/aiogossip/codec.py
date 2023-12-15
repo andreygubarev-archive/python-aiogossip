@@ -48,6 +48,8 @@ def encoder(obj):
         return msgpack.ExtType(5, packb(dataclass_astuple(obj)))
     if isinstance(obj, message.Message):
         return msgpack.ExtType(6, packb(dataclass_asdict(obj)))
+    if isinstance(obj, message.Message.Type):
+        return msgpack.ExtType(7, packb(obj.value))
     raise TypeError(f"Object of type {type(obj)} is not serializable")  # pragma: no cover
 
 
@@ -66,6 +68,8 @@ def decoder(code, data):
         return endpoint.Endpoint(*unpackb(data))
     if code == 6:
         return message.Message(**unpackb(data))
+    if code == 7:
+        return message.Message.Type(unpackb(data))
     return msgpack.ExtType(code, data)  # pragma: no cover
 
 
