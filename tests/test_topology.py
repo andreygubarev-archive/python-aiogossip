@@ -125,3 +125,34 @@ def test_topology_len(nodes):
     for node in nodes:
         topology.add_node(node)
     assert len(topology) == len(nodes)
+
+
+@pytest.mark.parametrize("instances", [3])
+def test_topology_get_successor_routes(nodes, addresses):
+    topology = Topology()
+
+    nodes[0].addresses.add(addresses[0])
+    topology.add_node(nodes[0])
+
+    nodes[1].addresses.add(addresses[1])
+    topology.add_node(nodes[1])
+
+    nodes[2].addresses.add(addresses[2])
+    topology.add_node(nodes[2])
+
+    topology.add_route(Route(nodes[0], addresses[0], nodes[1], addresses[1]))
+    topology.add_route(Route(nodes[0], addresses[0], nodes[2], addresses[2]))
+
+    successor_routes = topology.get_successor_routes(nodes[0])
+
+    assert len(successor_routes) == 2
+
+    assert successor_routes[0].snode == nodes[0]
+    assert successor_routes[0].saddr == addresses[0]
+    assert successor_routes[0].dnode == nodes[1]
+    assert successor_routes[0].daddr == addresses[1]
+
+    assert successor_routes[1].snode == nodes[0]
+    assert successor_routes[1].saddr == addresses[0]
+    assert successor_routes[1].dnode == nodes[2]
+    assert successor_routes[1].daddr == addresses[2]

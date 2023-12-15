@@ -88,6 +88,22 @@ class Topology:
         path = nx.shortest_path(self.g.to_undirected(), snode.node_id, dnode.node_id)
         return self.get_route(self.get_node(path[0]), self.get_node(path[1]))
 
+    @typeguard.typechecked
+    def get_successor_routes(self, snode: Node) -> list[Route]:
+        """
+        Get all routes originating from a node.
+
+        Args:
+            snode (Node): The source node.
+
+        Returns:
+            list[Route]: A list of routes originating from the node.
+        """
+        routes = []
+        for dnode in self.g.successors(snode.node_id):
+            routes.append(self.get_route(snode, self.get_node(dnode)))
+        return routes
+
     def __len__(self) -> int:
         """
         Returns the number of nodes in the topology.
