@@ -6,6 +6,7 @@ import pytest
 
 from aiogossip.address import Address, to_ipaddress
 from aiogossip.gossip import Gossip
+from aiogossip.message import Message
 from aiogossip.node import Node
 from aiogossip.route import Route
 from aiogossip.transport import Transport
@@ -29,15 +30,21 @@ def instances(request):
 # Message #####################################################################
 
 
-def get_message():
-    message = {}
-    message["id"] = uuid.uuid4().bytes
+def get_message(snode, dnode):
+    message = Message(
+        route_snode=snode.node_id,
+        route_dnode=dnode.node_id,
+    )
     return message
+
+
+def get_random_message():
+    return get_message(get_node(), get_node())
 
 
 @pytest.fixture
 def message():
-    return get_message()
+    return get_random_message()
 
 
 # Address #####################################################################
