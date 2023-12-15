@@ -73,4 +73,5 @@ class Gossip:
     async def recv(self):
         while True:
             message, addr = await self.transport.recv()
+            # TODO: process route_endpoints with adding snode.daddr and dnode.saddr
             yield message
