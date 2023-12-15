@@ -29,6 +29,11 @@ def test_post_init_with_invalid_port():
         Address(ipaddress.IPv4Address("192.168.1.1"), "invalid_port")
 
 
+def test_post_init_with_invalid_port_integer():
+    with pytest.raises(ValueError):
+        Address(ipaddress.IPv4Address("192.168.1.1"), 70000)
+
+
 def test_frozen_address():
     address = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
     with pytest.raises(dataclasses.FrozenInstanceError):

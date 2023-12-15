@@ -20,6 +20,9 @@ class Address:
         if not isinstance(self.port, int):
             raise TypeError("port must be int")
 
+        if not 0 <= self.port <= 65535:
+            raise ValueError("port must be between 0 and 65535")
+
 
 @typeguard.typechecked
 def to_ipaddress(
