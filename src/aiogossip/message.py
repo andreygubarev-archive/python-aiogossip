@@ -47,8 +47,11 @@ def update_send_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> M
     elif endpoints[-1].node == send.node:
         endpoints.append(recv)
 
+    endpoints[-2].node.addresses.add(send.saddr)
     endpoints[-2] = dataclasses.replace(endpoints[-2], saddr=send.saddr)
+    endpoints[-1].node.addresses.add(recv.daddr)
     endpoints[-1] = dataclasses.replace(endpoints[-1], daddr=recv.daddr)
+
     return dataclasses.replace(message, route_endpoints=endpoints)
 
 
@@ -66,6 +69,10 @@ def update_recv_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> M
         Message: The updated message with the new send and receive endpoints.
     """
     endpoints = message.route_endpoints
+
+    endpoints[-2].node.addresses.add(send.daddr)
     endpoints[-2] = dataclasses.replace(endpoints[-2], daddr=send.daddr)
+    endpoints[-1].node.addresses.add(recv.saddr)
     endpoints[-1] = dataclasses.replace(endpoints[-1], saddr=recv.saddr)
+
     return dataclasses.replace(message, route_endpoints=endpoints)

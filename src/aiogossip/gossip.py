@@ -7,6 +7,7 @@ from .concurrency import mutex
 from .endpoint import Endpoint
 from .message import Message, update_recv_endpoints, update_send_endpoints
 from .node import Node
+from .route import Route
 from .topology import Topology
 from .transport import Transport
 
@@ -104,6 +105,16 @@ class Gossip:
                 message,
                 send=Endpoint(message.route_endpoints[-2].node, daddr=addr),
                 recv=Endpoint(message.route_endpoints[-1].node, saddr=self.transport.addr),
+            )
+
+            self.topology.add_node(message.route_endpoints[-2].node)
+            self.topology.add_route(
+                Route(
+                    snode=message.route_endpoints[-2].node,
+                    saddr=message.route_endpoints[-2].daddr,
+                    dnode=message.route_endpoints[-1].node,
+                    daddr=message.route_endpoints[-1].saddr,
+                )
             )
 
             # gossip message

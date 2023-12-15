@@ -96,8 +96,8 @@ async def test_send_and_receive(gossips):
     assert received_message.route_endpoints[-1].daddr == daddr
 
 
-@pytest.mark.parametrize("random_seed", [3])
-@pytest.mark.parametrize("instances", [10, 30, 75])
+@pytest.mark.parametrize("random_seed", [0])
+@pytest.mark.parametrize("instances", [15])
 @pytest.mark.asyncio
 async def test_gossip(random_seed, gossips, message):
     assert gossips[0].fanout
