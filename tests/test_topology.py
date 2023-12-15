@@ -1,8 +1,7 @@
 import networkx as nx
 import pytest
 
-from aiogossip.route import Route
-from aiogossip.topology import Topology
+from aiogossip.topology import Route, Topology
 
 
 def test_topology_initialization():
@@ -133,10 +132,8 @@ def test_topology_get_successor_routes(nodes, addresses):
 
     nodes[0].addresses.add(addresses[0])
     topology.add_node(nodes[0])
-
     nodes[1].addresses.add(addresses[1])
     topology.add_node(nodes[1])
-
     nodes[2].addresses.add(addresses[2])
     topology.add_node(nodes[2])
 
@@ -156,3 +153,41 @@ def test_topology_get_successor_routes(nodes, addresses):
     assert successor_routes[1].saddr == addresses[0]
     assert successor_routes[1].dnode == nodes[2]
     assert successor_routes[1].daddr == addresses[2]
+
+
+@pytest.mark.parametrize("instances", [4])
+def test_get_random_dnodes(nodes, addresses):
+    topology = Topology()
+
+    # Add nodes to topology
+    nodes[0].addresses.add(addresses[0])
+    topology.add_node(nodes[0])
+    nodes[1].addresses.add(addresses[1])
+    topology.add_node(nodes[1])
+    nodes[2].addresses.add(addresses[2])
+    topology.add_node(nodes[2])
+    nodes[3].addresses.add(addresses[3])
+    topology.add_node(nodes[3])
+
+    # Create routes
+    route1 = Route(nodes[0], addresses[0], nodes[1], addresses[1])
+    topology.add_route(route1)
+    route2 = Route(nodes[0], addresses[0], nodes[2], addresses[2])
+    topology.add_route(route2)
+    route3 = Route(nodes[0], addresses[0], nodes[3], addresses[3])
+    topology.add_route(route3)
+
+    # Exclude node2 and node3
+    exclude_nodes = {nodes[2], nodes[3]}
+
+    # Get random destination nodes
+    random_dnodes = topology.get_random_successor_nodes(nodes[0], 1, exclude_nodes)
+
+    # Assert the number of random destination nodes
+    assert len(random_dnodes) == 1
+
+    # Assert that the random destination node is not in the excluded nodes
+    assert random_dnodes[0] not in exclude_nodes
+
+    # Assert that the random destination node is in the list of destination nodes
+    assert random_dnodes[0] in [route1.dnode, route2.dnode, route3.dnode]

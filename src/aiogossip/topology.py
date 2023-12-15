@@ -1,3 +1,4 @@
+import random
 import uuid
 
 import networkx as nx
@@ -36,6 +37,24 @@ class Topology:
 
         """
         return self.g.nodes[node_id]["node"]
+
+    @typeguard.typechecked
+    def get_random_successor_nodes(self, snode: Node, n: int, exclude_nodes: set[Node] = None) -> list[Node]:
+        """
+        Returns a list of randomly selected successor nodes from the given source node.
+
+        Args:
+            snode (Node): The source node.
+            n (int): The number of successor nodes to select.
+            exclude_nodes (set[Node], optional): Set of nodes to exclude from selection. Defaults to None.
+
+        Returns:
+            list[Node]: A list of randomly selected successor nodes.
+        """
+        routes = self.get_successor_routes(snode)
+        exclude_nodes = exclude_nodes or set()
+        dnodes = [r.dnode for r in routes if r.dnode not in exclude_nodes]
+        return random.sample(dnodes, min(n, len(dnodes)))
 
     @typeguard.typechecked
     def add_route(
