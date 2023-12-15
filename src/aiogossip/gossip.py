@@ -70,7 +70,8 @@ class Gossip:
         await self.transport.send(message, route.daddr)
         return message
 
-    async def recv(self):
+    @typeguard.typechecked
+    async def recv(self) -> Message:
         while True:
             message, addr = await self.transport.recv()
             message = update_recv_endpoints(
