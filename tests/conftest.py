@@ -119,7 +119,7 @@ def transports(event_loop, addresses):
 # Gossip ######################################################################
 
 
-def get_gossip(node, transport, fanout=0):
+def get_gossip(node, transport, fanout=5):
     return Gossip(node, transport, fanout)
 
 
