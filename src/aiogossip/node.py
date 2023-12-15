@@ -26,6 +26,9 @@ class Node:
             if not isinstance(address, Address):
                 raise TypeError("addresses must be set of Address")
 
+    def __hash__(self):
+        return hash(self.node_id)
+
 
 @typeguard.typechecked
 def to_node(node: Node | uuid.UUID | str) -> Node:

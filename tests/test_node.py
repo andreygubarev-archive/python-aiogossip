@@ -81,3 +81,11 @@ def test_to_node_with_invalid_uuid_version():
 def test_to_node_with_invalid_uuid_version_in_str():
     with pytest.raises(ValueError):
         to_node(f"{uuid.uuid4()}@127.0.0.1:8000")  # uuid4 is not uuid1
+
+
+@pytest.mark.parametrize("instances", [2])
+def test_node_hash(addresses):
+    node1 = Node(node_id=uuid.uuid1(), addresses={addresses[0]})
+    node2 = Node(node_id=uuid.uuid1(), addresses={addresses[1]})
+    assert hash(node1) != hash(node2)
+    assert hash(node1) == hash(node1)
