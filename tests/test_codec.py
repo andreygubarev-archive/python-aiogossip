@@ -18,23 +18,21 @@ def test_packb(gossips):
     message = Message(
         route_snode=gossips[0].node,
         route_dnode=gossips[1].node,
+        payload={
+            "addr": addr,
+            "identifier": identifier,
+            "test": "test",
+            "node": gossips[0].node,
+            "endpoint": Endpoint(node=gossips[0].node),
+        },
     )
 
-    data = {
-        "addr": addr,
-        "identifier": identifier,
-        "test": "test",
-        "node": gossips[0].node,
-        "endpoint": Endpoint(node=gossips[0].node),
-        "message": message,
-    }
-
-    packed = codec.packb(data)
+    packed = codec.packb(message)
     assert isinstance(packed, bytes)
 
     upacked = codec.unpackb(packed)
-    assert upacked["addr"].ip == ip
-    assert upacked["addr"].port == port
-    assert upacked["identifier"] == identifier
-    assert upacked["test"] == "test"
-    assert upacked["node"] == gossips[0].node
+    assert upacked.payload["addr"].ip == ip
+    assert upacked.payload["addr"].port == port
+    assert upacked.payload["identifier"] == identifier
+    assert upacked.payload["test"] == "test"
+    assert upacked.payload["node"] == gossips[0].node
