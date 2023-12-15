@@ -23,6 +23,12 @@ class Address:
         if not 0 <= self.port <= 65535:
             raise ValueError("port must be between 0 and 65535")
 
+    def __str__(self):
+        return f"{self.ip}:{self.port}"
+
+    def __hash__(self):
+        return hash(str(self))
+
 
 @typeguard.typechecked
 def to_ipaddress(

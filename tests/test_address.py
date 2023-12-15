@@ -188,3 +188,14 @@ def test_to_address_with_invalid_tuple_format():
 def test_to_address_with_tuple_of_wrong_size():
     with pytest.raises(typeguard.TypeCheckError):
         to_address(("192.168.1.1", 8080, "extra_value"))
+
+
+def test_address_str_representation():
+    address = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
+    assert str(address) == "192.168.1.1:8080"
+
+
+def test_address_hash():
+    address1 = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
+    address2 = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
+    assert hash(address1) == hash(address2)
