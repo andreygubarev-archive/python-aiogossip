@@ -66,3 +66,9 @@ def test_update_recv_endpoints(gossips):
     assert updated_message.route_endpoints == [send, recv]
     assert updated_message.route_endpoints[-2].daddr == send.daddr
     assert updated_message.route_endpoints[-1].saddr == recv.saddr
+
+
+@pytest.mark.parametrize("instances", [2])
+def test_message_hash(gossips):
+    message = Message(route_snode=gossips[0].node, route_dnode=gossips[1].node, message_id="test_id")
+    assert hash(message) == hash("test_id")

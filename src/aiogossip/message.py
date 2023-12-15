@@ -23,6 +23,9 @@ class Message:
 
     payload: Any | None = None
 
+    def __hash__(self):
+        return hash(self.message_id)
+
 
 @typeguard.typechecked
 def update_send_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> Message:
