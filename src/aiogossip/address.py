@@ -26,6 +26,9 @@ class Address:
     def __str__(self):
         return f"{self.ip}:{self.port}"
 
+    def __repr__(self):
+        return f"<Address '{self}'>"
+
     def __hash__(self):
         return hash(str(self))
 

@@ -199,3 +199,8 @@ def test_address_hash():
     address1 = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
     address2 = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
     assert hash(address1) == hash(address2)
+
+
+def test_address_repr():
+    address = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
+    assert repr(address) == "<Address '192.168.1.1:8080'>"
