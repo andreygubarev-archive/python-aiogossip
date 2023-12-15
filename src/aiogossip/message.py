@@ -3,6 +3,8 @@ import enum
 import uuid
 from typing import Any
 
+import typeguard
+
 from .endpoint import Endpoint
 
 
@@ -23,6 +25,7 @@ class Message:
     payload: Any | None = None
 
 
+@typeguard.typechecked
 def update_send_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> Message:
     endpoints = message.route_endpoints
 
@@ -33,4 +36,12 @@ def update_send_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> M
 
     endpoints[-2] = dataclasses.replace(endpoints[-2], saddr=send.saddr)
     endpoints[-1] = dataclasses.replace(endpoints[-1], daddr=recv.daddr)
+    return dataclasses.replace(message, route_endpoints=endpoints)
+
+
+@typeguard.typechecked
+def update_recv_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> Message:
+    endpoints = message.route_endpoints
+    endpoints[-2] = dataclasses.replace(endpoints[-2], daddr=send.daddr)
+    endpoints[-1] = dataclasses.replace(endpoints[-1], saddr=recv.saddr)
     return dataclasses.replace(message, route_endpoints=endpoints)

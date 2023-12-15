@@ -3,7 +3,7 @@ import math
 import typeguard
 
 from .endpoint import Endpoint
-from .message import Message, update_send_endpoints
+from .message import Message, update_recv_endpoints, update_send_endpoints
 from .node import Node
 from .topology import Topology
 from .transport import Transport
@@ -73,5 +73,9 @@ class Gossip:
     async def recv(self):
         while True:
             message, addr = await self.transport.recv()
-            # TODO: process route_endpoints with adding snode.daddr and dnode.saddr
+            message = update_recv_endpoints(
+                message,
+                send=Endpoint(message.route_endpoints[-2].node, daddr=addr),
+                recv=Endpoint(message.route_endpoints[-1].node, saddr=self.transport.addr),
+            )
             yield message
