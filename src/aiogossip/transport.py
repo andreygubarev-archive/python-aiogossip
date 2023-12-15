@@ -1,17 +1,17 @@
 import asyncio
 import socket
-from typing import Any
 
 import typeguard
 
 from . import codec
 from .address import Address, to_address
+from .message import Message
 
 
-@typeguard.typechecked
 class Transport:
     PACKET_SIZE = 4096
 
+    @typeguard.typechecked
     def __init__(self, addr: Address, loop: asyncio.AbstractEventLoop):
         self.loop = loop
 
@@ -26,7 +26,8 @@ class Transport:
         self.tx_bytes = 0
         self.tx_packets = 0
 
-    async def send(self, message: Any, addr: Address):
+    @typeguard.typechecked
+    async def send(self, message: Message, addr: Address):
         """
         Sends a message to the specified address.
 
@@ -49,7 +50,8 @@ class Transport:
         self.tx_packets += 1
         self.tx_bytes += len(data)
 
-    async def recv(self):
+    @typeguard.typechecked
+    async def recv(self) -> tuple[Message, Address]:
         """
         Receives a message from the transport.
 
