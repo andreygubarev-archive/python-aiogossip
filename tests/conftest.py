@@ -126,6 +126,7 @@ def get_gossip(node, transport, fanout=5):
 def get_random_gossip(event_loop):
     node = get_node()
     transport = get_transport(event_loop, get_address())
+    node.addresses.clear()
     node.addresses.add(transport.addr)
     return get_gossip(node, transport)
 
@@ -139,6 +140,7 @@ def gossip(event_loop):
 def gossips(event_loop, instances):
     gossips = [get_random_gossip(event_loop) for _ in range(instances)]
     gossips_connections = math.ceil(math.sqrt(len(gossips)))
+
     for gossip in gossips:
         if gossips[0] == gossip:
             continue
@@ -153,6 +155,16 @@ def gossips(event_loop, instances):
             )
         )
 
+        gossip.topology.add_node(gossips[0].node)
+        gossip.topology.add_route(
+            Route(
+                gossip.node,
+                list(gossip.node.addresses)[0],
+                gossips[0].node,
+                list(gossips[0].node.addresses)[0],
+            )
+        )
+
         for g in random.sample(gossips, gossips_connections):
             if g == gossip:
                 continue
@@ -163,6 +175,16 @@ def gossips(event_loop, instances):
                     list(gossip.node.addresses)[0],
                     g.node,
                     list(g.node.addresses)[0],
+                )
+            )
+
+            g.topology.add_node(gossip.node)
+            g.topology.add_route(
+                Route(
+                    g.node,
+                    list(g.node.addresses)[0],
+                    gossip.node,
+                    list(gossip.node.addresses)[0],
                 )
             )
     return gossips

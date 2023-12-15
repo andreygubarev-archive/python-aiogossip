@@ -1,4 +1,5 @@
 import asyncio
+import dataclasses
 
 import pytest
 
@@ -93,3 +94,34 @@ async def test_send_and_receive(gossips):
     assert received_message.route_endpoints[-1].node == dnode
     assert received_message.route_endpoints[-1].saddr == daddr
     assert received_message.route_endpoints[-1].daddr == daddr
+
+
+@pytest.mark.parametrize("random_seed", [3])
+@pytest.mark.parametrize("instances", [10, 30, 75])
+@pytest.mark.asyncio
+async def test_gossip(random_seed, gossips, message):
+    assert gossips[0].fanout
+    message = dataclasses.replace(message, message_type={Message.Type.GOSSIP})
+    await gossips[0].send_gossip(message)
+
+    async def listener(gossip):
+        try:
+            async with asyncio.timeout(0.1):
+                async for message in gossip.recv():
+                    pass
+        except asyncio.TimeoutError:
+            pass
+
+    listeners = [asyncio.create_task(listener(n)) for n in gossips]
+    await asyncio.gather(*listeners)
+
+    for g in gossips:
+        if g.node == gossips[0].node:
+            continue
+        if any([g.node in g.topology for g in gossips]):
+            assert g.transport.rx_packets > 0, g.topology
+    rx_packets = sum(g.transport.rx_packets for g in gossips)
+    assert rx_packets <= 2 ** len(gossips)
+
+    for g in gossips:
+        g.transport.close()

@@ -1,7 +1,9 @@
+import dataclasses
 import math
 
 import typeguard
 
+from .concurrency import mutex
 from .endpoint import Endpoint
 from .message import Message, update_recv_endpoints, update_send_endpoints
 from .node import Node
@@ -62,6 +64,7 @@ class Gossip:
     @typeguard.typechecked
     async def send(self, message: Message, node: Node) -> Message:
         route = self.topology.get_shortest_route(self.node, node)
+        print("SEND", node, route, "\n")
         message = update_send_endpoints(
             message,
             send=Endpoint(route.snode, saddr=route.saddr),
@@ -69,6 +72,29 @@ class Gossip:
         )
         await self.transport.send(message, route.daddr)
         return message
+
+    @typeguard.typechecked
+    async def send_gossip(self, message: Message) -> list[Message]:
+        if Message.Type.GOSSIP not in message.message_type:
+            raise ValueError("Message type must contain GOSSIP")
+
+        messages = set()
+        gossip_ignore = set([self.node])
+        gossip_ignore.update([ep.node for ep in message.route_endpoints])
+
+        @mutex(self, message.message_id)
+        async def multicast():
+            cycle = 0
+            while cycle < self.cycles:
+                nodes = self.topology.get_random_successor_nodes(self.node, self.fanout, exclude_nodes=gossip_ignore)
+                for node in nodes:
+                    m = dataclasses.replace(message, route_dnode=node.node_id)
+                    messages.add(await self.send(m, node))
+                gossip_ignore.update([n for n in nodes])
+                cycle += 1
+
+        await multicast()
+        return list(messages)
 
     @typeguard.typechecked
     async def recv(self) -> Message:
@@ -79,4 +105,9 @@ class Gossip:
                 send=Endpoint(message.route_endpoints[-2].node, daddr=addr),
                 recv=Endpoint(message.route_endpoints[-1].node, saddr=self.transport.addr),
             )
+
+            # gossip message
+            if Message.Type.GOSSIP in message.message_type:
+                await self.send_gossip(message)
+
             yield message
