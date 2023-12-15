@@ -7,12 +7,30 @@ import msgpack
 from . import address, endpoint, message, node
 
 
-def to_dict(dc):
-    return {f.name: getattr(dc, f.name) for f in dataclasses.fields(dc)}
+def dataclass_asdict(dataclass):
+    """
+    Convert a dataclass object to a dictionary without recursive conversion.
+
+    Args:
+        dataclass: The dataclass object to convert.
+
+    Returns:
+        dict: A dictionary representation of the dataclass object.
+    """
+    return {f.name: getattr(dataclass, f.name) for f in dataclasses.fields(dataclass)}
 
 
-def to_tuple(dc):
-    return tuple(getattr(dc, f.name) for f in dataclasses.fields(dc))
+def dataclass_astuple(dataclass):
+    """
+    Convert a dataclass instance to a tuple without recursive conversion.
+
+    Args:
+        dataclass: The dataclass instance to convert.
+
+    Returns:
+        tuple: The converted tuple.
+    """
+    return tuple(getattr(dataclass, f.name) for f in dataclasses.fields(dataclass))
 
 
 def encoder(obj):
@@ -23,13 +41,13 @@ def encoder(obj):
     if isinstance(obj, uuid.UUID):
         return msgpack.ExtType(2, bytes(obj.bytes))
     if isinstance(obj, address.Address):
-        return msgpack.ExtType(3, packb(to_tuple(obj)))
+        return msgpack.ExtType(3, packb(dataclass_astuple(obj)))
     if isinstance(obj, node.Node):
-        return msgpack.ExtType(4, packb(to_tuple(obj)))
+        return msgpack.ExtType(4, packb(dataclass_astuple(obj)))
     if isinstance(obj, endpoint.Endpoint):
-        return msgpack.ExtType(5, packb(to_tuple(obj)))
+        return msgpack.ExtType(5, packb(dataclass_astuple(obj)))
     if isinstance(obj, message.Message):
-        return msgpack.ExtType(6, packb(to_dict(obj)))
+        return msgpack.ExtType(6, packb(dataclass_asdict(obj)))
     raise TypeError(f"Object of type {type(obj)} is not serializable")  # pragma: no cover
 
 
