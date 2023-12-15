@@ -76,7 +76,7 @@ class Gossip:
 
     @typeguard.typechecked
     async def send_gossip(self, message: Message) -> list[Message]:
-        if Message.Type.GOSSIP not in message.message_type:
+        if Message.Type.GOSSIP not in message.message_type:  # pragma: no cover
             raise ValueError("Message type must contain GOSSIP")
 
         messages = set()
