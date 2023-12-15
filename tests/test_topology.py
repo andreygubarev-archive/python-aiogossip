@@ -191,3 +191,22 @@ def test_get_random_dnodes(nodes, addresses):
 
     # Assert that the random destination node is in the list of destination nodes
     assert random_dnodes[0] in [route1.dnode, route2.dnode, route3.dnode]
+
+
+@pytest.mark.parametrize("instances", [3])
+def test_topology_iter(nodes):
+    topology = Topology()
+    for node in nodes:
+        topology.add_node(node)
+    assert set(topology) == set(nodes)
+
+
+@pytest.mark.parametrize("instances", [3])
+def test_topology_contains(nodes):
+    topology = Topology()
+    for node in nodes:
+        topology.add_node(node)
+
+    assert nodes[0] in topology
+    assert nodes[1] in topology
+    assert nodes[2] in topology

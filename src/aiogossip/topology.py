@@ -131,3 +131,24 @@ class Topology:
             int: The number of nodes in the topology.
         """
         return len(self.g)
+
+    def __iter__(self) -> iter:
+        """
+        Returns an iterator over the nodes in the topology.
+
+        Returns:
+            iter: An iterator over the nodes in the topology.
+        """
+        return iter(self.get_node(node_id) for node_id in self.g)
+
+    def __contains__(self, node: Node) -> bool:
+        """
+        Returns True if the node is in the topology.
+
+        Args:
+            node (Node): The node to check.
+
+        Returns:
+            bool: True if the node is in the topology.
+        """
+        return node.node_id in self.g
