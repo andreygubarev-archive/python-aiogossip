@@ -27,6 +27,17 @@ class Message:
 
 @typeguard.typechecked
 def update_send_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> Message:
+    """
+    Update source address of sender and destination address of receiver in a message.
+
+    Args:
+        message (Message): The message to update.
+        send (Endpoint): The endpoint of the sender.
+        recv (Endpoint): The endpoint of the receiver.
+
+    Returns:
+        Message: The updated message with the new send and receive endpoints.
+    """
     endpoints = message.route_endpoints
 
     if not endpoints:
@@ -41,6 +52,17 @@ def update_send_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> M
 
 @typeguard.typechecked
 def update_recv_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> Message:
+    """
+    Update destination address of sender and source address of receiver in a message.
+
+    Args:
+        message (Message): The message to update.
+        send (Endpoint): The endpoint of the sender.
+        recv (Endpoint): The endpoint of the receiver.
+
+    Returns:
+        Message: The updated message with the new send and receive endpoints.
+    """
     endpoints = message.route_endpoints
     endpoints[-2] = dataclasses.replace(endpoints[-2], daddr=send.daddr)
     endpoints[-1] = dataclasses.replace(endpoints[-1], saddr=recv.saddr)
