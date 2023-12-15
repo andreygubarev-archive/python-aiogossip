@@ -8,19 +8,18 @@ import typeguard
 from .endpoint import Endpoint
 
 
-class Kind(enum.Enum):
-    HANDSHAKE = 0
-    GOSSIP = 1
-
-
 @dataclasses.dataclass(frozen=True, slots=True)
 class Message:
+    class Type(enum.Enum):
+        HANDSHAKE = 0
+        GOSSIP = 1
+
     route_snode: uuid.UUID
     route_dnode: uuid.UUID
     route_endpoints: list[Endpoint] = dataclasses.field(default_factory=list)
 
     message_id: uuid.UUID = dataclasses.field(default_factory=uuid.uuid4)
-    message_type: set[Kind] = dataclasses.field(default_factory=set)
+    message_type: set[Type] = dataclasses.field(default_factory=set)
 
     payload: Any | None = None
 
