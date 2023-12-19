@@ -121,6 +121,10 @@ class Gossip:
                 pass
 
             # IMPORTANT: syn/ack
+            if Message.Type.ACK in message.message_type:
+                yield message
+                continue
+
             if Message.Type.SYN in message.message_type:
                 # TODO: syn/ack
                 pass
