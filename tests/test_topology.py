@@ -1,6 +1,11 @@
+import uuid
+
 import networkx as nx
 import pytest
 
+from aiogossip.address import to_address
+from aiogossip.endpoint import Endpoint
+from aiogossip.node import Node
 from aiogossip.topology import Route, Topology
 
 
@@ -210,3 +215,47 @@ def test_topology_contains(nodes):
     assert nodes[0] in topology
     assert nodes[1] in topology
     assert nodes[2] in topology
+
+
+def test_topology_update_routes_with_three_endpoints():
+    nodes = [
+        Node(
+            uuid.UUID("aaaaaaaa-9eb9-11ee-9bae-76ec1a7abb6c"),
+            {to_address("127.0.0.1:10000"), to_address("192.168.0.1:10000")},
+        ),
+        Node(
+            uuid.UUID("bbbbbbbb-9eb9-11ee-9bae-76ec1a7abb6c"),
+            {to_address("127.0.0.1:10001"), to_address("192.168.0.1:10001")},
+        ),
+        Node(
+            uuid.UUID("cccccccc-9eb8-11ee-ad78-76ec1a7abb6c"),
+            {to_address("127.0.0.1:10002"), to_address("192.168.0.1:10002")},
+        ),
+    ]
+
+    topology = Topology()
+    topology.add_node(nodes[0])
+    with pytest.raises(ValueError):
+        topology.update_routes(
+            [
+                Endpoint(nodes[0], saddr=to_address("127.0.0.1:10000"), daddr=to_address("192.168.0.1:10000")),
+            ]
+        )
+
+    topology.update_routes(
+        [
+            Endpoint(nodes[0], saddr=to_address("127.0.0.1:10000"), daddr=to_address("192.168.0.1:10000")),
+            Endpoint(nodes[1], saddr=to_address("127.0.0.1:10001"), daddr=to_address("192.168.0.1:10001")),
+            Endpoint(nodes[2], saddr=to_address("127.0.0.1:10002"), daddr=to_address("192.168.0.1:10002")),
+        ]
+    )
+
+    assert topology.g.has_edge(nodes[0].node_id, nodes[1].node_id)
+    assert not topology.g.has_edge(nodes[1].node_id, nodes[0].node_id)
+    assert topology.g.edges[nodes[0].node_id, nodes[1].node_id]["daddr"] == to_address("192.168.0.1:10001")
+
+    assert topology.g.has_edge(nodes[1].node_id, nodes[2].node_id)
+    assert topology.g.edges[nodes[1].node_id, nodes[2].node_id]["daddr"] == to_address("192.168.0.1:10002")
+
+    assert topology.g.has_edge(nodes[2].node_id, nodes[1].node_id)
+    assert topology.g.edges[nodes[2].node_id, nodes[1].node_id]["daddr"] == to_address("192.168.0.1:10001")

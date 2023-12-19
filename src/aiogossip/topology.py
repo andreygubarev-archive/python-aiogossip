@@ -4,6 +4,7 @@ import uuid
 import networkx as nx
 import typeguard
 
+from .endpoint import Endpoint
 from .node import Node
 from .route import Route
 
@@ -21,7 +22,9 @@ class Topology:
             node (Node): The node to be added.
 
         """
-        if node.node_id not in self.g:
+        if node.node_id in self.g:
+            self.get_node(node.node_id).addresses.update(node.addresses)
+        else:
             self.g.add_node(node.node_id, node=node)
 
     @typeguard.typechecked
@@ -123,6 +126,30 @@ class Topology:
         for dnode in self.g.successors(snode.node_id):
             routes.append(self.get_route(snode, self.get_node(dnode)))
         return routes
+
+    @typeguard.typechecked
+    def update_routes(self, endpoints: list[Endpoint]):
+        """
+        Update the routes in the topology based on the given list of endpoints.
+
+        Args:
+            endpoints (list[Endpoint]): A list of endpoints representing the nodes in the topology.
+
+        Raises:
+            ValueError: If the number of endpoints is less than 2.
+
+        """
+        if len(endpoints) < 2:
+            raise ValueError("Endpoints must contain at least two endpoints")
+
+        for endpoint in endpoints:
+            self.add_node(endpoint.node)
+
+        # IMPORTANT: discovery
+        hops = list(zip(endpoints[:-1], endpoints[1:]))
+        for src, dst in hops:
+            self.add_route(Route(src.node, src.daddr, dst.node, dst.daddr))
+        self.add_route(Route(dst.node, dst.daddr, src.node, src.daddr))
 
     def __len__(self) -> int:
         """

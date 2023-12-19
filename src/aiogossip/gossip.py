@@ -7,7 +7,6 @@ from .concurrency import mutex
 from .endpoint import Endpoint
 from .message import Message, update_recv_endpoints, update_send_endpoints
 from .node import Node
-from .route import Route
 from .topology import Topology
 from .transport import Transport
 
@@ -65,7 +64,8 @@ class Gossip:
     @typeguard.typechecked
     async def send(self, message: Message, node: Node) -> Message:
         route = self.topology.get_shortest_route(self.node, node)
-        # IMPORTANT
+
+        # IMPORTANT: discovery
         message = update_send_endpoints(
             message,
             send=Endpoint(route.snode, saddr=route.saddr),
@@ -101,25 +101,18 @@ class Gossip:
     async def recv(self) -> Message:
         while True:
             message, addr = await self.transport.recv()
-            # IMPORTANT
+
+            # IMPORTANT: discovery
             message = update_recv_endpoints(
                 message,
                 send=Endpoint(message.route_endpoints[-2].node, daddr=addr),
                 recv=Endpoint(message.route_endpoints[-1].node, saddr=self.transport.addr),
             )
 
-            # TODO: replace with algorithm of routes discovery
-            self.topology.add_node(message.route_endpoints[-2].node)
-            self.topology.add_route(
-                Route(
-                    snode=message.route_endpoints[-2].node,
-                    saddr=message.route_endpoints[-2].daddr,
-                    dnode=message.route_endpoints[-1].node,
-                    daddr=message.route_endpoints[-1].saddr,
-                )
-            )
+            # IMPORTANT: discovery
+            self.topology.update_routes(message.route_endpoints)
 
-            # IMPORTANT
+            # IMPORTANT: gossip
             if Message.Type.GOSSIP in message.message_type:
                 await self.send_gossip(message)
 
