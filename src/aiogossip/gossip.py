@@ -120,6 +120,11 @@ class Gossip:
                 # TODO: handshake
                 pass
 
+            # IMPORTANT: syn/ack
+            if Message.Type.SYN in message.message_type:
+                # TODO: syn/ack
+                pass
+
             # IMPORTANT: gossip
             if Message.Type.GOSSIP in message.message_type:
                 await self.send_gossip(message)

@@ -13,6 +13,8 @@ class Message:
     class Type(enum.Enum):
         HANDSHAKE = 0
         GOSSIP = 1
+        SYN = 2
+        ACK = 3
 
     route_snode: uuid.UUID
     route_dnode: uuid.UUID
