@@ -171,4 +171,8 @@ class Gossip:
             if Message.Type.GOSSIP in message.message_type:
                 await self.send_gossip(message)
 
+            # IMPORTANT: handshake
+            if Message.Type.HANDSHAKE in message.message_type:
+                continue
+
             yield message

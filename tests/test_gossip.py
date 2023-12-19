@@ -143,7 +143,7 @@ async def test_send_ack_value_error(gossips):
 
 
 @pytest.mark.parametrize("instances", [2])
-async def test_send_ack_sends_ack_message(gossips, message):
+async def test_send_ack(gossips, message):
     messages = collections.defaultdict(list)
 
     async def listener(gossip):
@@ -154,6 +154,8 @@ async def test_send_ack_sends_ack_message(gossips, message):
         except asyncio.TimeoutError:
             pass
 
+    listeners = [asyncio.create_task(listener(n)) for n in gossips]
+
     message = dataclasses.replace(
         message,
         message_type={Message.Type.SYN},
@@ -161,8 +163,6 @@ async def test_send_ack_sends_ack_message(gossips, message):
         route_dnode=gossips[1].node.node_id,
     )
     await gossips[0].send(message, gossips[1].node)
-
-    listeners = [asyncio.create_task(listener(n)) for n in gossips]
     await asyncio.gather(*listeners)
 
     assert len(messages[gossips[0].node]) == 1
@@ -170,6 +170,32 @@ async def test_send_ack_sends_ack_message(gossips, message):
 
     assert len(messages[gossips[1].node]) == 1
     assert messages[gossips[1].node][0].message_type == {Message.Type.SYN}
+
+    for g in gossips:
+        g.transport.close()
+
+
+@pytest.mark.parametrize("instances", [2])
+async def test_send_handshake(gossips):
+    messages = collections.defaultdict(list)
+
+    async def listener(gossip):
+        try:
+            async with asyncio.timeout(0.1):
+                async for message in gossip.recv():
+                    messages[gossip.node].append(message)
+        except asyncio.TimeoutError:
+            pass
+
+    listeners = [asyncio.create_task(listener(n)) for n in gossips]
+
+    await gossips[0].send_handshake(gossips[1].node)
+    await asyncio.gather(*listeners)
+
+    assert len(messages[gossips[0].node]) == 1
+    assert messages[gossips[0].node][0].message_type == {Message.Type.ACK}
+
+    assert len(messages[gossips[1].node]) == 0
 
     for g in gossips:
         g.transport.close()
