@@ -110,7 +110,11 @@ class Gossip:
             )
 
             # IMPORTANT: discovery
-            self.topology.update_routes(message.route_endpoints)
+            handshakes = self.topology.update_routes(message.route_endpoints)
+
+            for handshake in handshakes:
+                # TODO: handshake
+                pass
 
             # IMPORTANT: gossip
             if Message.Type.GOSSIP in message.message_type:

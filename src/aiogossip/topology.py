@@ -142,7 +142,13 @@ class Topology:
         if len(endpoints) < 2:
             raise ValueError("Endpoints must contain at least two endpoints")
 
+        handshakes = set()
         for endpoint in endpoints:
+            handshakes.add(endpoint.node)
+
+        for endpoint in endpoints:
+            endpoint.node.addresses.add(endpoint.saddr)
+            endpoint.node.addresses.add(endpoint.daddr)
             self.add_node(endpoint.node)
 
         # IMPORTANT: discovery
@@ -150,6 +156,8 @@ class Topology:
         for src, dst in hops:
             self.add_route(Route(src.node, src.daddr, dst.node, dst.daddr))
         self.add_route(Route(dst.node, dst.daddr, src.node, src.daddr))
+
+        return handshakes
 
     def __len__(self) -> int:
         """
