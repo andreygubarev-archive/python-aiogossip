@@ -104,6 +104,7 @@ class Topology:
         Returns:
             Route: The shortest route between the source and destination nodes.
         """
+        # IMPORTANT
         path = nx.shortest_path(self.g.to_undirected(), snode.node_id, dnode.node_id)
         return self.get_route(self.get_node(path[0]), self.get_node(path[1]))
 

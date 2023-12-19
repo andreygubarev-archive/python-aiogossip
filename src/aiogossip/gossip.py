@@ -65,7 +65,7 @@ class Gossip:
     @typeguard.typechecked
     async def send(self, message: Message, node: Node) -> Message:
         route = self.topology.get_shortest_route(self.node, node)
-        print("SEND", node, route, "\n")
+        # IMPORTANT
         message = update_send_endpoints(
             message,
             send=Endpoint(route.snode, saddr=route.saddr),
@@ -101,6 +101,7 @@ class Gossip:
     async def recv(self) -> Message:
         while True:
             message, addr = await self.transport.recv()
+            # IMPORTANT
             message = update_recv_endpoints(
                 message,
                 send=Endpoint(message.route_endpoints[-2].node, daddr=addr),
@@ -117,7 +118,7 @@ class Gossip:
                 )
             )
 
-            # gossip message
+            # IMPORTANT
             if Message.Type.GOSSIP in message.message_type:
                 await self.send_gossip(message)
 
