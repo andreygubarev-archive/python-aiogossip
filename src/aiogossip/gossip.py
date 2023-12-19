@@ -108,6 +108,7 @@ class Gossip:
                 recv=Endpoint(message.route_endpoints[-1].node, saddr=self.transport.addr),
             )
 
+            # TODO: replace with algorithm of routes discovery
             self.topology.add_node(message.route_endpoints[-2].node)
             self.topology.add_route(
                 Route(
