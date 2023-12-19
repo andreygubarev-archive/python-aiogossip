@@ -109,9 +109,13 @@ class Gossip:
                 recv=Endpoint(message.route_endpoints[-1].node, saddr=self.transport.addr),
             )
 
-            # IMPORTANT: discovery
-            handshakes = self.topology.update_routes(message.route_endpoints)
+            # IMPORTANT: handshake
+            handshakes = {ep.node for ep in message.route_endpoints if ep.node not in self.topology}
 
+            # IMPORTANT: discovery
+            self.topology.update_routes(message.route_endpoints)
+
+            # IMPORTANT: handshake
             for handshake in handshakes:
                 # TODO: handshake
                 pass
