@@ -75,6 +75,28 @@ class Gossip:
         return message
 
     @typeguard.typechecked
+    async def send_ack(self, message: Message, node: Node) -> Message:
+        """
+        Sends an ACK message to the specified node.
+
+        Args:
+            message (Message): The original message.
+            node (Node): The destination node.
+
+        Returns:
+            Message: The ACK message sent.
+        """
+        if Message.Type.ACK in message.message_type:
+            raise ValueError("Message type must not contain ACK")
+
+        if Message.Type.SYN not in message.message_type:
+            raise ValueError("Message type must contain SYN for ACK")
+
+        message = dataclasses.replace(message, message_type={Message.Type.ACK})
+        dataclasses.replace(message, route_snode=message.route_dnode, route_dnode=message.route_snode)
+        return await self.send(message, node)
+
+    @typeguard.typechecked
     async def send_gossip(self, message: Message) -> list[Message]:
         if Message.Type.GOSSIP not in message.message_type:  # pragma: no cover
             raise ValueError("Message type must contain GOSSIP")
@@ -126,8 +148,7 @@ class Gossip:
                 continue
 
             if Message.Type.SYN in message.message_type:
-                # TODO: syn/ack
-                pass
+                await self.send_ack(message, self.topology.get_node(message.route_snode))
 
             # IMPORTANT: gossip
             if Message.Type.GOSSIP in message.message_type:

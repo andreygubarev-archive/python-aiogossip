@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import dataclasses
 
 import pytest
@@ -122,6 +123,53 @@ async def test_gossip(random_seed, gossips, message):
             assert g.transport.rx_packets > 0, g.topology
     rx_packets = sum(g.transport.rx_packets for g in gossips)
     assert rx_packets <= 2 ** len(gossips)
+
+    for g in gossips:
+        g.transport.close()
+
+
+async def test_send_ack_value_error(gossips):
+    g = gossips[0]
+    message = Message(g.node.node_id, g.node.node_id, message_type={Message.Type.ACK})
+    with pytest.raises(ValueError):
+        await g.send_ack(message, g.node)
+
+    message = Message(g.node.node_id, g.node.node_id, message_type={})
+    with pytest.raises(ValueError):
+        await g.send_ack(message, g.node)
+
+    for g in gossips:
+        g.transport.close()
+
+
+@pytest.mark.parametrize("instances", [2])
+async def test_send_ack_sends_ack_message(gossips, message):
+    messages = collections.defaultdict(list)
+
+    async def listener(gossip):
+        try:
+            async with asyncio.timeout(0.1):
+                async for message in gossip.recv():
+                    messages[gossip.node].append(message)
+        except asyncio.TimeoutError:
+            pass
+
+    message = dataclasses.replace(
+        message,
+        message_type={Message.Type.SYN},
+        route_snode=gossips[0].node.node_id,
+        route_dnode=gossips[1].node.node_id,
+    )
+    await gossips[0].send(message, gossips[1].node)
+
+    listeners = [asyncio.create_task(listener(n)) for n in gossips]
+    await asyncio.gather(*listeners)
+
+    assert len(messages[gossips[0].node]) == 1
+    assert messages[gossips[0].node][0].message_type == {Message.Type.ACK}
+
+    assert len(messages[gossips[1].node]) == 1
+    assert messages[gossips[1].node][0].message_type == {Message.Type.SYN}
 
     for g in gossips:
         g.transport.close()
