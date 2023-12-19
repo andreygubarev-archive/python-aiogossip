@@ -97,6 +97,24 @@ class Gossip:
         return await self.send(message, node)
 
     @typeguard.typechecked
+    async def send_handshake(self, node: Node) -> Message:
+        """
+        Sends HANDSHAKE/SYN message to the specified node.
+
+        Args:
+            node (Node): The destination node.
+
+        Returns:
+            Message: The SYN message sent.
+        """
+        message = Message(
+            route_snode=self.node.node_id,
+            route_dnode=node.node_id,
+            message_type={Message.Type.HANDSHAKE, Message.Type.SYN},
+        )
+        return await self.send(message, node)
+
+    @typeguard.typechecked
     async def send_gossip(self, message: Message) -> list[Message]:
         if Message.Type.GOSSIP not in message.message_type:  # pragma: no cover
             raise ValueError("Message type must contain GOSSIP")
@@ -139,8 +157,7 @@ class Gossip:
 
             # IMPORTANT: handshake
             for handshake in handshakes:
-                # TODO: handshake
-                pass
+                await self.send_handshake(handshake)
 
             # IMPORTANT: syn/ack
             if Message.Type.ACK in message.message_type:
