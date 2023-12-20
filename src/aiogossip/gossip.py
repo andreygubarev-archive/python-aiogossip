@@ -92,8 +92,12 @@ class Gossip:
         if Message.Type.SYN not in message.message_type:
             raise ValueError("Message type must contain SYN for ACK")
 
-        message = dataclasses.replace(message, message_type={Message.Type.ACK})
-        dataclasses.replace(message, route_snode=message.route_dnode, route_dnode=message.route_snode)
+        message = dataclasses.replace(
+            message,
+            message_type={Message.Type.ACK},
+            route_snode=message.route_dnode,
+            route_dnode=message.route_snode,
+        )
         return await self.send(message, node)
 
     @typeguard.typechecked
@@ -158,6 +162,11 @@ class Gossip:
             # IMPORTANT: handshake
             for handshake in handshakes:
                 await self.send_handshake(handshake)
+
+            # IMPORTANT: forward
+            if message.route_dnode != self.node.node_id:
+                await self.send(message, self.topology.get_node(message.route_dnode))
+                continue
 
             # IMPORTANT: syn/ack
             if Message.Type.ACK in message.message_type:

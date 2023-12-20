@@ -188,3 +188,34 @@ def gossips(event_loop, instances):
                 )
             )
     return gossips
+
+
+@pytest.fixture
+def gossips_with_topology_star(event_loop, instances):
+    gossips = [get_random_gossip(event_loop) for _ in range(instances)]
+
+    for gossip in gossips:
+        if gossips[0] == gossip:
+            continue
+
+        gossips[0].topology.add_node(gossip.node)
+        gossips[0].topology.add_route(
+            Route(
+                gossips[0].node,
+                list(gossips[0].node.addresses)[0],
+                gossip.node,
+                list(gossip.node.addresses)[0],
+            )
+        )
+
+        gossip.topology.add_node(gossips[0].node)
+        gossip.topology.add_route(
+            Route(
+                gossip.node,
+                list(gossip.node.addresses)[0],
+                gossips[0].node,
+                list(gossips[0].node.addresses)[0],
+            )
+        )
+
+    return gossips

@@ -167,9 +167,13 @@ async def test_send_ack(gossips, message):
 
     assert len(messages[gossips[0].node]) == 1
     assert messages[gossips[0].node][0].message_type == {Message.Type.ACK}
+    assert messages[gossips[0].node][0].route_snode == gossips[1].node.node_id
+    assert messages[gossips[0].node][0].route_dnode == gossips[0].node.node_id
 
     assert len(messages[gossips[1].node]) == 1
     assert messages[gossips[1].node][0].message_type == {Message.Type.SYN}
+    assert messages[gossips[1].node][0].route_snode == gossips[0].node.node_id
+    assert messages[gossips[1].node][0].route_dnode == gossips[1].node.node_id
 
     for g in gossips:
         g.transport.close()
@@ -194,8 +198,38 @@ async def test_send_handshake(gossips):
 
     assert len(messages[gossips[0].node]) == 1
     assert messages[gossips[0].node][0].message_type == {Message.Type.ACK}
+    assert messages[gossips[0].node][0].route_snode == gossips[1].node.node_id
+    assert messages[gossips[0].node][0].route_dnode == gossips[0].node.node_id
 
     assert len(messages[gossips[1].node]) == 0
+
+    for g in gossips:
+        g.transport.close()
+
+
+@pytest.mark.parametrize("instances", [3])
+async def test_send_forward(gossips_with_topology_star):
+    gossips = gossips_with_topology_star
+    gossips[1].topology.add_node(gossips[2].node)
+    # let node1 know that node2 is connected to node0
+    gossips[1].topology.add_route(
+        Route(gossips[0].node, list(gossips[0].node.addresses)[0], gossips[2].node, gossips[2].transport.addr)
+    )
+
+    messages = collections.defaultdict(list)
+
+    async def listener(gossip):
+        try:
+            async with asyncio.timeout(0.1):
+                async for message in gossip.recv():
+                    messages[gossip.node].append(message)
+        except asyncio.TimeoutError:
+            pass
+
+    listeners = [asyncio.create_task(listener(n)) for n in gossips]
+
+    await gossips[1].send_handshake(gossips[2].node)
+    await asyncio.gather(*listeners)
 
     for g in gossips:
         g.transport.close()
