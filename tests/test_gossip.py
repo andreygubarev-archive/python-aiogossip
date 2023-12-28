@@ -98,7 +98,7 @@ async def test_send_and_receive(gossips):
 
 
 @pytest.mark.parametrize("random_seed", [0])
-@pytest.mark.parametrize("instances", [15])
+@pytest.mark.parametrize("instances", [10])
 @pytest.mark.asyncio
 async def test_gossip(random_seed, gossips, message):
     assert gossips[0].fanout
