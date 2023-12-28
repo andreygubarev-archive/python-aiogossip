@@ -7,7 +7,7 @@ from .node import Node
 @dataclasses.dataclass(frozen=True, slots=True)
 class Endpoint:
     """
-    Dataclass that represents a network endpoint consisting of a node, a source address, and a destination address.
+    Dataclass that represents a network endpoint consisting of pair of addresses (source and destination).
     """
 
     node: Node
