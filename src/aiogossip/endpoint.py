@@ -6,6 +6,10 @@ from .node import Node
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class Endpoint:
+    """
+    Dataclass that represents a network endpoint consisting of a node, a source address, and a destination address.
+    """
+
     node: Node
 
     saddr: Address | None = None

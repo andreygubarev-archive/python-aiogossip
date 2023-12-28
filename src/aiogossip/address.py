@@ -7,7 +7,7 @@ import typeguard
 @dataclasses.dataclass(frozen=True, slots=True)
 class Address:
     """
-    Represents a network address consisting of an IP address and a port number.
+    Dataclass that represents a network address consisting of an IP address and a port number.
     """
 
     ip: ipaddress.IPv4Address | ipaddress.IPv6Address
