@@ -68,8 +68,8 @@ class Gossip:
         # IMPORTANT: discovery
         message = update_send_endpoints(
             message,
-            send=Endpoint(route.snode, saddr=route.saddr),
-            recv=Endpoint(route.dnode, daddr=route.daddr),
+            send=Endpoint(route.snode, src=route.saddr),
+            recv=Endpoint(route.dnode, dst=route.daddr),
         )
         await self.transport.send(message, route.daddr)
         return message
@@ -149,8 +149,8 @@ class Gossip:
             # IMPORTANT: discovery
             message = update_recv_endpoints(
                 message,
-                send=Endpoint(message.route_endpoints[-2].node, daddr=addr),
-                recv=Endpoint(message.route_endpoints[-1].node, saddr=self.transport.addr),
+                send=Endpoint(message.route_endpoints[-2].node, dst=addr),
+                recv=Endpoint(message.route_endpoints[-1].node, src=self.transport.addr),
             )
 
             # IMPORTANT: handshake

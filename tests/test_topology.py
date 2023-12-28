@@ -238,15 +238,15 @@ def test_topology_update_routes_with_three_endpoints():
     with pytest.raises(ValueError):
         topology.update_routes(
             [
-                Endpoint(nodes[0], saddr=to_address("127.0.0.1:10000"), daddr=to_address("192.168.0.1:10000")),
+                Endpoint(nodes[0], src=to_address("127.0.0.1:10000"), dst=to_address("192.168.0.1:10000")),
             ]
         )
 
     topology.update_routes(
         [
-            Endpoint(nodes[0], saddr=to_address("127.0.0.1:10000"), daddr=to_address("192.168.0.1:10000")),
-            Endpoint(nodes[1], saddr=to_address("127.0.0.1:10001"), daddr=to_address("192.168.0.1:10001")),
-            Endpoint(nodes[2], saddr=to_address("127.0.0.1:10002"), daddr=to_address("192.168.0.1:10002")),
+            Endpoint(nodes[0], src=to_address("127.0.0.1:10000"), dst=to_address("192.168.0.1:10000")),
+            Endpoint(nodes[1], src=to_address("127.0.0.1:10001"), dst=to_address("192.168.0.1:10001")),
+            Endpoint(nodes[2], src=to_address("127.0.0.1:10002"), dst=to_address("192.168.0.1:10002")),
         ]
     )
 

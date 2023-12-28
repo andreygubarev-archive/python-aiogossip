@@ -143,15 +143,15 @@ class Topology:
             raise ValueError("Endpoints must contain at least two endpoints")
 
         for endpoint in endpoints:
-            endpoint.node.addresses.add(endpoint.saddr)
-            endpoint.node.addresses.add(endpoint.daddr)
+            endpoint.node.addresses.add(endpoint.src)
+            endpoint.node.addresses.add(endpoint.dst)
             self.add_node(endpoint.node)
 
         # IMPORTANT: discovery
         hops = list(zip(endpoints[:-1], endpoints[1:]))
         for src, dst in hops:
-            self.add_route(Route(src.node, src.daddr, dst.node, dst.daddr))
-        self.add_route(Route(dst.node, dst.daddr, src.node, src.daddr))
+            self.add_route(Route(src.node, src.dst, dst.node, dst.dst))
+        self.add_route(Route(dst.node, dst.dst, src.node, src.dst))
 
     def __len__(self) -> int:
         """

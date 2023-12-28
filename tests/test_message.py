@@ -20,8 +20,8 @@ def test_message(gossips):
 
 @pytest.mark.parametrize("instances", [2])
 def test_update_send_endpoints(gossips):
-    send = Endpoint(node=gossips[0].node, saddr=list(gossips[0].node.addresses)[0])
-    recv = Endpoint(node=gossips[1].node, daddr=list(gossips[1].node.addresses)[0])
+    send = Endpoint(node=gossips[0].node, src=list(gossips[0].node.addresses)[0])
+    recv = Endpoint(node=gossips[1].node, dst=list(gossips[1].node.addresses)[0])
 
     message = Message(
         route_snode=gossips[0].node,
@@ -30,14 +30,14 @@ def test_update_send_endpoints(gossips):
     updated_message = update_send_endpoints(message, send, recv)
 
     assert updated_message.route_endpoints == [send, recv]
-    assert updated_message.route_endpoints[-2].saddr == send.saddr
-    assert updated_message.route_endpoints[-1].daddr == recv.daddr
+    assert updated_message.route_endpoints[-2].src == send.src
+    assert updated_message.route_endpoints[-1].dst == recv.dst
 
 
 @pytest.mark.parametrize("instances", [2])
 def test_update_send_endpoints_prefilled(gossips):
-    send = Endpoint(node=gossips[0].node, saddr=list(gossips[0].node.addresses)[0])
-    recv = Endpoint(node=gossips[1].node, daddr=list(gossips[1].node.addresses)[0])
+    send = Endpoint(node=gossips[0].node, src=list(gossips[0].node.addresses)[0])
+    recv = Endpoint(node=gossips[1].node, dst=list(gossips[1].node.addresses)[0])
 
     message = Message(
         route_snode=gossips[0].node,
@@ -47,14 +47,14 @@ def test_update_send_endpoints_prefilled(gossips):
     updated_message = update_send_endpoints(message, send, recv)
 
     assert updated_message.route_endpoints == [send, recv]
-    assert updated_message.route_endpoints[-2].saddr == send.saddr
-    assert updated_message.route_endpoints[-1].daddr == recv.daddr
+    assert updated_message.route_endpoints[-2].src == send.src
+    assert updated_message.route_endpoints[-1].dst == recv.dst
 
 
 @pytest.mark.parametrize("instances", [2])
 def test_update_recv_endpoints(gossips):
-    send = Endpoint(node=gossips[0].node, saddr=list(gossips[0].node.addresses)[0])
-    recv = Endpoint(node=gossips[1].node, daddr=list(gossips[1].node.addresses)[0])
+    send = Endpoint(node=gossips[0].node, src=list(gossips[0].node.addresses)[0])
+    recv = Endpoint(node=gossips[1].node, dst=list(gossips[1].node.addresses)[0])
 
     message = Message(
         route_snode=gossips[0].node,
@@ -64,8 +64,8 @@ def test_update_recv_endpoints(gossips):
     updated_message = update_recv_endpoints(message, send, recv)
 
     assert updated_message.route_endpoints == [send, recv]
-    assert updated_message.route_endpoints[-2].daddr == send.daddr
-    assert updated_message.route_endpoints[-1].saddr == recv.saddr
+    assert updated_message.route_endpoints[-2].dst == send.dst
+    assert updated_message.route_endpoints[-1].src == recv.src
 
 
 @pytest.mark.parametrize("instances", [2])

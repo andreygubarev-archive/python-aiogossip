@@ -12,15 +12,15 @@ class Endpoint:
 
     node: Node
 
-    saddr: Address | None = None
-    daddr: Address | None = None
+    src: Address | None = None
+    dst: Address | None = None
 
     def __post_init__(self):
         if not isinstance(self.node, Node):
             raise TypeError("node must be Node")
 
-        if self.saddr and not isinstance(self.saddr, Address):
-            raise TypeError("saddr must be Address")
+        if self.src and not isinstance(self.src, Address):
+            raise TypeError("src must be Address")
 
-        if self.daddr and not isinstance(self.daddr, Address):
-            raise TypeError("daddr must be Address")
+        if self.dst and not isinstance(self.dst, Address):
+            raise TypeError("dst must be Address")

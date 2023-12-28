@@ -75,12 +75,12 @@ async def test_send_and_receive(gossips):
     assert sent_message.message_type == message.message_type
 
     assert sent_message.route_endpoints[-2].node == snode
-    assert sent_message.route_endpoints[-2].saddr == saddr
-    assert sent_message.route_endpoints[-2].daddr is None
+    assert sent_message.route_endpoints[-2].src == saddr
+    assert sent_message.route_endpoints[-2].dst is None
 
     assert sent_message.route_endpoints[-1].node == dnode
-    assert sent_message.route_endpoints[-1].saddr is None
-    assert sent_message.route_endpoints[-1].daddr == daddr
+    assert sent_message.route_endpoints[-1].src is None
+    assert sent_message.route_endpoints[-1].dst == daddr
 
     async with asyncio.timeout(0.1):
         received_message = await anext(gossips[1].recv())
@@ -89,12 +89,12 @@ async def test_send_and_receive(gossips):
     assert received_message.message_type == message.message_type
 
     assert received_message.route_endpoints[-2].node == snode
-    assert received_message.route_endpoints[-2].saddr == saddr
-    assert received_message.route_endpoints[-2].daddr == saddr
+    assert received_message.route_endpoints[-2].src == saddr
+    assert received_message.route_endpoints[-2].dst == saddr
 
     assert received_message.route_endpoints[-1].node == dnode
-    assert received_message.route_endpoints[-1].saddr == daddr
-    assert received_message.route_endpoints[-1].daddr == daddr
+    assert received_message.route_endpoints[-1].src == daddr
+    assert received_message.route_endpoints[-1].dst == daddr
 
 
 @pytest.mark.parametrize("random_seed", [0])

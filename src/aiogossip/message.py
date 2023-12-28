@@ -50,10 +50,10 @@ def update_send_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> M
         endpoints.append(recv)
 
     # TODO: propagate addresses back to node
-    endpoints[-2].node.addresses.add(send.saddr)
-    endpoints[-2] = dataclasses.replace(endpoints[-2], saddr=send.saddr)
-    endpoints[-1].node.addresses.add(recv.daddr)
-    endpoints[-1] = dataclasses.replace(endpoints[-1], daddr=recv.daddr)
+    endpoints[-2].node.addresses.add(send.src)
+    endpoints[-2] = dataclasses.replace(endpoints[-2], src=send.src)
+    endpoints[-1].node.addresses.add(recv.dst)
+    endpoints[-1] = dataclasses.replace(endpoints[-1], dst=recv.dst)
 
     return dataclasses.replace(message, route_endpoints=endpoints)
 
@@ -74,9 +74,9 @@ def update_recv_endpoints(message: Message, send: Endpoint, recv: Endpoint) -> M
     endpoints = message.route_endpoints
 
     # TODO: propagate addresses back to node
-    endpoints[-2].node.addresses.add(send.daddr)
-    endpoints[-2] = dataclasses.replace(endpoints[-2], daddr=send.daddr)
-    endpoints[-1].node.addresses.add(recv.saddr)
-    endpoints[-1] = dataclasses.replace(endpoints[-1], saddr=recv.saddr)
+    endpoints[-2].node.addresses.add(send.dst)
+    endpoints[-2] = dataclasses.replace(endpoints[-2], dst=send.dst)
+    endpoints[-1].node.addresses.add(recv.src)
+    endpoints[-1] = dataclasses.replace(endpoints[-1], src=recv.src)
 
     return dataclasses.replace(message, route_endpoints=endpoints)
