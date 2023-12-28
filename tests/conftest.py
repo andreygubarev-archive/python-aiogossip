@@ -55,7 +55,7 @@ def get_address(port=0):
 
 
 def get_random_address():
-    return get_address(port=random.randint(0, 65535))
+    return get_address(port=0)
 
 
 @pytest.fixture
