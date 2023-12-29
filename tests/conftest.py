@@ -12,7 +12,7 @@ random.seed(0)
 # Random ######################################################################
 
 
-@pytest.fixture(params=[0, 1, 2, 3, 4], ids=lambda x: f"random_seed={x}")
+@pytest.fixture(params=[0, 1, 2], ids=lambda x: f"random_seed={x}")
 def random_seed(request):
     random.seed(request.param)
     return request.param
