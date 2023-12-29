@@ -30,12 +30,12 @@ endif
 MODULES := $(shell (cd src/aiogossip && ls -R **/*.py) | grep -v '__init__.py')
 MODULES_TESTS := $(foreach mod,$(MODULES),test_$(subst /,_,$(mod)))
 
-.PHONY: coverage
+.PHONY: coverage-$(MODULES_TESTS)
 coverage-$(MODULES_TESTS): ## Test Python Package with Coverage
 	python -m pytest --cov=$(shell grep '# MODULE: ' $(MAKEFILE_DIR)/tests/$(subst coverage-,,$@) | sed 's,# MODULE: ,,g') --cov-report=term-missing --cov-fail-under=100 --pdb $(MAKEFILE_DIR)/tests/$(subst coverage-,,$@)
 
 .PHONY: coverage
-coverage: $(addprefix coverage-,$(MODULES_TESTS)) ## Test Python Package with Coverage
+coverage: coverage-$(MODULES_TESTS) ## Test Python Package with Coverage
 
 .PHONY: run
 run: ## Run Python Package
