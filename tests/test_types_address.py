@@ -1,6 +1,5 @@
 # MODULE: aiogossip.types.address
 
-import dataclasses
 import ipaddress
 
 import pytest
@@ -34,26 +33,6 @@ def test_post_init_with_invalid_port():
 def test_post_init_with_invalid_port_integer():
     with pytest.raises(ValueError):
         Address(ipaddress.IPv4Address("192.168.1.1"), 70000)
-
-
-def test_frozen_address():
-    address = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
-    with pytest.raises(dataclasses.FrozenInstanceError):
-        address.ip = ipaddress.IPv4Address("127.0.0.1")
-
-
-def test_address_slots():
-    address = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
-    with pytest.raises(AttributeError):
-        address.invalid_attribute
-    with pytest.raises(TypeError):
-        address.invalid_attribute = "test"
-
-
-def test_frozen_replacement():
-    address = Address(ipaddress.IPv4Address("192.168.1.1"), 8080)
-    address = dataclasses.replace(address, ip=ipaddress.IPv4Address("192.168.0.1"))
-    assert address.ip == ipaddress.IPv4Address("192.168.0.1")
 
 
 def test_to_ip_with_valid_ipv4_string():

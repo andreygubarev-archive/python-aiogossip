@@ -3,7 +3,7 @@ import dataclasses
 from .address import Address
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass
 class Endpoint:
     """
     Dataclass that represents a network endpoint consisting of pair of addresses (source and destination).

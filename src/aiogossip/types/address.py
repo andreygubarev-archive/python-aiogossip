@@ -4,7 +4,7 @@ import ipaddress
 import typeguard
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass
 class Address:
     """
     Dataclass that represents a network address consisting of an IP address and a port number.
