@@ -27,8 +27,9 @@ else
 	python -m pytest --pdb $(MAKEFILE_DIR)/tests/test_$(MODULE)*.py
 endif
 
-MODULES := $(shell (cd src/aiogossip && ls -R **/*.py) | grep -v '__init__.py')
+MODULES := $(shell (cd src/aiogossip && find . -name '*.py') | cut -c3- | grep -v '__init__.py')
 MODULES_TESTS := $(foreach mod,$(MODULES),test_$(subst /,_,$(mod)))
+
 
 .PHONY: coverage-$(MODULES_TESTS)
 coverage-$(MODULES_TESTS): ## Test Python Package with Coverage
