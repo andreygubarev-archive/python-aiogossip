@@ -6,7 +6,7 @@ import typeguard
 from .address import Address, to_address
 
 
-class Transport:
+class UDPTransport:
     PACKET_SIZE = 8192
 
     @typeguard.typechecked
