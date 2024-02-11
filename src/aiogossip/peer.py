@@ -31,7 +31,7 @@ class Peer:
         print(f"Listening on {self.broker.addr}")
 
         try:
-            await protocol.transport_disconnected
+            await protocol.transport_closed
         finally:
             self.broker.close()
 

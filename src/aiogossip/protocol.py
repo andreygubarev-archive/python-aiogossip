@@ -12,7 +12,7 @@ class DatagramProtocol(asyncio.DatagramProtocol):
         self.on_message = on_message
 
         self.transport = None
-        self.transport_disconnected = self.loop.create_future()
+        self.transport_closed = self.loop.create_future()
 
     def connection_made(self, transport):
         """Called when a connection is made."""
@@ -20,7 +20,7 @@ class DatagramProtocol(asyncio.DatagramProtocol):
 
     def connection_lost(self, exc):
         """Called when a connection is lost."""
-        self.transport_disconnected.set_result(True)
+        self.transport_closed.set_result(True)
 
     def datagram_received(self, data, addr):
         """Called when a datagram is received."""
