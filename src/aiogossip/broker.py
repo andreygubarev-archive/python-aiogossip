@@ -3,6 +3,7 @@ import asyncio
 import typeguard
 
 from .address import Address, to_address
+from .dispatcher import Dispatcher
 
 
 class Broker:
@@ -10,8 +11,9 @@ class Broker:
 
     PACKET_SIZE = 8192
 
-    def __init__(self, loop: asyncio.AbstractEventLoop):
+    def __init__(self, loop: asyncio.AbstractEventLoop, dispatcher: Dispatcher):
         self.loop = loop
+        self.dispatcher = dispatcher
 
         self._transport = None
 
