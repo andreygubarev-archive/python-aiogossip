@@ -8,6 +8,8 @@ from .protocol import GossipProtocol
 
 
 class Peer:
+    PACKET_SIZE = 8192
+
     def __init__(self, host: str = "0.0.0.0", port: int = 0, loop: asyncio.AbstractEventLoop = None):
         self._host = host
         self._port = port
@@ -25,6 +27,9 @@ class Peer:
 
     @typeguard.typechecked
     def send(self, data: bytes, addr: Address):
+        if len(data) > self.PACKET_SIZE:
+            raise ValueError(f"Message size exceeds packet size of {self.PACKET_SIZE} bytes: {len(data)}")
+
         self.tx_bytes[addr] += len(data)
         self.tx_packets[addr] += 1
 
