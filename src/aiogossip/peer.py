@@ -1,4 +1,5 @@
 import asyncio
+import collections
 
 import typeguard
 
@@ -17,14 +18,26 @@ class Peer:
         self.transport = None
         self.protocol = None
 
+        self.rx_bytes = collections.defaultdict(int)
+        self.rx_packets = collections.defaultdict(int)
+        self.tx_bytes = collections.defaultdict(int)
+        self.tx_packets = collections.defaultdict(int)
+
     @typeguard.typechecked
     def send(self, data: bytes, addr: Address):
+        self.tx_bytes[addr] += len(data)
+        self.tx_packets[addr] += 1
+
         self.transport.sendto(data, addr.to_tuple())
 
     @typeguard.typechecked
     def recv(self, data: bytes, addr: Address):
+        self.rx_bytes[addr] += len(data)
+        self.rx_packets[addr] += 1
+
         addr = to_address(addr)
         print(f"Received {data} from {addr}")
+        print(f"Rx: {self.rx_bytes[addr]} bytes, {self.rx_packets[addr]} packets")
 
     def on_error(self, exc):
         pass
