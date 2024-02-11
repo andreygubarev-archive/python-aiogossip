@@ -16,7 +16,6 @@ class Peer:
 
         self.loop = loop or asyncio.get_event_loop()
 
-        self.addr = None
         self.transport = None
         self.protocol = None
 
@@ -24,6 +23,10 @@ class Peer:
         self.rx_packets = collections.defaultdict(int)
         self.tx_bytes = collections.defaultdict(int)
         self.tx_packets = collections.defaultdict(int)
+
+    @property
+    def addr(self):
+        return to_address(self.transport.get_extra_info("sockname"))
 
     @typeguard.typechecked
     def send(self, data: bytes, addr: Address):
@@ -55,7 +58,6 @@ class Peer:
             lambda: GossipProtocol(self.loop, self.recv, self.on_error, self.on_connection_lost),
             local_addr=(self._host, self._port),
         )
-        self.addr = to_address(self.transport.get_extra_info("sockname"))
         print(f"Listening on {self.addr}")
 
         try:
