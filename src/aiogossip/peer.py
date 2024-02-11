@@ -12,10 +12,10 @@ class Peer:
     def __init__(self, host: str = "0.0.0.0", port: int = 0, loop: asyncio.AbstractEventLoop = None):
         self._host = host
         self._port = port
+        self._loop = loop or asyncio.get_event_loop()
 
-        self.loop = loop or asyncio.get_event_loop()
-        self.dispatcher = Dispatcher(self.loop)
-        self.broker = Broker(self.loop, self.dispatcher)
+        self.dispatcher = Dispatcher(self._loop)
+        self.broker = Broker(self._loop, self.dispatcher)
 
     @typeguard.typechecked
     def addr(self) -> Address:
@@ -30,8 +30,8 @@ class Peer:
         self.dispatcher.add_handler(handler)
 
     async def _run(self):
-        self.broker.transport, protocol = await self.loop.create_datagram_endpoint(
-            lambda: DatagramProtocol(self.loop, self.broker.recv),
+        self.broker.transport, protocol = await self._loop.create_datagram_endpoint(
+            lambda: DatagramProtocol(self._loop, self.broker.recv),
             local_addr=(self._host, self._port),
         )
         print(f"Listening on {self.broker.addr}")
@@ -43,8 +43,8 @@ class Peer:
 
     def run(self):
         try:
-            self.loop.run_until_complete(self._run())
+            self._loop.run_until_complete(self._run())
         except KeyboardInterrupt:
             self.broker.close()
         finally:
-            self.loop.close()
+            self._loop.close()

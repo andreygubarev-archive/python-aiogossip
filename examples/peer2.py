@@ -12,5 +12,5 @@ async def send():
 
 
 if __name__ == "__main__":
-    peer.loop.create_task(send())
+    peer._loop.create_task(send())
     peer.run()
