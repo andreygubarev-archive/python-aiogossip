@@ -1,6 +1,7 @@
 import asyncio
 
 from .address import to_address
+from .message import to_message
 
 
 class DatagramProtocol(asyncio.DatagramProtocol):
@@ -24,7 +25,9 @@ class DatagramProtocol(asyncio.DatagramProtocol):
 
     def datagram_received(self, data, addr):
         """Called when a datagram is received."""
-        self.recv(data, to_address(addr))
+        msg = to_message(data)
+        addr = to_address(addr)
+        self.recv(msg, addr)
 
     def error_received(self, exc):
         """Called when an error is received."""

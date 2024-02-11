@@ -3,6 +3,7 @@ import asyncio
 import typeguard
 
 from .address import Address, to_address
+from .message import Message
 from .topology import Topology
 
 
@@ -46,13 +47,12 @@ class Broker:
         print(f"Sent {data} to {addr}")
 
     @typeguard.typechecked
-    def recv(self, data: bytes, addr: Address):
+    def recv(self, msg: Message, addr: Address):
         """Receive a message from an address."""
-        addr = to_address(addr)
-        print(f"Received {data} from {addr}")
+        print(f"Received {msg} from {addr}")
 
         self.topology.add_node(addr)
-        self._dispatch(data, addr)
+        self._dispatch(msg, addr)
 
     def close(self):
         """Close the broker."""

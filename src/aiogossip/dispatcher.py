@@ -1,6 +1,7 @@
 import asyncio
 
 from .address import Address
+from .message import Message
 
 
 class Dispatcher:
@@ -10,10 +11,10 @@ class Dispatcher:
         self.loop = loop
         self.handlers = set()
 
-    def dispatch(self, data: bytes, addr: Address):
+    def dispatch(self, msg: Message, addr: Address):
         """Dispatch a message to the appropriate handler."""
         for handler in self.handlers:
-            self.loop.create_task(handler(data, addr))
+            self.loop.create_task(handler(msg, addr))
 
     def add_handler(self, handler):
         """Add a handler to the dispatcher."""
