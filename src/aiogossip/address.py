@@ -32,6 +32,15 @@ class Address:
     def __hash__(self):
         return hash(str(self))
 
+    def to_tuple(self) -> tuple[str, int]:
+        """
+        Return the address as a tuple of IP address and port number.
+
+        Returns:
+            tuple[str, int]: The address as a tuple of IP address and port number.
+        """
+        return str(self.ip), self.port
+
 
 @typeguard.typechecked
 def to_ipaddress(
