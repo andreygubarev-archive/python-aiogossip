@@ -16,6 +16,10 @@ class Peer:
         self.broker = Broker(self.loop)
 
     @typeguard.typechecked
+    def addr(self) -> Address:
+        return self.broker.addr
+
+    @typeguard.typechecked
     def send(self, data: bytes, addr: Address):
         self.broker.send(data, addr)
 
