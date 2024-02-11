@@ -6,10 +6,10 @@ from .address import to_address
 class DatagramProtocol(asyncio.DatagramProtocol):
     """A simple datagram protocol that calls a callback when a message is received."""
 
-    def __init__(self, loop, on_message):
+    def __init__(self, loop, recv):
         """Initialize the protocol with a loop and a callback."""
         self.loop = loop
-        self.on_message = on_message
+        self.recv = recv
 
         self.transport = None
         self.transport_closed = self.loop.create_future()
@@ -24,7 +24,7 @@ class DatagramProtocol(asyncio.DatagramProtocol):
 
     def datagram_received(self, data, addr):
         """Called when a datagram is received."""
-        self.on_message(data, to_address(addr))
+        self.recv(data, to_address(addr))
 
     def error_received(self, exc):
         """Called when an error is received."""
