@@ -40,7 +40,7 @@ coverage: coverage-$(MODULES_TESTS) ## Test Python Package with Coverage
 
 .PHONY: run
 run: ## Run Python Package
-	python $(MAKEFILE_DIR)/examples/peer.py
+	@python $(MAKEFILE_DIR)/examples/peer.py
 
 .PHONY: build
 build: ## Build Python Package
