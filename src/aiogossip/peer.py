@@ -1,6 +1,6 @@
 import asyncio
 
-from .address import to_address
+from .address import Address, to_address
 from .protocol import GossipProtocol
 
 
@@ -9,32 +9,38 @@ class Peer:
         self._host = host
         self._port = port
 
-        self.addr = to_address((host, port))
         self.loop = loop or asyncio.get_event_loop()
 
+        self.addr = None
         self.transport = None
         self.protocol = None
 
-    async def _run(self):
-        self.connection_lost = self.loop.create_future()
-        self.transport, self.protocol = await self.loop.create_datagram_endpoint(
-            lambda: GossipProtocol(self.loop, self.on_message, self.on_error, self.on_connection_lost),
-            local_addr=self.addr.to_tuple(),
-        )
-
-        try:
-            await self.connection_lost
-        finally:
-            self.transport.close()
+    def send(self, data: bytes, addr: Address):
+        self.transport.sendto(data, addr.to_tuple())
 
     def on_message(self, data, addr):
-        pass
+        addr = to_address(addr)
+        print(f"Received {data} from {addr}")
 
     def on_error(self, exc):
         pass
 
     def on_connection_lost(self, exc):
         self.connection_lost.set_result(exc)
+
+    async def _run(self):
+        self.connection_lost = self.loop.create_future()
+        self.transport, self.protocol = await self.loop.create_datagram_endpoint(
+            lambda: GossipProtocol(self.loop, self.on_message, self.on_error, self.on_connection_lost),
+            local_addr=(self._host, self._port),
+        )
+        self.addr = to_address(self.transport.get_extra_info("sockname"))
+        print(f"Listening on {self.addr}")
+
+        try:
+            await self.connection_lost
+        finally:
+            self.transport.close()
 
     def run(self):
         try:
