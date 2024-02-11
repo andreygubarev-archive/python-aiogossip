@@ -6,9 +6,9 @@ from .address import Address, to_address
 
 
 class Broker:
-    PACKET_SIZE = 8192
-
     """A broker is a server that receives and forwards messages to other brokers or clients."""
+
+    PACKET_SIZE = 8192
 
     def __init__(self, loop: asyncio.AbstractEventLoop):
         self.loop = loop
