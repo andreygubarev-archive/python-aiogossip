@@ -21,7 +21,8 @@ class Peer:
     def send(self, data: bytes, addr: Address):
         self.transport.sendto(data, addr.to_tuple())
 
-    def on_message(self, data, addr):
+    @typeguard.typechecked
+    def recv(self, data: bytes, addr: Address):
         addr = to_address(addr)
         print(f"Received {data} from {addr}")
 
@@ -33,7 +34,7 @@ class Peer:
 
     async def _run(self):
         self.transport, self.protocol = await self.loop.create_datagram_endpoint(
-            lambda: GossipProtocol(self.loop, self.on_message, self.on_error, self.on_connection_lost),
+            lambda: GossipProtocol(self.loop, self.recv, self.on_error, self.on_connection_lost),
             local_addr=(self._host, self._port),
         )
         self.addr = to_address(self.transport.get_extra_info("sockname"))

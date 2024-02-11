@@ -1,5 +1,7 @@
 import asyncio
 
+from .address import to_address
+
 
 class GossipProtocol(asyncio.DatagramProtocol):
     def __init__(self, loop, on_message, on_error, on_connection_lost):
@@ -20,7 +22,7 @@ class GossipProtocol(asyncio.DatagramProtocol):
         self.on_connection_lost(exc)
 
     def datagram_received(self, data, addr):
-        self.on_message(data, addr)
+        self.on_message(data, to_address(addr))
 
     def error_received(self, exc):
         self.on_error(exc)
