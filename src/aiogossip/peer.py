@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 
 import typeguard
@@ -50,3 +51,12 @@ class Peer:
             self.broker.close()
         finally:
             self._loop.close()
+
+    def main(self):
+        parser = argparse.ArgumentParser(description="Gossip Peer.")
+        parser.add_argument("command", choices=["run"], help="The command to run.")
+        parser.add_argument("params", nargs="*", help="Parameters for the command.")
+        args = parser.parse_args()
+
+        if args.command == "run":
+            self.run()

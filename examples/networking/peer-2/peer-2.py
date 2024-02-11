@@ -9,4 +9,4 @@ async def handler(msg, addr):
 
 
 if __name__ == "__main__":
-    peer.run()
+    peer.main()
