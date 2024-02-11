@@ -15,7 +15,7 @@ class Peer:
         self._loop = loop or asyncio.get_event_loop()
 
         self.dispatcher = Dispatcher(self._loop)
-        self.broker = Broker(self._loop, self.dispatcher)
+        self.broker = Broker(self._loop, self.dispatcher.dispatch)
 
     @typeguard.typechecked
     def addr(self) -> Address:
