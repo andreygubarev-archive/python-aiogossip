@@ -37,6 +37,8 @@ class Peer:
         self.tx_packets[addr] += 1
 
         self.transport.sendto(data, addr.to_tuple())
+        print(f"Sent {data} to {addr}")
+        print(f"Tx: {self.tx_bytes[addr]} bytes, {self.tx_packets[addr]} packets")
 
     @typeguard.typechecked
     def recv(self, data: bytes, addr: Address):
