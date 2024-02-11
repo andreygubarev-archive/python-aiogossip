@@ -50,6 +50,8 @@ class Broker:
         addr = to_address(addr)
         print(f"Received {data} from {addr}")
 
+        self.dispatcher.dispatch(data, addr)
+
     def close(self):
         """Close the broker."""
         del self.transport

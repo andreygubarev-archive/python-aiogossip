@@ -25,6 +25,10 @@ class Peer:
     def send(self, data: bytes, addr: Address):
         self.broker.send(data, addr)
 
+    @typeguard.typechecked
+    def subscribe(self, handler: callable):
+        self.dispatcher.add_handler(handler)
+
     async def _run(self):
         self.broker.transport, protocol = await self.loop.create_datagram_endpoint(
             lambda: DatagramProtocol(self.loop, self.broker.recv),
