@@ -43,8 +43,8 @@ class Broker:
         if len(data) > self.PACKET_SIZE:
             raise ValueError(f"Message size exceeds packet size of {self.PACKET_SIZE} bytes: {len(data)}")
 
-        self.transport.sendto(data, addr.to_tuple())
         print(f"Sent {data} to {addr}")
+        self.transport.sendto(data, addr.to_tuple())
 
     @typeguard.typechecked
     def recv(self, msg: Message, addr: Address):
