@@ -49,15 +49,9 @@ class Peer:
         print(f"Received {data} from {addr}")
         print(f"Rx: {self.rx_bytes[addr]} bytes, {self.rx_packets[addr]} packets")
 
-    def on_error(self, exc):
-        pass
-
-    def on_connection_lost(self, exc):
-        pass
-
     async def _run(self):
         self.transport, self.protocol = await self.loop.create_datagram_endpoint(
-            lambda: GossipProtocol(self.loop, self.recv, self.on_error, self.on_connection_lost),
+            lambda: GossipProtocol(self.loop, self.recv),
             local_addr=(self._host, self._port),
         )
         print(f"Listening on {self.addr}")
