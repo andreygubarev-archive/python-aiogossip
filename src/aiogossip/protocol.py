@@ -3,7 +3,7 @@ import asyncio
 from .address import to_address
 
 
-class GossipProtocol(asyncio.DatagramProtocol):
+class DatagramProtocol(asyncio.DatagramProtocol):
     def __init__(self, loop, on_message):
         self.loop = loop
         self.on_message = on_message

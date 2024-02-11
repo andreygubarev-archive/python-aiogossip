@@ -4,7 +4,7 @@ import collections
 import typeguard
 
 from .address import Address, to_address
-from .protocol import GossipProtocol
+from .protocol import DatagramProtocol
 
 
 class Peer:
@@ -51,7 +51,7 @@ class Peer:
 
     async def _run(self):
         self.transport, self.protocol = await self.loop.create_datagram_endpoint(
-            lambda: GossipProtocol(self.loop, self.recv),
+            lambda: DatagramProtocol(self.loop, self.recv),
             local_addr=(self._host, self._port),
         )
         print(f"Listening on {self.addr}")
