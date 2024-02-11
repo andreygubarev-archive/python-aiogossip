@@ -15,31 +15,26 @@ class Peer:
         self.loop = loop or asyncio.get_event_loop()
         self.broker = Broker(self.loop)
 
-        self.transport = None
-
     @typeguard.typechecked
     def send(self, data: bytes, addr: Address):
         self.broker.send(data, addr)
 
     async def _run(self):
-        self.transport, protocol = await self.loop.create_datagram_endpoint(
+        self.broker.transport, protocol = await self.loop.create_datagram_endpoint(
             lambda: DatagramProtocol(self.loop, self.broker.recv),
             local_addr=(self._host, self._port),
         )
-        self.broker.transport_set(self.transport)
-
-        print(f"Listening on {self.broker.transport_addr}")
+        print(f"Listening on {self.broker.addr}")
 
         try:
             await protocol.transport_disconnected
         finally:
-            self.transport.close()
-            self.broker.transport_unset()
+            self.broker.close()
 
     def run(self):
         try:
             self.loop.run_until_complete(self._run())
         except KeyboardInterrupt:
-            self.transport.close()
+            self.broker.close()
         finally:
             self.loop.close()

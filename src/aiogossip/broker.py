@@ -12,18 +12,25 @@ class Broker:
 
     def __init__(self, loop: asyncio.AbstractEventLoop):
         self.loop = loop
-        self.transport = None
 
-    def transport_set(self, transport):
-        """Set the transport for the broker."""
-        self.transport = transport
-
-    def transport_unset(self):
-        """Unset the transport for the broker."""
-        self.transport = None
+        self._transport = None
 
     @property
-    def transport_addr(self):
+    def transport(self):
+        return self._transport
+
+    @transport.setter
+    def transport(self, transport):
+        self._transport = transport
+
+    @transport.deleter
+    def transport(self):
+        if self._transport:
+            self._transport.close()
+        self._transport = None
+
+    @property
+    def addr(self):
         return to_address(self.transport.get_extra_info("sockname"))
 
     @typeguard.typechecked
@@ -40,3 +47,7 @@ class Broker:
         """Receive a message from an address."""
         addr = to_address(addr)
         print(f"Received {data} from {addr}")
+
+    def close(self):
+        """Close the broker."""
+        del self.transport
