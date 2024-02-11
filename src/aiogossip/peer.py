@@ -28,6 +28,8 @@ class Peer:
         )
         self.broker.transport_set(self.transport)
 
+        print(f"Listening on {self.broker.transport_addr}")
+
         try:
             await protocol.transport_disconnected
         finally:
