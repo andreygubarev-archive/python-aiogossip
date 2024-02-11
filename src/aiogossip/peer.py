@@ -29,10 +29,9 @@ class Peer:
         pass
 
     def on_connection_lost(self, exc):
-        self.connection_lost.set_result(exc)
+        pass
 
     async def _run(self):
-        self.connection_lost = self.loop.create_future()
         self.transport, self.protocol = await self.loop.create_datagram_endpoint(
             lambda: GossipProtocol(self.loop, self.on_message, self.on_error, self.on_connection_lost),
             local_addr=(self._host, self._port),
@@ -41,7 +40,7 @@ class Peer:
         print(f"Listening on {self.addr}")
 
         try:
-            await self.connection_lost
+            await self.protocol.transport_disconnected
         finally:
             self.transport.close()
 
