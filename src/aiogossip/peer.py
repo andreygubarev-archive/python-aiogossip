@@ -1,5 +1,7 @@
 import asyncio
 
+import typeguard
+
 from .address import Address, to_address
 from .protocol import GossipProtocol
 
@@ -15,6 +17,7 @@ class Peer:
         self.transport = None
         self.protocol = None
 
+    @typeguard.typechecked
     def send(self, data: bytes, addr: Address):
         self.transport.sendto(data, addr.to_tuple())
 
