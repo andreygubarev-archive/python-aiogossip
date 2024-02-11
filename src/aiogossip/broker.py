@@ -3,6 +3,7 @@ import asyncio
 import typeguard
 
 from .address import Address, to_address
+from .topology import Topology
 
 
 class Broker:
@@ -10,8 +11,9 @@ class Broker:
 
     PACKET_SIZE = 8192
 
-    def __init__(self, loop: asyncio.AbstractEventLoop, dispatch: callable):
+    def __init__(self, loop: asyncio.AbstractEventLoop, topology: Topology, dispatch: callable):
         self.loop = loop
+        self.topology = topology
         self._dispatch = dispatch
 
         self._transport = None
@@ -49,6 +51,7 @@ class Broker:
         addr = to_address(addr)
         print(f"Received {data} from {addr}")
 
+        self.topology.add_node(addr)
         self._dispatch(data, addr)
 
     def close(self):

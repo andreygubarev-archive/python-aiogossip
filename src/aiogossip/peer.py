@@ -6,6 +6,7 @@ from .address import Address
 from .broker import Broker
 from .dispatcher import Dispatcher
 from .protocol import DatagramProtocol
+from .topology import Topology
 
 
 class Peer:
@@ -14,8 +15,9 @@ class Peer:
         self._port = port
         self._loop = loop or asyncio.get_event_loop()
 
+        self.topology = Topology()
         self.dispatcher = Dispatcher(self._loop)
-        self.broker = Broker(self._loop, self.dispatcher.dispatch)
+        self.broker = Broker(self._loop, self.topology, self.dispatcher.dispatch)
 
     @typeguard.typechecked
     def addr(self) -> Address:
