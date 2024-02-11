@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import json
 
 import typeguard
 
@@ -65,8 +66,15 @@ class Peer:
             data = await reader.read(100)
             if not data:
                 break
-            addr = writer.get_extra_info("peername")
-            print(f"Received {data.decode()} from {addr}")
+            print(f"Received {data.decode()}")
+            data = json.loads(data.decode())
+            command = data["command"]
+            params = data["params"]
+
+            if command == "send":
+                data = params[0].encode()
+                addr = to_address(params[1])
+                self.send(data, addr)
 
     def main(self):
         parser = argparse.ArgumentParser(description="Gossip Peer.")
@@ -81,7 +89,11 @@ class Peer:
             ipc_addr = to_address(args.ipc)
             print(f"Sending to {ipc_addr}")
 
-            data = " ".join(args.params).encode("utf-8")
+            data = {
+                "command": "send",
+                "params": args.params,
+            }
+            data = json.dumps(data).encode()
 
             async def ipc_send():
                 reader, writer = await asyncio.open_connection(str(ipc_addr.ip), ipc_addr.port)
