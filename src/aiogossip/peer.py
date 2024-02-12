@@ -1,12 +1,12 @@
 import argparse
 import asyncio
-import json
 
 import typeguard
 
 from .address import Address, to_address
 from .broker import Broker
 from .dispatcher import Dispatcher
+from .ipc import IPC
 from .protocol import DatagramProtocol
 from .topology import Topology
 
@@ -15,8 +15,9 @@ class Peer:
     def __init__(self, host: str = "0.0.0.0", port: int = 0, ipc_port: int = 0, loop: asyncio.AbstractEventLoop = None):
         self._host = host
         self._port = port
-        self._ipc_port = ipc_port
         self._loop = loop or asyncio.get_event_loop()
+
+        self.ipc = IPC(peer=self, port=ipc_port)
 
         self.topology = Topology()
         self.dispatcher = Dispatcher(self._loop)
@@ -35,9 +36,7 @@ class Peer:
         self.dispatcher.add_handler(handler)
 
     async def _run(self):
-        command_server = await asyncio.start_server(self.process_commands, "127.0.0.1", self._ipc_port)
-        self.ipc_port = command_server.sockets[0].getsockname()[1]
-        print(f"IPC server listening on 127.0.0.1:{self.ipc_port}")
+        await self.ipc.recv()
 
         self.broker.transport, protocol = await self._loop.create_datagram_endpoint(
             lambda: DatagramProtocol(self._loop, self.broker.recv),
@@ -48,33 +47,17 @@ class Peer:
         try:
             await protocol.transport_closed
         finally:
+            self.ipc.close()
             self.broker.close()
-            command_server.close()
-            await command_server.wait_closed()
 
     def run(self):
         try:
             self._loop.run_until_complete(self._run())
         except KeyboardInterrupt:
+            self.ipc.close()
             self.broker.close()
         finally:
             self._loop.close()
-
-    async def process_commands(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-        # Read the commands and process them
-        while True:
-            data = await reader.read(100)
-            if not data:
-                break
-            print(f"Received {data.decode()}")
-            data = json.loads(data.decode())
-            command = data["command"]
-            params = data["params"]
-
-            if command == "send":
-                data = params[0].encode()
-                addr = to_address(params[1])
-                self.send(data, addr)
 
     def main(self):
         parser = argparse.ArgumentParser(description="Gossip Peer.")
@@ -85,21 +68,9 @@ class Peer:
 
         if args.command == "run":
             self.run()
-        elif args.command == "send":
-            ipc_addr = to_address(args.ipc)
-            print(f"Sending to {ipc_addr}")
-
-            data = {
-                "command": "send",
-                "params": args.params,
-            }
-            data = json.dumps(data).encode()
-
-            async def ipc_send():
-                reader, writer = await asyncio.open_connection(str(ipc_addr.ip), ipc_addr.port)
-                writer.write(data)
-                await writer.drain()
-                writer.close()
-                await writer.wait_closed()
-
-            self._loop.run_until_complete(ipc_send())
+        else:
+            ipc = to_address(args.ipc)
+            self.ipc.host = str(ipc.ip)
+            self.ipc.port = ipc.port
+            cmd = self.ipc.send(args.command, args.params)
+            self._loop.run_until_complete(cmd)
